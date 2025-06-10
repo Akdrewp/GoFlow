@@ -1,10 +1,10 @@
 import { getAuth, createUserWithEmailAndPassword, UserCredential, AuthError } from "firebase/auth";
 
-import { UserSignUpIndividual, UserSignUpOrganization } from '@/Api/SignUp/signUp';
+import { SignUpAuthService, UserSignUpIndividual, UserSignUpOrganization } from '@/api/auth/signUp';
 
 const auth = getAuth();
 
-export class fireBaseSignUp {
+export class fireBaseSignUp implements SignUpAuthService {
     async signUpIndividual(formData: UserSignUpIndividual): Promise<void> {
         try {
             const response: UserCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);

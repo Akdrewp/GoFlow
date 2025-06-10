@@ -28,7 +28,7 @@ export interface UserSignUpOrganization {
  * Any class that implements this interface must provide concrete
  * implementations for the signUpIndividual and signUpOrganization methods.
  */
-export interface ISignUpAuthService {
+export interface SignUpAuthService {
   /**
    * Handles the sign-up process for individual users.
    * @param formData - The data required for individual user registration.

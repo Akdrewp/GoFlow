@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 /**
  * @todo Not sure if its smart to put the types in a seperate file
  */
-import { SignupType, UserSignUpIndividual, UserSignUpOrganization } from '@/Api/SignUp/signUp';
+import { SignupType, UserSignUpIndividual, UserSignUpOrganization } from '@/api/auth/signUp';
 
 // SignUpPage component for user registration
 // It receives setCurrentPage from the parent App component for navigation.
