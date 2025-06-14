@@ -5,7 +5,8 @@ import React, { useState } from 'react';
 /**
  * @todo Not sure if its smart to put the types in a seperate file
  */
-import { SignupType, UserSignUpIndividual, UserSignUpOrganization } from '@/api/auth/signUp';
+import { SignupType } from '@/api/auth/signUp';
+import { firebaseAuthService } from "@/api/firebase/firebaseSignUp";
 
 // SignUpPage component for user registration
 // It receives setCurrentPage from the parent App component for navigation.
@@ -15,7 +16,7 @@ export default function SignUpPage() {
     const [signupType, setSignupType] = useState<SignupType | null>(null); // null, 'individual', or 'organization'
 
     // State for organization-related fields
-    const [organizationNumber, setOrganizationNumber] = useState('');
+    const [organizationId, setOrganizationId] = useState('');
     const [employeeId, setEmployeeId] = useState('');
 
     // State for user registration fields
@@ -49,14 +50,30 @@ export default function SignUpPage() {
         // For now, just log the form data.
         console.log('Sign Up Data:', {
             signupType,
-            ...(signupType === 'organization' && { organizationNumber, employeeId }), // Conditionally add org data
+            ...(signupType === 'organization' && { organizationNumber: organizationId, employeeId }), // Conditionally add org data
             name,
             email,
             password,
         });
 
+
+
         if (signupType == SignupType.INDIVIDUAL) {
-            sign
+            firebaseAuthService.signUpIndividual({
+                name: name,
+                email: email,
+                password: password,
+            });
+        } else if (signupType == SignupType.ORGANIZATION) {
+            firebaseAuthService.signUpOrganization({
+                name: name,
+                email: email,
+                password: password,
+                organizationId: organizationId,
+                employeeId: employeeId
+            });
+        } else {
+            throw(new Error("Neither ORGANIZATION or INDIVIDUAL signup error"));
         }
 
         // Here you would typically call an authentication API.
@@ -161,7 +178,7 @@ export default function SignUpPage() {
             {signupType === 'organization' && (
                 <div className="mb-6 bg-background-surface p-4 rounded-lg">
                 <h3 className="text-lg font-semibold text-foreground mb-4">Organization Details</h3>
-                {renderInputField('organizationNumber', 'Organization Number', 'text', organizationNumber, setOrganizationNumber, 'e.g., ORG12345')}
+                {renderInputField('organizationNumber', 'Organization Number', 'text', organizationId, setOrganizationId, 'e.g., ORG12345')}
                 {renderInputField('employeeId', 'Employee ID', 'text', employeeId, setEmployeeId, 'e.g., EMP001')}
                 </div>
             )}

@@ -23,11 +23,6 @@ export interface UserSignUpOrganization {
     employeeId: string,
 }
 
-/**
- * Defines the contract for any authentication service related to sign-up.
- * Any class that implements this interface must provide concrete
- * implementations for the signUpIndividual and signUpOrganization methods.
- */
 export interface SignUpAuthService {
   /**
    * Handles the sign-up process for individual users.
