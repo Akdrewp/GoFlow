@@ -15,6 +15,8 @@ export const firebaseAuthService: SignUpAuthService = {
    */
     signUpIndividual: async (formData: UserSignUpIndividual): Promise<void> => {
         try {
+
+            //createUserWithEmailAndPassword already checks for duplicate UID
             const response: UserCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
 
             if (response.user) {

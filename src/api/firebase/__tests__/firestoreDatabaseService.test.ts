@@ -11,18 +11,47 @@ jest.mock('firebase/firestore', () => ({
   collection: jest.fn(),
   doc: jest.fn(),
   setDoc: jest.fn(),
+  getDoc: jest.fn(),
+  getDocs: jest.fn(),
+  query: jest.fn(),
+  where: jest.fn(),
 }));
 
-import { doc, setDoc, collection } from 'firebase/firestore';
+import { doc, setDoc, collection, getDoc, getDocs, query, where } from 'firebase/firestore';
 import { UserProfile, Organization } from '@/api/database/database';
 
 
 describe('firebaseDatabase', () => {
+  // Helper mocks for Firestore snapshots
+  const mockDocSnapshot = (exists: boolean, data?: any) => ({
+    exists: () => exists,
+    data: () => data,
+    id: 'mock-doc-id', // A consistent ID for mock documents
+  });
+
+  const mockQuerySnapshot = (docs: any[] = []) => ({
+    empty: docs.length === 0,
+    docs: docs.map(d => ({
+      id: d.uid || 'mock-doc-id-' + Math.random().toString(36).substring(7), // Unique ID for each mock doc in a query
+      data: () => d,
+      exists: () => true
+    })),
+    forEach: jest.fn(callback => docs.forEach(d => callback({ data: () => d }))),
+    size: docs.length
+  });
+
   beforeEach(() => {
     jest.clearAllMocks();
     (setDoc as jest.Mock).mockResolvedValue(undefined);
-    (doc as jest.Mock).mockReturnValue({});
-    (collection as jest.Mock).mockReturnValue({});
+    // Default mocks for isValidUserFormData Firestore calls: User does NOT exist by default
+    (getDoc as jest.Mock).mockResolvedValue(mockDocSnapshot(false)); // Default: User UID does not exist
+    (getDocs as jest.Mock).mockResolvedValue(mockQuerySnapshot([])); // Default: No users with that name exist
+    (doc as jest.Mock).mockReturnValue({}); // doc returns a DocumentReference, often mocked as empty object
+    (collection as jest.Mock).mockReturnValue({}); // collection returns a CollectionReference
+    // query and where often don't need complex mocks if getDocs handles the return value,
+    // but mocking implementation can help confirm args if needed.
+    (query as jest.Mock).mockImplementation((_collectionRef, ...constraints) => ({ _collectionRef, _constraints: constraints }));
+    (where as jest.Mock).mockImplementation((field, op, value) => ({ field, op, value }));
   });
 
   describe('addUserToDatabase', () => {
@@ -36,7 +65,7 @@ describe('firebaseDatabase', () => {
 
       await firebaseDatabase.addUserToDatabase(mockUser);
 
-      expect(doc).toHaveBeenCalledTimes(1);
+      expect(doc).toHaveBeenCalledTimes(2);
       expect(doc).toHaveBeenCalledWith(expect.anything(), 'users', mockUser.uid);
       expect(setDoc).toHaveBeenCalledTimes(1);
       expect(setDoc).toHaveBeenCalledWith(

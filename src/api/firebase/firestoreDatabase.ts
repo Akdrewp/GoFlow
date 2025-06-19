@@ -1,4 +1,6 @@
-import { collection, doc, setDoc, getDoc, getDocs, query, where, getDocFromCache } from "firebase/firestore";
+'use server';
+
+import { collection, doc, setDoc, getDoc, getDocs, query, where, } from "firebase/firestore";
 import { db } from "./firebaseConfig";
 
 import { Database, UserProfile, Organization } from "@/api/database/database";
@@ -12,7 +14,7 @@ import { Database, UserProfile, Organization } from "@/api/database/database";
  * @returns A Promise that resolves when the operation is complete.
  * @throws {Error} If the database operation fails.
  */
-const isValidUserFormData =  async (formData: UserProfile) => {
+const isValidUserFormData = async (formData: UserProfile) => {
 
     //Check for missing required parameters
     if (!formData.uid || typeof formData.uid !== 'string' || formData.uid.trim() === '') {
@@ -30,12 +32,17 @@ const isValidUserFormData =  async (formData: UserProfile) => {
     }
 
     //Check if user with UID already exists
-    if (await getDoc(doc(db, 'users', formData.uid))) {
+    const userDocRef = doc(db, 'users', formData.uid);
+    const userDocSnap = await getDoc(userDocRef);
+    if (userDocSnap.exists()) {
         throw new Error("User profile with passed uid already exists.");
     }
 
     //Check if user with user name already exists
-    if ( await query(collection(db, 'users'), where('name', '==', formData.name)) ) {
+    const usersRef = collection(db, 'users');
+    const q = query(usersRef, where('name', '==', formData.name));
+    const querySnapshot = await getDocs(q);
+    if (!querySnapshot.empty) { // Check if snapshot is NOT empty
         throw new Error("User profile with passed user name already exists.");
     }
 
@@ -45,6 +52,7 @@ const isValidUserFormData =  async (formData: UserProfile) => {
     }
 
 };
+
 
 // Export an object that adheres to the IDatabaseService interface
 export const firebaseDatabase: Database = {
@@ -60,7 +68,7 @@ export const firebaseDatabase: Database = {
     addUserToDatabase: async (userProfile: UserProfile): Promise<void> => {
         try {
             
-            isValidUserFormData(userProfile);
+            await isValidUserFormData(userProfile);
 
             await setDoc(doc(db, "users", userProfile.uid), {
                 name: userProfile.name,
