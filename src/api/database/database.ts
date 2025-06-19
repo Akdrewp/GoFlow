@@ -12,7 +12,7 @@ export interface Organization {
     email: string,
     uid: string,
     createdAt: Date,
-    organizationId?: string,
+    organizationId: string,
     createdBy: string,
 }
 
@@ -47,4 +47,31 @@ export interface Database {
      */
     addOrganizationToDatabase(organization: Organization): Promise<void>;
 
+
+    /**
+     * Checks if an organization with the given ID exists.
+     * @param organizationId The ID of the organization to check.
+     * @returns A Promise resolving to true if the organization exists, false otherwise.
+     */
+    organizationExists(organizationId: string): Promise<boolean>;
+
+    /**
+     * Checks if an employeeId is valid for a given organization and not yet "consumed".
+     * This logic is highly dependent on your data model for employee IDs within organizations.
+     * For example, it might check if `organization/orgId/employees/{employeeId}` document exists
+     * or if a field like `availableEmployeeIds` in the organization document contains it.
+     *
+     * @param organizationId The ID of the organization.
+     * @param employeeId The employee ID to validate.
+     * @returns A Promise resolving to true if the employeeId is valid for the organization, false otherwise.
+     */
+    employeeIdExistsInOrganization(organizationId: string, employeeId: string): Promise<boolean>
+
+    /**
+     * Checks if an employeeId is already associated with an existing user profile.
+     * Assumes UserProfile documents have an 'employeeId' field.
+     * @param employeeId The employee ID to check.
+     * @returns A Promise resolving to true if a user with this employeeId already exists, false otherwise.
+     */
+    isEmployeeIdAlreadyAssociatedWithUser(employeeId: string): Promise<boolean>
 }

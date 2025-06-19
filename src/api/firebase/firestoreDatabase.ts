@@ -1,7 +1,50 @@
-import { collection, doc, setDoc } from "firebase/firestore";
+import { collection, doc, setDoc, getDoc, getDocs, query, where, getDocFromCache } from "firebase/firestore";
 import { db } from "./firebaseConfig";
 
 import { Database, UserProfile, Organization } from "@/api/database/database";
+
+
+/**
+ * Checks whether the UserProfile has no 
+ * missing/invalid type paramenters
+ * 
+ * @param userProfile - The user's profile data, including UID.
+ * @returns A Promise that resolves when the operation is complete.
+ * @throws {Error} If the database operation fails.
+ */
+const isValidUserFormData =  async (formData: UserProfile) => {
+
+    //Check for missing required parameters
+    if (!formData.uid || typeof formData.uid !== 'string' || formData.uid.trim() === '') {
+        throw new Error("User profile 'uid' is required and must be a non-empty string.");
+    }
+    if (!formData.name || typeof formData.name !== 'string' || formData.name.trim() === '') {
+        throw new Error("User profile 'name' is required and must be a non-empty string.");
+    }
+    if (!formData.email || typeof formData.email !== 'string' || formData.email.trim() === '') {
+        throw new Error("User profile 'email' is required and must be a non-empty string.");
+    }
+    // Check if createdAt is a Date object and not null/undefined
+    if (!(formData.createdAt instanceof Date) || isNaN(formData.createdAt.getTime())) {
+        throw new Error("User profile 'createdAt' is required and must be a valid Date object.");
+    }
+
+    //Check if user with UID already exists
+    if (await getDoc(doc(db, 'users', formData.uid))) {
+        throw new Error("User profile with passed uid already exists.");
+    }
+
+    //Check if user with user name already exists
+    if ( await query(collection(db, 'users'), where('name', '==', formData.name)) ) {
+        throw new Error("User profile with passed user name already exists.");
+    }
+
+    //Check if date is in the future
+    if(formData.createdAt > new Date()) {
+        throw new Error("Created at is in the future");
+    }
+
+};
 
 // Export an object that adheres to the IDatabaseService interface
 export const firebaseDatabase: Database = {
@@ -16,13 +59,16 @@ export const firebaseDatabase: Database = {
      */
     addUserToDatabase: async (userProfile: UserProfile): Promise<void> => {
         try {
+            
+            isValidUserFormData(userProfile);
+
             await setDoc(doc(db, "users", userProfile.uid), {
                 name: userProfile.name,
                 email: userProfile.email,
                 uid: userProfile.uid,
                 ...(userProfile.organizationId && { organizationId: userProfile.organizationId }),
                 ...(userProfile.employeeId && { employeeId: userProfile.employeeId }),
-                createdAt: new Date(),
+                createdAt: userProfile.createdAt || new Date(),
             });
             console.log("User document added/updated with UID:", userProfile.uid);
         } catch (e) {
@@ -33,7 +79,8 @@ export const firebaseDatabase: Database = {
 
     /**
      * Adds a new organization's details to the 'organizations' collection.
-     * The organization's UID or organizationId is used as the document ID.
+     * The organization's Firebase Auth UID (`organization.uid`) is used as the document ID.
+     * The custom `organizationId` field is stored within the document.
      *
      * @param organization - The organization's data.
      * @returns A Promise that resolves when the operation is complete.
@@ -41,20 +88,94 @@ export const firebaseDatabase: Database = {
      */
     addOrganizationToDatabase: async (organization: Organization): Promise<void> => {
         try {
-            const orgDocId = organization.uid || organization.organizationId || doc(collection(db, "organizations")).id;
+            // The document ID for an organization is its Firebase Auth UID (organization.uid)
+            const orgDocId = organization.uid;
 
             await setDoc(doc(db, "organizations", orgDocId), {
                 name: organization.name,
                 email: organization.email,
-                uid: organization.uid,
-                organizationId: organization.organizationId,
+                uid: organization.uid, // This is the Firebase Auth UID (and doc ID)
+                organizationId: organization.organizationId, // This is the *custom* organization ID field
                 createdBy: organization.createdBy,
-                createdAt: new Date(),
+                createdAt: organization.createdAt,
             });
             console.log("Organization document added with ID:", orgDocId);
         } catch (e) {
-            console.error("Error adding user to database:", e);
-            throw new Error(`Failed to add user to database: ${(e as Error).message || 'Unknown error'}`);
+            console.error("Error adding organization to database:", e);
+            throw new Error(`Failed to add organization to database: ${(e as Error).message || 'Unknown error'}`);
+        }
+    },
+
+    /**
+     * Checks if an organization with the given custom organizationId exists.
+     * It queries the 'organizations' collection where the 'organizationId' field matches.
+     *
+     * @param customOrganizationId The custom business ID of the organization to check.
+     * @returns A Promise resolving to true if the organization exists, false otherwise.
+     */
+    organizationExists: async (customOrganizationId: string): Promise<boolean> => {
+        try {
+            const organizationsRef = collection(db, "organizations");
+            const q = query(organizationsRef, where("organizationId", "==", customOrganizationId));
+            const querySnapshot = await getDocs(q);
+            return !querySnapshot.empty; // If any document matches the custom organizationId, it exists
+        } catch (e) {
+            console.error("Error checking organization existence:", e);
+            throw new Error(`Failed to check organization existence: ${(e as Error).message || 'Unknown error'}`);
+        }
+    },
+
+    /**
+     * Checks if an employeeId is valid for a given organization (identified by its custom organizationId)
+     * and not yet "consumed".
+     * This logic is highly dependent on your data model for employee IDs within organizations.
+     *
+     * @param customOrganizationId The custom business ID of the organization.
+     * @param employeeId The employee ID to validate.
+     * @returns A Promise resolving to true if the employeeId is valid for the organization, false otherwise.
+     */
+    employeeIdExistsInOrganization: async (customOrganizationId: string, employeeId: string): Promise<boolean> => {
+        try {
+            // First, find the organization document by its customOrganizationId
+            const organizationsRef = collection(db, "organizations");
+            const orgQuery = query(organizationsRef, where("organizationId", "==", customOrganizationId));
+            const orgSnapshot = await getDocs(orgQuery);
+
+            if (orgSnapshot.empty) {
+                return false; // Organization itself not found
+            }
+
+            // Assuming there's only one organization per customOrganizationId, get the first one
+            const organizationDoc = orgSnapshot.docs[0];
+            const orgDocId = organizationDoc.id; // This is the Firebase Auth UID of the organization's admin
+
+            // Now, check for the employeeId within this specific organization's document or subcollection
+            // Example: Assumes 'organizations/{orgAuthUserUid}/employee_slots/{employeeId}'
+            const employeeSlotRef = doc(db, "organizations", orgDocId, "employee_slots", employeeId);
+            const docSnap = await getDoc(employeeSlotRef);
+
+            return docSnap.exists(); // Simple existence check for the employee slot
+        } catch (e) {
+            console.error("Error checking employee ID validity within organization:", e);
+            throw new Error(`Failed to check employee ID validity: ${(e as Error).message || 'Unknown error'}`);
+        }
+    },
+
+    /**
+     * Checks if an employeeId is already associated with an existing user profile.
+     * Assumes UserProfile documents have an 'employeeId' field.
+     * @param employeeId The employee ID to check.
+     * @returns A Promise resolving to true if a user with this employeeId already exists, false otherwise.
+     */
+    isEmployeeIdAlreadyAssociatedWithUser: async (employeeId: string): Promise<boolean> => {
+        try {
+            const usersRef = collection(db, "users");
+            const q = query(usersRef, where("employeeId", "==", employeeId));
+            const querySnapshot = await getDocs(q);
+            return !querySnapshot.empty; // If querySnapshot is not empty, it means a user exists with that employeeId
+        } catch (e) {
+            console.error("Error checking if employee ID is already associated with a user:", e);
+            throw new Error(`Failed to check employee ID association: ${(e as Error).message || 'Unknown error'}`);
         }
     },
 };

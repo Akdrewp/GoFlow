@@ -1,17 +1,18 @@
 // firebase/auth/firebaseAuthService.ts
 import { getAuth, createUserWithEmailAndPassword, UserCredential, AuthError } from "firebase/auth";
 import { SignUpAuthService, UserSignUpIndividual, UserSignUpOrganization } from '@/api/auth/signUp';
-import { UserProfile, Organization } from '@/api/database/database';
-import { firebaseDatabase } from '@/api/firebase/firestoreDatabase'
+import { UserProfile } from '@/api/database/database';
+import { firebaseDatabase } from '@/api/firebase/firestoreDatabase';
 
 const auth = getAuth();
 
 // Export an object that adheres to the ISignUpAuthService interface
 export const firebaseAuthService: SignUpAuthService = {
     /**
-     * Handles the sign-up process for individual users using Firebase Authentication.
-     * ... (JSDoc as before) ...
-     */
+   * Handles the sign-up process for individual users.
+   * @param formData - The data required for individual user registration.
+   * @returns A Promise that resolves when signup is successful, or rejects with an error.
+   */
     signUpIndividual: async (formData: UserSignUpIndividual): Promise<void> => {
         try {
             const response: UserCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
@@ -55,9 +56,10 @@ export const firebaseAuthService: SignUpAuthService = {
     },
 
     /**
-     * Handles the sign-up process for organization users using Firebase Authentication.
-     * ... (JSDoc as before) ...
-     */
+   * Handles the sign-up process for organization users.
+   * @param formData - The data required for organization user registration.
+   * @returns A Promise that resolves when signup is successful, or rejects with an error.
+   */
     signUpOrganization: async (formData: UserSignUpOrganization): Promise<void> => {
         try {
             const userResponse: UserCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
@@ -78,16 +80,6 @@ export const firebaseAuthService: SignUpAuthService = {
                 createdAt: new Date(),
             };
             await firebaseDatabase.addUserToDatabase(userProfile);
-
-            const organizationData: Organization = {
-                uid: formData.organizationId, // Using organizationId as the primary UID for the org doc
-                organizationId: formData.organizationId,
-                name: formData.name, // Placeholder, adjust as per your org creation flow
-                email: formData.email, // Placeholder, adjust as per your org creation flow
-                createdBy: userResponse.user.uid,
-                createdAt: new Date(),
-            };
-            await firebaseDatabase.addOrganizationToDatabase(organizationData);
 
             return;
         } catch (e) {
