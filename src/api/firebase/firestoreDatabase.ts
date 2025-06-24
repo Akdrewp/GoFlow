@@ -1,9 +1,9 @@
-'use server';
+// import "server-only";
 
 import { collection, doc, setDoc, getDoc, getDocs, query, where, } from "firebase/firestore";
 import { db } from "./firebaseConfig";
 
-import { Database, UserProfile, Organization } from "@/api/database/database";
+import { Database, UserProfile, Organization, userProfileSchema } from "@/api/database/database";
 
 
 /**

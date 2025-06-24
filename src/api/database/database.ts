@@ -16,6 +16,26 @@ export interface Organization {
     createdBy: string,
 }
 
+import { z } from "zod";
+
+export const userProfileSchema = z.object({
+  name: z.string(),
+  email: z.string(),
+  uid: z.string(),
+  createdAt: z.coerce.date(),
+  organizationId: z.string().optional(),
+  employeeId: z.string().optional()
+});
+
+export const organizationSchema = z.object({
+  name: z.string(),
+  email: z.string(),
+  uid: z.string(),
+  createdAt: z.coerce.date(),
+  organizationId: z.string(),
+  createdBy: z.string()
+});
+
 export interface Database {
 
     /**

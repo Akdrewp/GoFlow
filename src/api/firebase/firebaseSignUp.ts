@@ -28,7 +28,16 @@ export const firebaseAuthService: SignUpAuthService = {
                     email: formData.email,
                     createdAt: new Date(),
                 };
-                await firebaseDatabase.addUserToDatabase(userProfile); // Use the imported firebaseDatabase
+
+                const databaseResponse = await fetch("/api/auth/signup", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json', // <--- IMPORTANT: Tell the server you're sending JSON
+                    },
+                    body: JSON.stringify(userProfile), // <--- IMPORTANT: Convert your object to a JSON string
+                });
+
+                console.log(databaseResponse);
 
                 return;
             } else {
