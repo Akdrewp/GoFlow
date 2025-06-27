@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "next lint",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "test:e2e": "FIRESTORE_EMULATOR_HOST=\"localhost:8080\" FIREBASE_AUTH_EMULATOR_HOST=\"localhost:9099\" jest --config jest.config.e2e.js --runInBand",
+    "test:e2e:ci": "npm run start & npm run test:e2e"
   },
   "dependencies": {
     "firebase": "^11.9.0",

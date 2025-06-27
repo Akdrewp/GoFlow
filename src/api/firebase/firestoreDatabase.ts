@@ -3,55 +3,7 @@
 import { collection, doc, setDoc, getDoc, getDocs, query, where, } from "firebase/firestore";
 import { db } from "./firebaseConfig";
 
-import { Database, UserProfile, Organization, userProfileSchema } from "@/api/database/database";
-
-
-/**
- * Checks whether the UserProfile has no 
- * missing/invalid type paramenters
- * 
- * @param userProfile - The user's profile data, including UID.
- * @returns A Promise that resolves when the operation is complete.
- * @throws {Error} If the database operation fails.
- */
-const isValidUserFormData = async (formData: UserProfile) => {
-
-    //Check for missing required parameters
-    if (!formData.uid || typeof formData.uid !== 'string' || formData.uid.trim() === '') {
-        throw new Error("User profile 'uid' is required and must be a non-empty string.");
-    }
-    if (!formData.name || typeof formData.name !== 'string' || formData.name.trim() === '') {
-        throw new Error("User profile 'name' is required and must be a non-empty string.");
-    }
-    if (!formData.email || typeof formData.email !== 'string' || formData.email.trim() === '') {
-        throw new Error("User profile 'email' is required and must be a non-empty string.");
-    }
-    // Check if createdAt is a Date object and not null/undefined
-    if (!(formData.createdAt instanceof Date) || isNaN(formData.createdAt.getTime())) {
-        throw new Error("User profile 'createdAt' is required and must be a valid Date object.");
-    }
-
-    //Check if user with UID already exists
-    const userDocRef = doc(db, 'users', formData.uid);
-    const userDocSnap = await getDoc(userDocRef);
-    if (userDocSnap.exists()) {
-        throw new Error("User profile with passed uid already exists.");
-    }
-
-    //Check if user with user name already exists
-    const usersRef = collection(db, 'users');
-    const q = query(usersRef, where('name', '==', formData.name));
-    const querySnapshot = await getDocs(q);
-    if (!querySnapshot.empty) { // Check if snapshot is NOT empty
-        throw new Error("User profile with passed user name already exists.");
-    }
-
-    //Check if date is in the future
-    if(formData.createdAt > new Date()) {
-        throw new Error("Created at is in the future");
-    }
-
-};
+import { Database, UserProfile, Organization} from "@/api/database/database";
 
 
 // Export an object that adheres to the IDatabaseService interface
@@ -67,8 +19,6 @@ export const firebaseDatabase: Database = {
      */
     addUserToDatabase: async (userProfile: UserProfile): Promise<void> => {
         try {
-            
-            await isValidUserFormData(userProfile);
 
             await setDoc(doc(db, "users", userProfile.uid), {
                 name: userProfile.name,

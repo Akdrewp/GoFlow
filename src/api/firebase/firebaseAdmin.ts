@@ -1,16 +1,27 @@
-import * as admin from 'firebase-admin';
+// app/api/auth/signup/route.ts (or your Firebase Admin init file)
 
-// Path to your service account key file (relative or absolute)
-// IMPORTANT: Make sure this path is correct for where your server-side code runs!
-import serviceAccount from '/home/james_paul/GoFlow-app/goflow-routemaker-firebase-adminsdk-fbsvc-683cfa7e78.json';
+import admin from 'firebase-admin';
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount as admin.ServiceAccount)
-  // You can also specify other options here if needed,
-  // like databaseURL or storageBucket if they're not the defaults.
-  // databaseURL: "https://YOUR_DATABASE_ID.firebaseio.com",
-  // storageBucket: "YOUR_STORAGE_BUCKET.appspot.com"
-});
+// Initialize Firebase Admin SDK only once
+if (!admin.apps.length) {
+  // Check if the environment variable is set
+  if (!process.env.FIREBASE_ADMIN_SDK_CONFIG) {
+    throw new Error('FIREBASE_ADMIN_SDK_CONFIG environment variable is not set.');
+  }
 
-// ... rest of your admin code ...
+  // Parse the JSON string from the environment variable
+  let serviceAccountConfig;
+  try {
+    serviceAccountConfig = JSON.parse(process.env.FIREBASE_ADMIN_SDK_CONFIG);
+  } catch (e) {
+    console.error("Failed to parse FIREBASE_ADMIN_SDK_CONFIG:", e);
+    throw new Error('FIREBASE_ADMIN_SDK_CONFIG is not a valid JSON string. Please check its format.');
+  }
 
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccountConfig as admin.ServiceAccount),
+  });
+}
+
+export const adminAuth = admin.auth();
+export const adminDb = admin.firestore();

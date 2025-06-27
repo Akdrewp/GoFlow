@@ -37,7 +37,7 @@ export const firebaseAuthService: SignUpAuthService = {
                     body: JSON.stringify(userProfile), // <--- IMPORTANT: Convert your object to a JSON string
                 });
 
-                console.log(databaseResponse);
+                console.log("Database response: ",await databaseResponse.json());
 
                 return;
             } else {
