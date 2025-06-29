@@ -27,14 +27,14 @@ export interface SignUpAuthService {
   /**
    * Handles the sign-up process for individual users.
    * @param formData - The data required for individual user registration.
-   * @returns A Promise that resolves when signup is successful, or rejects with an error.
+   * @returns A Promise that resolves with Response when signup is successful, or rejects with an error.
    */
-  signUpIndividual(formData: UserSignUpIndividual): Promise<void>;
+  signUpIndividual(formData: UserSignUpIndividual): Promise<Response>;
 
   /**
    * Handles the sign-up process for organization users.
    * @param formData - The data required for organization user registration.
-   * @returns A Promise that resolves when signup is successful, or rejects with an error.
+   * @returns A Promise that resolves with Response when signup is successful, or rejects with an error.
    */
-  signUpOrganization(formData: UserSignUpOrganization): Promise<void>;
+  signUpOrganization(formData: UserSignUpOrganization): Promise<Response>;
 }

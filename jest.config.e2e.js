@@ -15,4 +15,5 @@ module.exports = {
   },
   // Set a higher timeout for E2E tests as they involve network requests
   testTimeout: 20000, // 20 seconds
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts', '<rootDir>/src/api/firebase/firebaseConfig.ts'], //Load enviroment variables
 };

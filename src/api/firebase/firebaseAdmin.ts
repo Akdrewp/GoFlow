@@ -10,7 +10,7 @@ if (!admin.apps.length) {
   }
 
   // Parse the JSON string from the environment variable
-  let serviceAccountConfig;
+  let serviceAccountConfig: JSON;
   try {
     serviceAccountConfig = JSON.parse(process.env.FIREBASE_ADMIN_SDK_CONFIG);
   } catch (e) {

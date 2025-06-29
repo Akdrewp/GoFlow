@@ -28,73 +28,75 @@ export default function SignUpPage() {
 
     // Function to handle form submission
     const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault(); // Prevent default form submission behavior
+        void ( async () => {
+            e.preventDefault(); // Prevent default form submission behavior
 
-        // Basic password validation
-        if (password !== confirmPassword) {
-            setPasswordError('Passwords do not match.');
-            return;
-        }
-        setPasswordError(''); // Clear error if passwords match
+            // Basic password validation
+            if (password !== confirmPassword) {
+                setPasswordError('Passwords do not match.');
+                return;
+            }
+            setPasswordError(''); // Clear error if passwords match
 
-        if (!signupType) {
-            console.log("Must choose a signup type");
-            return;
-        }
+            if (!signupType) {
+                console.log("Must choose a signup type");
+                return;
+            }
 
-        /**
-         * 
-         * @todo Switch for real api
-         */
+            /**
+             * 
+             * @todo Switch for real api
+             */
 
-        // For now, just log the form data.
-        console.log('Sign Up Data:', {
-            signupType,
-            ...(signupType === 'organization' && { organizationNumber: organizationId, employeeId }), // Conditionally add org data
-            name,
-            email,
-            password,
-        });
-
-
-
-        if (signupType == SignupType.INDIVIDUAL) {
-            firebaseAuthService.signUpIndividual({
-                name: name,
-                email: email,
-                password: password,
+            // For now, just log the form data.
+            console.log('Sign Up Data:', {
+                signupType,
+                ...(signupType === 'organization' && { organizationNumber: organizationId, employeeId }), // Conditionally add org data
+                name,
+                email,
+                password,
             });
-        } else if (signupType == SignupType.ORGANIZATION) {
-            firebaseAuthService.signUpOrganization({
-                name: name,
-                email: email,
-                password: password,
-                organizationId: organizationId,
-                employeeId: employeeId
-            });
-        } else {
-            throw(new Error("Neither ORGANIZATION or INDIVIDUAL signup error"));
-        }
 
-        // Here you would typically call an authentication API.
-        // For demonstration, let's simulate a successful signup and navigate back to home
-        // or to a dashboard.
-        // Using a custom alert/message box instead of window.alert()
-        const showMessage = (msg: string) => {
-            const messageBox = document.createElement('div');
-            messageBox.className = "fixed inset-0 flex items-center justify-center z-50 p-4";
-            messageBox.innerHTML = `
-            <div class="bg-card text-foreground p-6 rounded-lg shadow-xl max-w-sm text-center">
-                <p class="text-lg font-semibold mb-4">${msg}</p>
-                <button class="bg-primary hover:bg-primary-hover text-primary-foreground font-bold py-2 px-4 rounded-md" onclick="this.parentNode.parentNode.remove()">
-                OK
-                </button>
-            </div>
-            `;
-            document.body.appendChild(messageBox);
-        };
 
-        showMessage('Sign Up Successful! (Check console for data)');
+
+            if (signupType == SignupType.INDIVIDUAL) {
+                await firebaseAuthService.signUpIndividual({
+                    name: name,
+                    email: email,
+                    password: password,
+                });
+            } else if (signupType == SignupType.ORGANIZATION) {
+                await firebaseAuthService.signUpOrganization({
+                    name: name,
+                    email: email,
+                    password: password,
+                    organizationId: organizationId,
+                    employeeId: employeeId
+                });
+            } else {
+                throw(new Error("Neither ORGANIZATION or INDIVIDUAL signup error"));
+            }
+
+            // Here you would typically call an authentication API.
+            // For demonstration, let's simulate a successful signup and navigate back to home
+            // or to a dashboard.
+            // Using a custom alert/message box instead of window.alert()
+            const showMessage = (msg: string) => {
+                const messageBox = document.createElement('div');
+                messageBox.className = "fixed inset-0 flex items-center justify-center z-50 p-4";
+                messageBox.innerHTML = `
+                <div class="bg-card text-foreground p-6 rounded-lg shadow-xl max-w-sm text-center">
+                    <p class="text-lg font-semibold mb-4">${msg}</p>
+                    <button class="bg-primary hover:bg-primary-hover text-primary-foreground font-bold py-2 px-4 rounded-md" onclick="this.parentNode.parentNode.remove()">
+                    OK
+                    </button>
+                </div>
+                `;
+                document.body.appendChild(messageBox);
+            };
+
+            showMessage('Sign Up Successful! (Check console for data)');
+        })();
     };
 
     // Helper function to render a form input field

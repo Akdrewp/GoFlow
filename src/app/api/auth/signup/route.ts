@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
     }
 
     // If all checks pass, you would proceed with creating the user or saving the profile
-    firebaseDatabase.addUserToDatabase(parsedReq);
+    await firebaseDatabase.addUserToDatabase(parsedReq);
     console.log("SERVER LOG: === All unique key checks passed, returning 201 Success === Adding user to database");
     return NextResponse.json(
       { status: "success", message: "User account succesfully added to database", data: isValidUserFormData.data },

@@ -2,25 +2,24 @@
 import { getAuth, createUserWithEmailAndPassword, UserCredential, AuthError } from "firebase/auth";
 import { SignUpAuthService, UserSignUpIndividual, UserSignUpOrganization } from '@/api/auth/signUp';
 import { UserProfile } from '@/api/database/database';
-import { firebaseDatabase } from '@/api/firebase/firestoreDatabase';
 
-const auth = getAuth();
+const auth = getAuth(); // Client-side Auth instance
 
-// Export an object that adheres to the ISignUpAuthService interface
+const NEXT_PUBLIC_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+
 export const firebaseAuthService: SignUpAuthService = {
     /**
-   * Handles the sign-up process for individual users.
-   * @param formData - The data required for individual user registration.
-   * @returns A Promise that resolves when signup is successful, or rejects with an error.
-   */
-    signUpIndividual: async (formData: UserSignUpIndividual): Promise<void> => {
+     * Handles the sign-up process for individual users.
+     * @param formData - The data required for individual user registration.
+     * @returns A Promise that resolves with the `Response` object from the API call upon successful signup, or rejects with an error.
+     */
+    signUpIndividual: async (formData: UserSignUpIndividual): Promise<Response> => { // <--- CHANGE RETURN TYPE
         try {
-
-            //createUserWithEmailAndPassword already checks for duplicate UID
+            // createUserWithEmailAndPassword already checks for duplicate UID
             const response: UserCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
 
             if (response.user) {
-                console.log("Firebase Auth User created:", response.user.uid);
+                console.log("Firebase Auth User created (client-side):", response.user.uid);
 
                 const userProfile: UserProfile = {
                     uid: response.user.uid,
@@ -29,23 +28,27 @@ export const firebaseAuthService: SignUpAuthService = {
                     createdAt: new Date(),
                 };
 
-                const databaseResponse = await fetch("/api/auth/signup", {
+                const apiEndpoint = `${NEXT_PUBLIC_BASE_URL}/api/auth/signup`;
+
+                const databaseResponse = await fetch(apiEndpoint, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json', // <--- IMPORTANT: Tell the server you're sending JSON
+                        'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify(userProfile), // <--- IMPORTANT: Convert your object to a JSON string
+                    body: JSON.stringify(userProfile),
                 });
 
-                console.log("Database response: ",await databaseResponse.json());
+                // Use .clone() if you need to read the body more than once (e.g., for logging AND returning)
+                console.log("Database response (from client-side service): ", await databaseResponse.clone().json());
 
-                return;
+                return databaseResponse; // <--- RETURN THE FETCH RESPONSE OBJECT
             } else {
                 console.error("Firebase sign up failed: No user object in response after creation.");
                 throw new Error("User creation failed: No user information received.");
             }
         } catch (e) {
-            console.error("Firebase signUpIndividual ERROR:", e);
+            console.error("Firebase signUpIndividual ERROR (client-side):", e);
+            // Re-throw specific errors as before
             if (e && typeof e === 'object' && 'code' in e && 'message' in e) {
                 const firebaseError = e as AuthError;
                 switch (firebaseError.code) {
@@ -66,12 +69,8 @@ export const firebaseAuthService: SignUpAuthService = {
         }
     },
 
-    /**
-   * Handles the sign-up process for organization users.
-   * @param formData - The data required for organization user registration.
-   * @returns A Promise that resolves when signup is successful, or rejects with an error.
-   */
-    signUpOrganization: async (formData: UserSignUpOrganization): Promise<void> => {
+    // ... signUpOrganization (consider similar return type change) ...
+    signUpOrganization: async (formData: UserSignUpOrganization): Promise<Response> => { // <--- Change return type
         try {
             const userResponse: UserCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
 
@@ -80,7 +79,7 @@ export const firebaseAuthService: SignUpAuthService = {
                 throw new Error("Organization user creation failed: No user information received.");
             }
 
-            console.log("Firebase Auth Organization User created:", userResponse.user.uid);
+            console.log("Firebase Auth Organization User created (client-side):", userResponse.user.uid);
 
             const userProfile: UserProfile = {
                 uid: userResponse.user.uid,
@@ -90,11 +89,28 @@ export const firebaseAuthService: SignUpAuthService = {
                 employeeId: formData.employeeId,
                 createdAt: new Date(),
             };
-            await firebaseDatabase.addUserToDatabase(userProfile);
+            // Assuming this addUserToDatabase is for a direct Firestore client-side write
+            // If it's *also* calling the API route, then this logic needs careful review.
+            // For now, if you want it to trigger the /api/auth/signup route, you would do a fetch here.
+            // But if this is a separate path that bypasses the API route, you need to be aware of security implications.
+            // For E2E, we're assuming signUpIndividual triggers the API.
+            // await firebaseDatabase.addUserToDatabase(userProfile); // This is likely client-side Firestore
 
-            return;
+            const apiEndpoint = `${NEXT_PUBLIC_BASE_URL}/api/auth/signup`;
+
+            // To mimic the individual signup flow (API route for database ops)
+            const databaseResponse = await fetch(apiEndpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(userProfile),
+            });
+
+            console.log("Database response (from client-side service for organization): ", await databaseResponse.clone().json());
+            return databaseResponse; // <--- RETURN THE FETCH RESPONSE OBJECT
+
         } catch (e) {
-            console.error("Firebase signUpOrganization ERROR:", e);
+            console.error("Firebase signUpOrganization ERROR (client-side):", e);
+            // ... (error handling) ...
             if (e && typeof e === 'object' && 'code' in e && 'message' in e) {
                 const firebaseError = e as AuthError;
                 switch (firebaseError.code) {
