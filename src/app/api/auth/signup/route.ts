@@ -1,11 +1,14 @@
 // src/app/api/auth/signup/route.ts
 
-// import "server-only"; // Keep this commented or uncommented as per your preference
+import "server-only";
 
 import { NextRequest, NextResponse } from 'next/server';
 
 // KEEPING THESE IMPORTS AS REQUESTED (CLIENT-SIDE FIRESTORE SDK)
 import { collection, doc, getDoc, getDocs, query, where, } from "firebase/firestore";
+import { AuthError } from "firebase/auth";
+import { signInWithEmailAndPassword } from "firebase/auth";
+
 import { db } from "@/api/firebase/firebaseConfig"; // This 'db' is from your client-side config
 
 import { adminAuth } from "@/api/firebase/firebaseAdmin"; // This is the Admin SDK Auth instance
@@ -13,14 +16,28 @@ import { adminAuth } from "@/api/firebase/firebaseAdmin"; // This is the Admin S
 // Assuming these are correctly defined and imported
 import { userProfileSchema } from "@/api/database/database";
 import { firebaseDatabase } from '@/api/firebase/firestoreDatabase';
+import { z } from 'zod';
 
 
 export async function POST(request: NextRequest) {
   let parsedReq;
 
   try {
+
+    // Check if auth token exists
+    const authHeader = request.headers.get('Authorization');
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { status: "fail", message: "Authorization token required." },
+        { status: 401 } // Unauthorized
+      );
+    }
+
+    // Extract the token part
+    const idToken = authHeader.split('Bearer ')[1];
+
     parsedReq = await request.json();
-    console.log("SERVER LOG: === Incoming Request Body (parsedReq) ===", parsedReq);
 
     const isValidUserFormData = userProfileSchema.safeParse(parsedReq);
 
@@ -70,22 +87,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // --- NEW LOGIC: Check if user IS in Firebase Auth before adding to Firestore ---
-    // We now expect 'getUsers' to find a user. If it doesn't, that's the error.
-    const firebaseAuthUserResult = await adminAuth.getUsers([
-      { uid: uid },
-      { email: email },
-    ]);
+    const authUser = await adminAuth.getUser(uid); // Attempt to get the user directly by UID
 
-    // If NO users were found for the given UID or email, then the Firebase Auth user does not exist.
-    // This indicates a problem (e.g., client-side signup failed or client sent incorrect info).
-    if (firebaseAuthUserResult.users.length === 0) {
-      console.log("SERVER LOG: === Returning 404 - User NOT found in Firebase Auth ===");
-      return NextResponse.json(
-        { status: "fail", message: "User not found in Firebase Authentication. Please ensure account was created successfully." },
-        { status: 404 } // Not Found, or 400 Bad Request
-      );
+    // If the user is found by UID, now verify if their email matches the provided email.
+    if (authUser.email !== email) {
+        console.log(`SERVER LOG: === Returning 404 - User found by UID (${uid}) but email (${authUser.email}) does NOT match provided email (${email}) ===`);
+        return NextResponse.json(
+            { status: "fail", message: "User found by UID but the associated email does not match. Please ensure correct user information." },
+            { status: 404 } // Conflict
+        );
     }
+
+    //User uid and email matches firebase auth
+    //Check if token is valid for specific user
+    
 
     // If all checks pass, you would proceed with creating the user or saving the profile
     await firebaseDatabase.addUserToDatabase(parsedReq);
@@ -105,6 +120,16 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    //If it's a firebase Error
+    if (e && typeof e === 'object' && 'code' in e && 'message' in e) {
+        console.log(`SERVER LOG: === Returning 404 - User with passed UID NOT found in Firebase Auth ===`);
+        return NextResponse.json(
+            { status: "fail", message: "User not found in Firebase Authentication (UID mismatch). Please ensure account was created successfully." },
+            { status: 404 } // Not Found
+        );
+    }
+
     // Catch other unexpected errors
     console.log("SERVER LOG: === Returning 500 - Unexpected Server Error ===");
     return NextResponse.json(

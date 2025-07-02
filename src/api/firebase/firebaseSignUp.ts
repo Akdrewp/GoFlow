@@ -1,9 +1,10 @@
+import { auth } from "./firebaseConfig";
+
 // firebase/auth/firebaseAuthService.ts
-import { getAuth, createUserWithEmailAndPassword, UserCredential, AuthError } from "firebase/auth";
+import { createUserWithEmailAndPassword, UserCredential, AuthError } from "firebase/auth";
 import { SignUpAuthService, UserSignUpIndividual, UserSignUpOrganization } from '@/api/auth/signUp';
 import { UserProfile } from '@/api/database/database';
 
-const auth = getAuth(); // Client-side Auth instance
 
 const NEXT_PUBLIC_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
@@ -27,13 +28,17 @@ export const firebaseAuthService: SignUpAuthService = {
                     email: formData.email,
                     createdAt: new Date(),
                 };
+                const idToken = await auth.currentUser?.getIdToken();
+
 
                 const apiEndpoint = `${NEXT_PUBLIC_BASE_URL}/api/auth/signup`;
 
+                //Send user data along with token
                 const databaseResponse = await fetch(apiEndpoint, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${idToken}`,
                     },
                     body: JSON.stringify(userProfile),
                 });
