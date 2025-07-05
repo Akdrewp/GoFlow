@@ -2,9 +2,6 @@
 
 import React, { useState } from 'react';
 
-/**
- * @todo Not sure if its smart to put the types in a seperate file
- */
 import { SignupType } from '@/api/auth/signUp';
 import { firebaseAuthService } from "@/api/firebase/firebaseSignUp";
 
@@ -43,12 +40,6 @@ export default function SignUpPage() {
                 return;
             }
 
-            /**
-             * 
-             * @todo Switch for real api
-             */
-
-            // For now, just log the form data.
             console.log('Sign Up Data:', {
                 signupType,
                 ...(signupType === 'organization' && { organizationNumber: organizationId, employeeId }), // Conditionally add org data
@@ -56,8 +47,6 @@ export default function SignUpPage() {
                 email,
                 password,
             });
-
-
 
             if (signupType == SignupType.INDIVIDUAL) {
                 await firebaseAuthService.signUpIndividual({
@@ -77,10 +66,6 @@ export default function SignUpPage() {
                 throw(new Error("Neither ORGANIZATION or INDIVIDUAL signup error"));
             }
 
-            // Here you would typically call an authentication API.
-            // For demonstration, let's simulate a successful signup and navigate back to home
-            // or to a dashboard.
-            // Using a custom alert/message box instead of window.alert()
             const showMessage = (msg: string) => {
                 const messageBox = document.createElement('div');
                 messageBox.className = "fixed inset-0 flex items-center justify-center z-50 p-4";

@@ -12,6 +12,9 @@ export const firebaseDatabase: Database = {
      * Adds or updates a user's profile information in the 'users' collection.
      * The Firebase Auth UID is used as the document ID.
      * Optional fields (organizationId, employeeId) are only added if present.
+     * 
+     * This doesn't protect against any bad actors other than through firestore rules,
+     * prior backend validation required before calling.
      *
      * @param userProfile - The user's profile data, including UID.
      * @returns A Promise that resolves when the operation is complete.
@@ -19,7 +22,7 @@ export const firebaseDatabase: Database = {
      */
     addUserToDatabase: async (userProfile: UserProfile): Promise<void> => {
         try {
-
+            //Add user with specified fields
             await setDoc(doc(db, "users", userProfile.uid), {
                 name: userProfile.name,
                 email: userProfile.email,

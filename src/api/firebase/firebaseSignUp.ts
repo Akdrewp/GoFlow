@@ -7,6 +7,7 @@ import { UserProfile } from '@/api/database/database';
 
 
 const NEXT_PUBLIC_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+const databaseSignUpApiEndpoint = `${NEXT_PUBLIC_BASE_URL}/api/auth/signup`;
 
 export const firebaseAuthService: SignUpAuthService = {
     /**
@@ -14,7 +15,7 @@ export const firebaseAuthService: SignUpAuthService = {
      * @param formData - The data required for individual user registration.
      * @returns A Promise that resolves with the `Response` object from the API call upon successful signup, or rejects with an error.
      */
-    signUpIndividual: async (formData: UserSignUpIndividual): Promise<Response> => { // <--- CHANGE RETURN TYPE
+    signUpIndividual: async (formData: UserSignUpIndividual): Promise<Response> => {
         try {
             // createUserWithEmailAndPassword already checks for duplicate UID
             const response: UserCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
@@ -31,10 +32,8 @@ export const firebaseAuthService: SignUpAuthService = {
                 const idToken = await auth.currentUser?.getIdToken();
 
 
-                const apiEndpoint = `${NEXT_PUBLIC_BASE_URL}/api/auth/signup`;
-
                 //Send user data along with token
-                const databaseResponse = await fetch(apiEndpoint, {
+                const databaseResponse = await fetch(databaseSignUpApiEndpoint, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -43,13 +42,12 @@ export const firebaseAuthService: SignUpAuthService = {
                     body: JSON.stringify(userProfile),
                 });
 
-                // Use .clone() if you need to read the body more than once (e.g., for logging AND returning)
                 console.log("Database response (from client-side service): ", await databaseResponse.clone().json());
 
-                return databaseResponse; // <--- RETURN THE FETCH RESPONSE OBJECT
+                return databaseResponse; // return fetch response
             } else {
                 console.error("Firebase sign up failed: No user object in response after creation.");
-                throw new Error("User creation failed: No user information received.");
+                throw new Error("User creation failed: No user information received from firebase Auth.");
             }
         } catch (e) {
             console.error("Firebase signUpIndividual ERROR (client-side):", e);

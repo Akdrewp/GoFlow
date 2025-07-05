@@ -4,16 +4,12 @@ import "server-only";
 
 import { NextRequest, NextResponse } from 'next/server';
 
-// KEEPING THESE IMPORTS AS REQUESTED (CLIENT-SIDE FIRESTORE SDK)
-import { collection, doc, getDoc, getDocs, query, where, } from "firebase/firestore";
-
-import { db } from "@/api/firebase/firebaseConfig"; // This 'db' is from your client-side config
-
-import { adminAuth } from "@/api/firebase/firebaseAdmin"; // This is the Admin SDK Auth instance
-
-// Assuming these are correctly defined and imported
+import { db } from "@/api/firebase/firebaseConfig";
+import { adminAuth } from "@/api/firebase/firebaseAdmin";
 import { userProfileSchema } from "@/api/database/database";
 import { firebaseDatabase } from '@/api/firebase/firestoreDatabase';
+
+import { collection, doc, getDoc, getDocs, query, where, } from "firebase/firestore";
 import { FirebaseAuthError } from "firebase-admin/auth";
 
 
@@ -35,13 +31,15 @@ export async function POST(request: NextRequest) {
     // Extract the token part
     const idToken = authHeader.split('Bearer ')[1];
 
+    //Check sent data agianst form schema
     parsedReq = await request.json();
-
     const isValidUserFormData = userProfileSchema.safeParse(parsedReq);
 
     if (!isValidUserFormData.success) {
       console.log("SERVER LOG: === Returning 400 - Zod Validation Failed ===");
-      return NextResponse.json({ status: "fail", message: isValidUserFormData.error }, { status: 400 });
+      return NextResponse.json(
+        { status: "fail", message: isValidUserFormData.error }, 
+        { status: 400 }); //Bad Request User Error
     }
 
     const { uid, name, email } = isValidUserFormData.data; // Destructure validated data
@@ -49,7 +47,6 @@ export async function POST(request: NextRequest) {
     // --- Duplicate Key Checks ---
 
     // Check if user profile with UID already exists (Firestore document ID)
-    // NOTE: Using 'db' from client-side config as requested.
     const userDocRef = doc(db, 'users', uid);
     const userDocSnap = await getDoc(userDocRef);
     if (userDocSnap.exists()) {
@@ -61,7 +58,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user profile with user name already exists
-    // NOTE: Using 'db' from client-side config as requested.
     const usersRef = collection(db, 'users');
     const qName = query(usersRef, where('name', '==', name));
     const querySnapshotName = await getDocs(qName);
@@ -74,7 +70,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user profile with email already exists
-    // NOTE: Using 'db' from client-side config as requested.
     const qEmail = query(usersRef, where('email', '==', email));
     const querySnapshotEmail = await getDocs(qEmail);
     if (!querySnapshotEmail.empty) {
