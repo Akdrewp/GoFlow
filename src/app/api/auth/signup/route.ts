@@ -6,8 +6,6 @@ import { NextRequest, NextResponse } from 'next/server';
 
 // KEEPING THESE IMPORTS AS REQUESTED (CLIENT-SIDE FIRESTORE SDK)
 import { collection, doc, getDoc, getDocs, query, where, } from "firebase/firestore";
-import { AuthError } from "firebase/auth";
-import { signInWithEmailAndPassword } from "firebase/auth";
 
 import { db } from "@/api/firebase/firebaseConfig"; // This 'db' is from your client-side config
 
@@ -16,7 +14,7 @@ import { adminAuth } from "@/api/firebase/firebaseAdmin"; // This is the Admin S
 // Assuming these are correctly defined and imported
 import { userProfileSchema } from "@/api/database/database";
 import { firebaseDatabase } from '@/api/firebase/firestoreDatabase';
-import { z } from 'zod';
+import { FirebaseAuthError } from "firebase-admin/auth";
 
 
 export async function POST(request: NextRequest) {
@@ -100,9 +98,18 @@ export async function POST(request: NextRequest) {
 
     //User uid and email matches firebase auth
     //Check if token is valid for specific user
-    
+    const decodedIdToken = await adminAuth.verifyIdToken(idToken);
 
-    // If all checks pass, you would proceed with creating the user or saving the profile
+    //Check if token matches email and uid
+    if (decodedIdToken.uid != uid || decodedIdToken.email != email) {
+      return NextResponse.json(
+        { status: "fail", message: "Authenticated email/uid from token does not match provided email/uid." },
+        { status: 403 } //Forbidden
+      );
+    }
+    
+    // Token matches provided data
+    // Proceed with adding account to database
     await firebaseDatabase.addUserToDatabase(parsedReq);
     console.log("SERVER LOG: === All unique key checks passed, returning 201 Success === Adding user to database");
     return NextResponse.json(
@@ -121,8 +128,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
+
     //If it's a firebase Error
-    if (e && typeof e === 'object' && 'code' in e && 'message' in e) {
+    if (e && typeof e === 'object' && 'code' in e && 'message' in e && e.code && (e as FirebaseAuthError).code.startsWith('auth/')) {
         console.log(`SERVER LOG: === Returning 404 - User with passed UID NOT found in Firebase Auth ===`);
         return NextResponse.json(
             { status: "fail", message: "User not found in Firebase Authentication (UID mismatch). Please ensure account was created successfully." },

@@ -88,6 +88,10 @@ describe('Signup API Route E2E Tests', () => {
     });
     
     afterAll( async () => {
+        //Clear database and auth
+        await clearFirestoreAuth();
+        await clearFirestoreDB();
+
         //Close firestore database when done
         await adminDb.terminate();
     });
@@ -307,6 +311,29 @@ describe('Signup API Route E2E Tests', () => {
 
         expect(fakeEmailApiResponse.status).toBe(404);
         expect(fakeEmailApiResponseData.message).toContain("User found by UID but the associated email does not match");
+
+        // --- Scenario 3: Email and UID match user but Token does NOT ---
+        const invalidTokenProvidedData = {
+            email: newAuthUser.email,
+            name: newAuthUser.displayName,
+            uid: newAuthUser.uid,
+            createdAt: currentTimeIso,
+        };
+
+        const invalidTokenApiResponse = await fetch(apiEndpoint, {
+            method: "POST",
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${validUserToken}` //Token not for invalidUidUser
+            },
+            body: JSON.stringify(invalidTokenProvidedData),
+        });
+
+        const invalidTokenApiResponseData = await invalidTokenApiResponse.json();
+
+        expect(invalidTokenApiResponse.status).toBe(403); //Not authorized
+        expect(invalidTokenApiResponseData.message).toContain("Authenticated email/uid from token does not match provided email/uid.");
+
     });
 
 });
