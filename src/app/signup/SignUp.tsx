@@ -1,11 +1,9 @@
-'use client'
+'use client';
 
 import React, { useState } from 'react';
 
-/**
- * @todo Not sure if its smart to put the types in a seperate file
- */
-import { SignupType } from '@/AuthApi/SignUp/signUp';
+import { SignupType } from '@/api/auth/signUp';
+import { firebaseAuthService } from "@/api/firebase/firebaseSignUp";
 
 // SignUpPage component for user registration
 // It receives setCurrentPage from the parent App component for navigation.
@@ -15,7 +13,7 @@ export default function SignUpPage() {
     const [signupType, setSignupType] = useState<SignupType | null>(null); // null, 'individual', or 'organization'
 
     // State for organization-related fields
-    const [organizationNumber, setOrganizationNumber] = useState('');
+    const [organizationId, setOrganizationId] = useState('');
     const [employeeId, setEmployeeId] = useState('');
 
     // State for user registration fields
@@ -27,49 +25,63 @@ export default function SignUpPage() {
 
     // Function to handle form submission
     const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault(); // Prevent default form submission behavior
+        void ( async () => {
+            e.preventDefault(); // Prevent default form submission behavior
 
-    // Basic password validation
-    if (password !== confirmPassword) {
-        setPasswordError('Passwords do not match.');
-        return;
-    }
-    setPasswordError(''); // Clear error if passwords match
+            // Basic password validation
+            if (password !== confirmPassword) {
+                setPasswordError('Passwords do not match.');
+                return;
+            }
+            setPasswordError(''); // Clear error if passwords match
 
-     /**
-     * 
-     * @todo Switch for real api
-     */
+            if (!signupType) {
+                console.log("Must choose a signup type");
+                return;
+            }
 
-    // For now, just log the form data.
-    // In a real application, you would send this data to an API for user registration.
-    console.log('Sign Up Data:', {
-        signupType,
-        ...(signupType === 'organization' && { organizationNumber, employeeId }), // Conditionally add org data
-        name,
-        email,
-        password,
-    });
+            console.log('Sign Up Data:', {
+                signupType,
+                ...(signupType === 'organization' && { organizationNumber: organizationId, employeeId }), // Conditionally add org data
+                name,
+                email,
+                password,
+            });
 
-    // Here you would typically call an authentication API.
-    // For demonstration, let's simulate a successful signup and navigate back to home
-    // or to a dashboard.
-    // Using a custom alert/message box instead of window.alert()
-    const showMessage = (msg: string) => {
-        const messageBox = document.createElement('div');
-        messageBox.className = "fixed inset-0 flex items-center justify-center z-50 p-4";
-        messageBox.innerHTML = `
-        <div class="bg-card text-foreground p-6 rounded-lg shadow-xl max-w-sm text-center">
-            <p class="text-lg font-semibold mb-4">${msg}</p>
-            <button class="bg-primary hover:bg-primary-hover text-primary-foreground font-bold py-2 px-4 rounded-md" onclick="this.parentNode.parentNode.remove()">
-            OK
-            </button>
-        </div>
-        `;
-        document.body.appendChild(messageBox);
-    };
+            if (signupType == SignupType.INDIVIDUAL) {
+                await firebaseAuthService.signUpIndividual({
+                    name: name,
+                    email: email,
+                    password: password,
+                });
+            } else if (signupType == SignupType.ORGANIZATION) {
+                await firebaseAuthService.signUpOrganization({
+                    name: name,
+                    email: email,
+                    password: password,
+                    organizationId: organizationId,
+                    employeeId: employeeId
+                });
+            } else {
+                throw(new Error("Neither ORGANIZATION or INDIVIDUAL signup error"));
+            }
 
-    showMessage('Sign Up Successful! (Check console for data)');
+            const showMessage = (msg: string) => {
+                const messageBox = document.createElement('div');
+                messageBox.className = "fixed inset-0 flex items-center justify-center z-50 p-4";
+                messageBox.innerHTML = `
+                <div class="bg-card text-foreground p-6 rounded-lg shadow-xl max-w-sm text-center">
+                    <p class="text-lg font-semibold mb-4">${msg}</p>
+                    <button class="bg-primary hover:bg-primary-hover text-primary-foreground font-bold py-2 px-4 rounded-md" onclick="this.parentNode.parentNode.remove()">
+                    OK
+                    </button>
+                </div>
+                `;
+                document.body.appendChild(messageBox);
+            };
+
+            showMessage('Sign Up Successful! (Check console for data)');
+        })();
     };
 
     // Helper function to render a form input field
@@ -108,40 +120,44 @@ export default function SignUpPage() {
 
         {/* Step 1: Choose Sign-up Type */}
         {signupType === null && (
-            <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-foreground mb-4">How would you like to sign up?</h3>
-            <div className="flex flex-col space-y-3">
-                <label className="inline-flex items-center text-foreground">
-                <input
-                    type="radio"
-                    name="signupType"
-                    value="individual"
-                    onChange={() => setSignupType(SignupType.INDIVIDUAL)}
-                    className="form-radio h-5 w-5 text-primary"
-                />
-                <span className="ml-2">Sign up by myself</span>
-                </label>
-                <label className="inline-flex items-center text-foreground">
-                <input
-                    type="radio"
-                    name="signupType"
-                    value="organization"
-                    onChange={() => setSignupType(SignupType.ORGANIZATION)}
-                    className="form-radio h-5 w-5 text-primary"
-                />
-                <span className="ml-2">Sign up with an existing organization</span>
-                </label>
-            </div>
-            {/* Back button (optional, but good for UX) */}
-            <button
-                className="mt-6 w-full bg-secondary hover:bg-secondary-hover text-secondary-foreground font-bold py-2 px-4 rounded-lg
-                            transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-secondary
-                            focus:ring-opacity-75"
-            >
-                Back to Home
-            </button>
-            </div>
-        )}
+                    <div className="space-y-6"> {/* Increased spacing */}
+                        <h3 className="text-lg font-semibold text-center text-foreground mb-4">How would you like to sign up?</h3>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4"> {/* Grid for side-by-side cards on larger screens */}
+                            {/* Individual Signup Card */}
+                            <button
+                                type="button" // Important for buttons not in a form
+                                onClick={() => setSignupType(SignupType.INDIVIDUAL)}
+                                className={`
+                                    flex flex-col items-center justify-center p-6 rounded-lg border-2
+                                    transition-all duration-200 ease-in-out
+                                    ${signupType === SignupType.INDIVIDUAL ? 'border-primary bg-primary-muted' : 'border-border bg-input hover:border-primary-hover'}
+                                    text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-75
+                                `}
+                            >
+                                {/* <UserIcon className="h-10 w-10 text-primary mb-3" /> Example icon */}
+                                <span className="font-semibold text-lg text-center">Sign up by myself</span>
+                                <p className="text-sm text-muted-foreground text-center mt-1">For personal use</p>
+                            </button>
+
+                            {/* Organization Signup Card */}
+                            <button
+                                type="button" // Important for buttons not in a form
+                                onClick={() => setSignupType(SignupType.ORGANIZATION)}
+                                className={`
+                                    flex flex-col items-center justify-center p-6 rounded-lg border-2
+                                    transition-all duration-200 ease-in-out
+                                    ${signupType === SignupType.ORGANIZATION ? 'border-primary bg-primary-muted' : 'border-border bg-input hover:border-primary-hover'}
+                                    text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-75
+                                `}
+                            >
+                                {/* <BuildingOfficeIcon className="h-10 w-10 text-primary mb-3" /> Example icon */}
+                                <span className="font-semibold text-lg text-center">Sign up with an organization</span>
+                                <p className="text-sm text-muted-foreground text-center mt-1">Join an existing team</p>
+                            </button>
+                        </div>
+                    </div>
+                )}
 
         {/* Step 2: Organization Details (if selected) or Registration Form */}
         {signupType !== null && (
@@ -149,7 +165,7 @@ export default function SignUpPage() {
             {signupType === 'organization' && (
                 <div className="mb-6 bg-background-surface p-4 rounded-lg">
                 <h3 className="text-lg font-semibold text-foreground mb-4">Organization Details</h3>
-                {renderInputField('organizationNumber', 'Organization Number', 'text', organizationNumber, setOrganizationNumber, 'e.g., ORG12345')}
+                {renderInputField('organizationNumber', 'Organization Number', 'text', organizationId, setOrganizationId, 'e.g., ORG12345')}
                 {renderInputField('employeeId', 'Employee ID', 'text', employeeId, setEmployeeId, 'e.g., EMP001')}
                 </div>
             )}
