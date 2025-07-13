@@ -2,7 +2,7 @@ import { adminAuth, adminDb } from "@/api/firebase/firebaseAdmin";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { getAuth } from "firebase/auth"; 
 
-import { firebaseAuthService } from "@/api/firebase/firebaseSignUp";
+import { firebaseAuthService } from "@/api/firebase/firebaseAuthService";
 
 const NEXT_PUBLIC_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
@@ -48,6 +48,7 @@ describe('Signup API Route E2E Tests', () => {
 
     beforeEach( async () => {
         try {
+            //Clear existing data
             await clearFirestoreAuth();
             await clearFirestoreDB();
 
@@ -104,7 +105,7 @@ describe('Signup API Route E2E Tests', () => {
         const testPassword = 'securePassword123';
 
         // Call your client-side service method, which internally calls Auth SDK and your API route
-        const apiResponse = await firebaseAuthService.signUpIndividual({
+        const apiResponse = await firebaseAuthService.signUp.signUpIndividual({
             name: testName,
             email: testEmail,
             password: testPassword
@@ -285,8 +286,8 @@ describe('Signup API Route E2E Tests', () => {
         const invalidUidApiResponseData = await invalidUidApiResponse.json();
         console.log("Scenario 1 (Invalid UID) - API Response:", invalidUidApiResponseData);
 
-        expect(invalidUidApiResponse.status).toBe(404);
-        expect(invalidUidApiResponseData.message).toContain("User not found in Firebase Authentication");
+        expect(invalidUidApiResponse.status).toBe(403);
+        expect(invalidUidApiResponseData.message).toContain("Authenticated email/uid from token does not match provided email/uid.");
 
         // --- Scenario 2: Email in payload does NOT match the existing Auth user's email (but UID does match) ---
         const fakeEmailProvidedData = {
@@ -309,8 +310,8 @@ describe('Signup API Route E2E Tests', () => {
         const fakeEmailApiResponseData = await fakeEmailApiResponse.json();
         console.log("Scenario 2 (Fake Email) - API Response:", fakeEmailApiResponseData);
 
-        expect(fakeEmailApiResponse.status).toBe(404);
-        expect(fakeEmailApiResponseData.message).toContain("User found by UID but the associated email does not match");
+        expect(fakeEmailApiResponse.status).toBe(403);
+        expect(fakeEmailApiResponseData.message).toContain("Authenticated email/uid from token does not match provided email/uid.");
 
         // --- Scenario 3: Email and UID match user but Token does NOT ---
         const invalidTokenProvidedData = {

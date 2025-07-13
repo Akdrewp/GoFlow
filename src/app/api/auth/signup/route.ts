@@ -80,17 +80,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const authUser = await adminAuth.getUser(uid); // Attempt to get the user directly by UID
-
-    // If the user is found by UID, now verify if their email matches the provided email.
-    if (authUser.email !== email) {
-        console.log(`SERVER LOG: === Returning 404 - User found by UID (${uid}) but email (${authUser.email}) does NOT match provided email (${email}) ===`);
-        return NextResponse.json(
-            { status: "fail", message: "User found by UID but the associated email does not match. Please ensure correct user information." },
-            { status: 404 } // Conflict
-        );
-    }
-
     //User uid and email matches firebase auth
     //Check if token is valid for specific user
     const decodedIdToken = await adminAuth.verifyIdToken(idToken);

@@ -2,8 +2,8 @@
 
 import React, { useState } from 'react';
 
-import { SignupType } from '@/api/auth/signUp';
-import { firebaseAuthService } from "@/api/firebase/firebaseSignUp";
+import { SignupType } from '@/api/auth/authService';
+import { firebaseAuthService } from "@/api/firebase/firebaseAuthService";
 
 // SignUpPage component for user registration
 // It receives setCurrentPage from the parent App component for navigation.
@@ -49,13 +49,13 @@ export default function SignUpPage() {
             });
 
             if (signupType == SignupType.INDIVIDUAL) {
-                await firebaseAuthService.signUpIndividual({
+                await firebaseAuthService.signUp.signUpIndividual({
                     name: name,
                     email: email,
                     password: password,
                 });
             } else if (signupType == SignupType.ORGANIZATION) {
-                await firebaseAuthService.signUpOrganization({
+                await firebaseAuthService.signUp.signUpOrganization({
                     name: name,
                     email: email,
                     password: password,
@@ -65,6 +65,13 @@ export default function SignUpPage() {
             } else {
                 throw(new Error("Neither ORGANIZATION or INDIVIDUAL signup error"));
             }
+
+            //Signup is successful
+            //Log user in using credentials
+            await firebaseAuthService.login.loginWithEmail({
+                email: email,
+                password: password,
+            });
 
             const showMessage = (msg: string) => {
                 const messageBox = document.createElement('div');
