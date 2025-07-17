@@ -5236,3 +5236,510 @@ INFO: Detected HTTP/2 connection.
 [debug] [2025-07-13T23:05:43.565Z] Jul 13, 2025 7:05:43 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
 INFO: Detected HTTP/2 connection.
  {"metadata":{"emulator":{"name":"firestore"},"message":"Jul 13, 2025 7:05:43 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected HTTP/2 connection.\n"}}
+[debug] [2025-07-13T23:30:54.239Z] Jul 13, 2025 7:30:54 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed
+INFO: Websocket client disconnected
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Jul 13, 2025 7:30:54 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed\nINFO: Websocket client disconnected\n"}}
+[debug] [2025-07-13T23:57:34.956Z] Jul 13, 2025 7:57:34 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel
+INFO: Connected to new websocket client
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Jul 13, 2025 7:57:34 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel\nINFO: Connected to new websocket client\n"}}
+[debug] [2025-07-14T00:14:04.422Z] Jul 13, 2025 8:14:04 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Jul 13, 2025 8:14:04 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected HTTP/2 connection.\n"}}
+[debug] [2025-07-14T00:14:04.589Z] Jul 13, 2025 8:14:04 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Jul 13, 2025 8:14:04 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected HTTP/2 connection.\n"}}
+[debug] [2025-07-14T00:14:04.971Z] Jul 13, 2025 8:14:04 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Jul 13, 2025 8:14:04 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected HTTP/2 connection.\n"}}
+[debug] [2025-07-14T00:15:00.504Z] Jul 13, 2025 8:15:00 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Jul 13, 2025 8:15:00 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected HTTP/2 connection.\n"}}
+[debug] [2025-07-14T00:15:00.909Z] Jul 13, 2025 8:15:00 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Jul 13, 2025 8:15:00 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected HTTP/2 connection.\n"}}
+[debug] [2025-07-14T00:15:15.326Z] Jul 13, 2025 8:15:15 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Jul 13, 2025 8:15:15 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected HTTP/2 connection.\n"}}
+[debug] [2025-07-14T00:15:14.199Z] Jul 13, 2025 8:15:14 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Jul 13, 2025 8:15:14 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected HTTP/2 connection.\n"}}
+[debug] [2025-07-14T02:15:55.917Z] Jul 13, 2025 10:15:55 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed
+INFO: Websocket client disconnected
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Jul 13, 2025 10:15:55 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed\nINFO: Websocket client disconnected\n"}}
+[debug] [2025-07-14T05:29:32.754Z] Jul 14, 2025 1:29:32 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel
+INFO: Connected to new websocket client
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Jul 14, 2025 1:29:32 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel\nINFO: Connected to new websocket client\n"}}
+[debug] [2025-07-14T05:29:57.262Z] Jul 14, 2025 1:29:57 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed
+INFO: Websocket client disconnected
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Jul 14, 2025 1:29:57 AM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed\nINFO: Websocket client disconnected\n"}}
+[debug] [2025-07-14T05:29:57.673Z] Received signal SIGHUP 1
+[info]  
+[info] i  emulators: Received SIGHUP for the first time. Starting a clean shutdown. 
+[info] i  emulators: Please wait for a clean shutdown or send the SIGHUP signal again to stop right now. 
+[debug] [2025-07-14T05:29:57.742Z] Error: write EIO
+    at afterWriteDispatched (node:internal/stream_base_commons:159:15)
+    at writeGeneric (node:internal/stream_base_commons:150:3)
+    at Socket._writeGeneric (node:net:966:11)
+    at Socket._write (node:net:978:8)
+    at writeOrBuffer (node:internal/streams/writable:570:12)
+    at _write (node:internal/streams/writable:499:10)
+    at Writable.write (node:internal/streams/writable:508:10)
+    at Console.log (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston/lib/winston/transports/console.js:87:23)
+    at Console._write (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston-transport/modern.js:103:17)
+    at doWrite (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston-transport/node_modules/readable-stream/lib/_stream_writable.js:390:139)
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-07-14T05:29:57.745Z] Error: write EIO
+    at afterWriteDispatched (node:internal/stream_base_commons:159:15)
+    at writeGeneric (node:internal/stream_base_commons:150:3)
+    at Socket._writeGeneric (node:net:966:11)
+    at Socket._write (node:net:978:8)
+    at writeOrBuffer (node:internal/streams/writable:570:12)
+    at _write (node:internal/streams/writable:499:10)
+    at Writable.write (node:internal/streams/writable:508:10)
+    at Console.log (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston/lib/winston/transports/console.js:87:23)
+    at Console._write (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston-transport/modern.js:103:17)
+    at doWrite (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston-transport/node_modules/readable-stream/lib/_stream_writable.js:390:139)
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-07-14T05:29:57.747Z] Error: write EIO
+    at afterWriteDispatched (node:internal/stream_base_commons:159:15)
+    at writeGeneric (node:internal/stream_base_commons:150:3)
+    at Socket._writeGeneric (node:net:966:11)
+    at Socket._write (node:net:978:8)
+    at writeOrBuffer (node:internal/streams/writable:570:12)
+    at _write (node:internal/streams/writable:499:10)
+    at Writable.write (node:internal/streams/writable:508:10)
+    at Console.log (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston/lib/winston/transports/console.js:87:23)
+    at Console._write (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston-transport/modern.js:103:17)
+    at doWrite (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston-transport/node_modules/readable-stream/lib/_stream_writable.js:390:139)
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-07-14T05:29:57.748Z] Error: write EIO
+    at afterWriteDispatched (node:internal/stream_base_commons:159:15)
+    at writeGeneric (node:internal/stream_base_commons:150:3)
+    at Socket._writeGeneric (node:net:966:11)
+    at Socket._write (node:net:978:8)
+    at writeOrBuffer (node:internal/streams/writable:570:12)
+    at _write (node:internal/streams/writable:499:10)
+    at Writable.write (node:internal/streams/writable:508:10)
+    at Console.log (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston/lib/winston/transports/console.js:87:23)
+    at Console._write (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston-transport/modern.js:103:17)
+    at doWrite (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston-transport/node_modules/readable-stream/lib/_stream_writable.js:390:139)
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-07-14T05:29:57.749Z] Error: write EIO
+    at afterWriteDispatched (node:internal/stream_base_commons:159:15)
+    at writeGeneric (node:internal/stream_base_commons:150:3)
+    at Socket._writeGeneric (node:net:966:11)
+    at Socket._write (node:net:978:8)
+    at writeOrBuffer (node:internal/streams/writable:570:12)
+    at _write (node:internal/streams/writable:499:10)
+    at Writable.write (node:internal/streams/writable:508:10)
+    at Console.log (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston/lib/winston/transports/console.js:87:23)
+    at Console._write (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston-transport/modern.js:103:17)
+    at doWrite (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston-transport/node_modules/readable-stream/lib/_stream_writable.js:390:139)
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-07-14T05:29:57.750Z] Error: write EIO
+    at afterWriteDispatched (node:internal/stream_base_commons:159:15)
+    at writeGeneric (node:internal/stream_base_commons:150:3)
+    at Socket._writeGeneric (node:net:966:11)
+    at Socket._write (node:net:978:8)
+    at writeOrBuffer (node:internal/streams/writable:570:12)
+    at _write (node:internal/streams/writable:499:10)
+    at Writable.write (node:internal/streams/writable:508:10)
+    at Console.log (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston/lib/winston/transports/console.js:87:23)
+    at Console._write (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston-transport/modern.js:103:17)
+    at doWrite (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston-transport/node_modules/readable-stream/lib/_stream_writable.js:390:139)
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-07-14T05:29:57.750Z] Error: write EIO
+    at afterWriteDispatched (node:internal/stream_base_commons:159:15)
+    at writeGeneric (node:internal/stream_base_commons:150:3)
+    at Socket._writeGeneric (node:net:966:11)
+    at Socket._write (node:net:978:8)
+    at writeOrBuffer (node:internal/streams/writable:570:12)
+    at _write (node:internal/streams/writable:499:10)
+    at Writable.write (node:internal/streams/writable:508:10)
+    at Console.log (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston/lib/winston/transports/console.js:87:23)
+    at Console._write (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston-transport/modern.js:103:17)
+    at doWrite (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston-transport/node_modules/readable-stream/lib/_stream_writable.js:390:139)
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-07-14T05:29:57.752Z] Error: write EIO
+    at afterWriteDispatched (node:internal/stream_base_commons:159:15)
+    at writeGeneric (node:internal/stream_base_commons:150:3)
+    at Socket._writeGeneric (node:net:966:11)
+    at Socket._write (node:net:978:8)
+    at writeOrBuffer (node:internal/streams/writable:570:12)
+    at _write (node:internal/streams/writable:499:10)
+    at Writable.write (node:internal/streams/writable:508:10)
+    at Console.log (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston/lib/winston/transports/console.js:87:23)
+    at Console._write (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston-transport/modern.js:103:17)
+    at doWrite (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston-transport/node_modules/readable-stream/lib/_stream_writable.js:390:139)
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-07-14T05:29:57.752Z] Error: write EIO
+    at afterWriteDispatched (node:internal/stream_base_commons:159:15)
+    at writeGeneric (node:internal/stream_base_commons:150:3)
+    at Socket._writeGeneric (node:net:966:11)
+    at Socket._write (node:net:978:8)
+    at writeOrBuffer (node:internal/streams/writable:570:12)
+    at _write (node:internal/streams/writable:499:10)
+    at Writable.write (node:internal/streams/writable:508:10)
+    at Console.log (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston/lib/winston/transports/console.js:87:23)
+    at Console._write (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston-transport/modern.js:103:17)
+    at doWrite (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston-transport/node_modules/readable-stream/lib/_stream_writable.js:390:139)
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-07-14T05:29:57.753Z] Error: write EIO
+    at afterWriteDispatched (node:internal/stream_base_commons:159:15)
+    at writeGeneric (node:internal/stream_base_commons:150:3)
+    at Socket._writeGeneric (node:net:966:11)
+    at Socket._write (node:net:978:8)
+    at writeOrBuffer (node:internal/streams/writable:570:12)
+    at _write (node:internal/streams/writable:499:10)
+    at Writable.write (node:internal/streams/writable:508:10)
+    at Console.log (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston/lib/winston/transports/console.js:87:23)
+    at Console._write (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston-transport/modern.js:103:17)
+    at doWrite (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston-transport/node_modules/readable-stream/lib/_stream_writable.js:390:139)
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-07-14T05:29:57.755Z] Error: write EIO
+    at afterWriteDispatched (node:internal/stream_base_commons:159:15)
+    at writeGeneric (node:internal/stream_base_commons:150:3)
+    at Socket._writeGeneric (node:net:966:11)
+    at Socket._write (node:net:978:8)
+    at writeOrBuffer (node:internal/streams/writable:570:12)
+    at _write (node:internal/streams/writable:499:10)
+    at Writable.write (node:internal/streams/writable:508:10)
+    at Console.log (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston/lib/winston/transports/console.js:87:23)
+    at Console._write (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston-transport/modern.js:103:17)
+    at doWrite (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston-transport/node_modules/readable-stream/lib/_stream_writable.js:390:139)
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-07-14T05:29:57.756Z] Error: write EIO
+    at afterWriteDispatched (node:internal/stream_base_commons:159:15)
+    at writeGeneric (node:internal/stream_base_commons:150:3)
+    at Socket._writeGeneric (node:net:966:11)
+    at Socket._write (node:net:978:8)
+    at writeOrBuffer (node:internal/streams/writable:570:12)
+    at _write (node:internal/streams/writable:499:10)
+    at Writable.write (node:internal/streams/writable:508:10)
+    at Console.log (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston/lib/winston/transports/console.js:87:23)
+    at Console._write (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston-transport/modern.js:103:17)
+    at doWrite (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston-transport/node_modules/readable-stream/lib/_stream_writable.js:390:139)
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-07-14T05:29:57.759Z] Error: write EIO
+    at afterWriteDispatched (node:internal/stream_base_commons:159:15)
+    at writeGeneric (node:internal/stream_base_commons:150:3)
+    at Socket._writeGeneric (node:net:966:11)
+    at Socket._write (node:net:978:8)
+    at writeOrBuffer (node:internal/streams/writable:570:12)
+    at _write (node:internal/streams/writable:499:10)
+    at Writable.write (node:internal/streams/writable:508:10)
+    at Console.log (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston/lib/winston/transports/console.js:87:23)
+    at Console._write (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston-transport/modern.js:103:17)
+    at doWrite (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston-transport/node_modules/readable-stream/lib/_stream_writable.js:390:139)
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-07-14T05:29:57.760Z] Error: write EIO
+    at afterWriteDispatched (node:internal/stream_base_commons:159:15)
+    at writeGeneric (node:internal/stream_base_commons:150:3)
+    at Socket._writeGeneric (node:net:966:11)
+    at Socket._write (node:net:978:8)
+    at writeOrBuffer (node:internal/streams/writable:570:12)
+    at _write (node:internal/streams/writable:499:10)
+    at Writable.write (node:internal/streams/writable:508:10)
+    at Console.log (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston/lib/winston/transports/console.js:87:23)
+    at Console._write (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston-transport/modern.js:103:17)
+    at doWrite (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston-transport/node_modules/readable-stream/lib/_stream_writable.js:390:139)
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-07-14T05:29:57.760Z] Error: write EIO
+    at afterWriteDispatched (node:internal/stream_base_commons:159:15)
+    at writeGeneric (node:internal/stream_base_commons:150:3)
+    at Socket._writeGeneric (node:net:966:11)
+    at Socket._write (node:net:978:8)
+    at writeOrBuffer (node:internal/streams/writable:570:12)
+    at _write (node:internal/streams/writable:499:10)
+    at Writable.write (node:internal/streams/writable:508:10)
+    at Console.log (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston/lib/winston/transports/console.js:87:23)
+    at Console._write (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston-transport/modern.js:103:17)
+    at doWrite (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston-transport/node_modules/readable-stream/lib/_stream_writable.js:390:139)
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-07-14T05:29:57.761Z] Error: write EIO
+    at afterWriteDispatched (node:internal/stream_base_commons:159:15)
+    at writeGeneric (node:internal/stream_base_commons:150:3)
+    at Socket._writeGeneric (node:net:966:11)
+    at Socket._write (node:net:978:8)
+    at writeOrBuffer (node:internal/streams/writable:570:12)
+    at _write (node:internal/streams/writable:499:10)
+    at Writable.write (node:internal/streams/writable:508:10)
+    at Console.log (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston/lib/winston/transports/console.js:87:23)
+    at Console._write (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston-transport/modern.js:103:17)
+    at doWrite (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston-transport/node_modules/readable-stream/lib/_stream_writable.js:390:139)
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-07-14T05:29:57.762Z] Error: write EIO
+    at afterWriteDispatched (node:internal/stream_base_commons:159:15)
+    at writeGeneric (node:internal/stream_base_commons:150:3)
+    at Socket._writeGeneric (node:net:966:11)
+    at Socket._write (node:net:978:8)
+    at writeOrBuffer (node:internal/streams/writable:570:12)
+    at _write (node:internal/streams/writable:499:10)
+    at Writable.write (node:internal/streams/writable:508:10)
+    at Console.log (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston/lib/winston/transports/console.js:87:23)
+    at Console._write (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston-transport/modern.js:103:17)
+    at doWrite (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston-transport/node_modules/readable-stream/lib/_stream_writable.js:390:139)
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-07-14T05:29:57.762Z] Error: write EIO
+    at afterWriteDispatched (node:internal/stream_base_commons:159:15)
+    at writeGeneric (node:internal/stream_base_commons:150:3)
+    at Socket._writeGeneric (node:net:966:11)
+    at Socket._write (node:net:978:8)
+    at writeOrBuffer (node:internal/streams/writable:570:12)
+    at _write (node:internal/streams/writable:499:10)
+    at Writable.write (node:internal/streams/writable:508:10)
+    at Console.log (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston/lib/winston/transports/console.js:87:23)
+    at Console._write (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston-transport/modern.js:103:17)
+    at doWrite (/home/james_paul/.nvm/versions/node/v24.3.0/lib/node_modules/firebase-tools/node_modules/winston-transport/node_modules/readable-stream/lib/_stream_writable.js:390:139)
+[error] 
+[error] Error: An unexpected error has occurred.
+[debug] [2025-07-15T01:04:55.952Z] ----------------------------------------------------------------------
+[debug] [2025-07-15T01:04:55.956Z] Command:       /home/james_paul/.nvm/versions/node/v24.3.0/bin/node /home/james_paul/.nvm/versions/node/v24.3.0/bin/firebase emulators:start
+[debug] [2025-07-15T01:04:55.957Z] CLI Version:   14.9.0
+[debug] [2025-07-15T01:04:55.957Z] Platform:      linux
+[debug] [2025-07-15T01:04:55.957Z] Node Version:  v24.3.0
+[debug] [2025-07-15T01:04:55.957Z] Time:          Mon Jul 14 2025 21:04:55 GMT-0400 (Eastern Daylight Time)
+[debug] [2025-07-15T01:04:55.957Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-07-15T01:04:55.958Z] >>> [apiv2][query] GET https://firebase-public.firebaseio.com/cli.json [none]
+[debug] [2025-07-15T01:04:56.101Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-07-15T01:04:56.101Z] > authorizing via signed-in user (jamesterpaul@gmail.com)
+[debug] [2025-07-15T01:04:56.174Z] openjdk version "21.0.7" 2025-04-15
+
+[debug] [2025-07-15T01:04:56.174Z] OpenJDK Runtime Environment (build 21.0.7+6-Ubuntu-0ubuntu124.04)
+OpenJDK 64-Bit Server VM (build 21.0.7+6-Ubuntu-0ubuntu124.04, mixed mode, sharing)
+
+[debug] [2025-07-15T01:04:56.178Z] <<< [apiv2][status] GET https://firebase-public.firebaseio.com/cli.json 200
+[debug] [2025-07-15T01:04:56.178Z] <<< [apiv2][body] GET https://firebase-public.firebaseio.com/cli.json {"cloudBuildErrorAfter":1594252800000,"cloudBuildWarnAfter":1590019200000,"defaultNode10After":1594252800000,"minVersion":"3.0.5","node8DeploysDisabledAfter":1613390400000,"node8RuntimeDisabledAfter":1615809600000,"node8WarnAfter":1600128000000}
+[debug] [2025-07-15T01:04:56.189Z] Parsed Java major version: 21
+[info] i  emulators: Starting emulators: auth, firestore {"metadata":{"emulator":{"name":"hub"},"message":"Starting emulators: auth, firestore"}}
+[debug] [2025-07-15T01:04:56.191Z] assigned listening specs for emulators {"user":{"hub":[{"address":"127.0.0.1","family":"IPv4","port":4400}],"ui":[{"address":"127.0.0.1","family":"IPv4","port":4000}],"logging":[{"address":"127.0.0.1","family":"IPv4","port":4500}],"auth":[{"address":"127.0.0.1","family":"IPv4","port":9099}],"firestore":[{"address":"127.0.0.1","family":"IPv4","port":8080}],"firestore.websocket":[{"address":"127.0.0.1","family":"IPv4","port":9150}]},"metadata":{"message":"assigned listening specs for emulators"}}
+[debug] [2025-07-15T01:04:56.193Z] [hub] writing locator at /tmp/hub-goflow-routemaker.json
+[debug] [2025-07-15T01:04:56.198Z] Ignoring unsupported arg: auto_download {"metadata":{"emulator":{"name":"firestore"},"message":"Ignoring unsupported arg: auto_download"}}
+[debug] [2025-07-15T01:04:56.198Z] Ignoring unsupported arg: single_project_mode_error {"metadata":{"emulator":{"name":"firestore"},"message":"Ignoring unsupported arg: single_project_mode_error"}}
+[debug] [2025-07-15T01:04:56.198Z] Starting Firestore Emulator with command {"binary":"java","args":["-Djava.net.preferIPv4Stack=true","-Dgoogle.cloud_firestore.debug_log_level=FINE","-Duser.language=en","-jar","/home/james_paul/.cache/firebase/emulators/cloud-firestore-emulator-v1.19.8.jar","--host","127.0.0.1","--port",8080,"--websocket_port",9150,"--project_id","goflow-routemaker","--rules","/home/james_paul/GoFlow-app/goflow-routemaker/firestore.rules","--single_project_mode",true],"optionalArgs":["port","webchannel_port","host","rules","websocket_port","functions_emulator","seed_from_export","project_id","single_project_mode"],"joinArgs":false,"shell":false,"port":8080} {"metadata":{"emulator":{"name":"firestore"},"message":"Starting Firestore Emulator with command {\"binary\":\"java\",\"args\":[\"-Djava.net.preferIPv4Stack=true\",\"-Dgoogle.cloud_firestore.debug_log_level=FINE\",\"-Duser.language=en\",\"-jar\",\"/home/james_paul/.cache/firebase/emulators/cloud-firestore-emulator-v1.19.8.jar\",\"--host\",\"127.0.0.1\",\"--port\",8080,\"--websocket_port\",9150,\"--project_id\",\"goflow-routemaker\",\"--rules\",\"/home/james_paul/GoFlow-app/goflow-routemaker/firestore.rules\",\"--single_project_mode\",true],\"optionalArgs\":[\"port\",\"webchannel_port\",\"host\",\"rules\",\"websocket_port\",\"functions_emulator\",\"seed_from_export\",\"project_id\",\"single_project_mode\"],\"joinArgs\":false,\"shell\":false,\"port\":8080}"}}
+[info] i  firestore: Firestore Emulator logging to firestore-debug.log {"metadata":{"emulator":{"name":"firestore"},"message":"Firestore Emulator logging to \u001b[1mfirestore-debug.log\u001b[22m"}}
+[debug] [2025-07-15T01:04:57.026Z] Jul 14, 2025 9:04:57 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketServer start
+INFO: Started WebSocket server on ws://127.0.0.1:9150
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Jul 14, 2025 9:04:57 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketServer start\nINFO: Started WebSocket server on ws://127.0.0.1:9150\n"}}
+[debug] [2025-07-15T01:04:57.121Z] API endpoint: http://127.0.0.1:8080
+ {"metadata":{"emulator":{"name":"firestore"},"message":"API endpoint: http://127.0.0.1:8080\n"}}
+[debug] [2025-07-15T01:04:57.121Z] If you are using a library that supports the FIRESTORE_EMULATOR_HOST environment variable, run:
+
+   export FIRESTORE_EMULATOR_HOST=127.0.0.1:8080
+
+If you are running a Firestore in Datastore Mode project, run:
+
+   export DATASTORE_EMULATOR_HOST=127.0.0.1:8080
+
+Note: Support for Datastore Mode is in preview. If you encounter any bugs please file at https://github.com/firebase/firebase-tools/issues.
+Dev App Server is now running.
+
+ {"metadata":{"emulator":{"name":"firestore"},"message":"If you are using a library that supports the FIRESTORE_EMULATOR_HOST environment variable, run:\n\n   export FIRESTORE_EMULATOR_HOST=127.0.0.1:8080\n\nIf you are running a Firestore in Datastore Mode project, run:\n\n   export DATASTORE_EMULATOR_HOST=127.0.0.1:8080\n\nNote: Support for Datastore Mode is in preview. If you encounter any bugs please file at https://github.com/firebase/firebase-tools/issues.\nDev App Server is now running.\n\n"}}
+[info] ✔  firestore: Firestore Emulator UI websocket is running on 9150. {"metadata":{"emulator":{"name":"firestore"},"message":"Firestore Emulator UI websocket is running on 9150."}}
+[debug] [2025-07-15T01:04:59.953Z] Could not find VSCode notification endpoint: FetchError: request to http://localhost:40001/vscode/notify failed, reason: connect ECONNREFUSED 127.0.0.1:40001. If you are not running the Firebase Data Connect VSCode extension, this is expected and not an issue.
+[info] 
+┌─────────────────────────────────────────────────────────────┐
+│ ✔  All emulators ready! It is now safe to connect your app. │
+│ i  View Emulator UI at http://127.0.0.1:4000/               │
+└─────────────────────────────────────────────────────────────┘
+
+┌────────────────┬────────────────┬─────────────────────────────────┐
+│ Emulator       │ Host:Port      │ View in Emulator UI             │
+├────────────────┼────────────────┼─────────────────────────────────┤
+│ Authentication │ 127.0.0.1:9099 │ http://127.0.0.1:4000/auth      │
+├────────────────┼────────────────┼─────────────────────────────────┤
+│ Firestore      │ 127.0.0.1:8080 │ http://127.0.0.1:4000/firestore │
+└────────────────┴────────────────┴─────────────────────────────────┘
+  Emulator Hub host: 127.0.0.1 port: 4400
+  Other reserved ports: 4500, 9150
+
+Issues? Report them at https://github.com/firebase/firebase-tools/issues and attach the *-debug.log files.
+ 
+[debug] [2025-07-15T01:06:54.200Z] Jul 14, 2025 9:06:54 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Jul 14, 2025 9:06:54 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected HTTP/2 connection.\n"}}
+[debug] [2025-07-15T01:06:56.132Z] Jul 14, 2025 9:06:56 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Jul 14, 2025 9:06:56 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected HTTP/2 connection.\n"}}
+[debug] [2025-07-15T01:06:57.139Z] Jul 14, 2025 9:06:57 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Jul 14, 2025 9:06:57 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected HTTP/2 connection.\n"}}
+[debug] [2025-07-15T01:18:34.988Z] Jul 14, 2025 9:18:34 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel
+INFO: Connected to new websocket client
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Jul 14, 2025 9:18:34 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel\nINFO: Connected to new websocket client\n"}}
+[debug] [2025-07-15T01:18:36.132Z] Jul 14, 2025 9:18:36 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Jul 14, 2025 9:18:36 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2025-07-15T01:18:36.184Z] Jul 14, 2025 9:18:36 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Jul 14, 2025 9:18:36 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected HTTP/2 connection.\n"}}
+[debug] [2025-07-15T01:34:51.099Z] Jul 14, 2025 9:34:51 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Jul 14, 2025 9:34:51 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected HTTP/2 connection.\n"}}
+[debug] [2025-07-15T01:39:31.947Z] Jul 14, 2025 9:39:31 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed
+INFO: Websocket client disconnected
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Jul 14, 2025 9:39:31 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed\nINFO: Websocket client disconnected\n"}}
+[debug] [2025-07-15T21:36:25.385Z] Jul 15, 2025 5:36:25 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel
+INFO: Connected to new websocket client
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Jul 15, 2025 5:36:25 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel\nINFO: Connected to new websocket client\n"}}
+[debug] [2025-07-15T22:52:37.072Z] Jul 15, 2025 6:52:37 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed
+INFO: Websocket client disconnected
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Jul 15, 2025 6:52:37 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed\nINFO: Websocket client disconnected\n"}}
+[debug] [2025-07-15T23:08:22.934Z] Jul 15, 2025 7:08:22 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel
+INFO: Connected to new websocket client
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Jul 15, 2025 7:08:22 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel\nINFO: Connected to new websocket client\n"}}
+[debug] [2025-07-16T23:28:23.473Z] ----------------------------------------------------------------------
+[debug] [2025-07-16T23:28:23.475Z] Command:       /home/james_paul/.nvm/versions/node/v24.3.0/bin/node /home/james_paul/.nvm/versions/node/v24.3.0/bin/firebase emulators:start
+[debug] [2025-07-16T23:28:23.475Z] CLI Version:   14.9.0
+[debug] [2025-07-16T23:28:23.475Z] Platform:      linux
+[debug] [2025-07-16T23:28:23.475Z] Node Version:  v24.3.0
+[debug] [2025-07-16T23:28:23.475Z] Time:          Wed Jul 16 2025 19:28:23 GMT-0400 (Eastern Daylight Time)
+[debug] [2025-07-16T23:28:23.475Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-07-16T23:28:23.476Z] >>> [apiv2][query] GET https://firebase-public.firebaseio.com/cli.json [none]
+[debug] [2025-07-16T23:28:23.617Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-07-16T23:28:23.617Z] > authorizing via signed-in user (jamesterpaul@gmail.com)
+[debug] [2025-07-16T23:28:23.688Z] openjdk version "21.0.7" 2025-04-15
+OpenJDK Runtime Environment (build 21.0.7+6-Ubuntu-0ubuntu124.04)
+OpenJDK 64-Bit Server VM (build 21.0.7+6-Ubuntu-0ubuntu124.04, mixed mode, sharing)
+
+[debug] [2025-07-16T23:28:23.689Z] <<< [apiv2][status] GET https://firebase-public.firebaseio.com/cli.json 200
+[debug] [2025-07-16T23:28:23.689Z] <<< [apiv2][body] GET https://firebase-public.firebaseio.com/cli.json {"cloudBuildErrorAfter":1594252800000,"cloudBuildWarnAfter":1590019200000,"defaultNode10After":1594252800000,"minVersion":"3.0.5","node8DeploysDisabledAfter":1613390400000,"node8RuntimeDisabledAfter":1615809600000,"node8WarnAfter":1600128000000}
+[debug] [2025-07-16T23:28:23.700Z] Parsed Java major version: 21
+[info] i  emulators: Starting emulators: auth, firestore {"metadata":{"emulator":{"name":"hub"},"message":"Starting emulators: auth, firestore"}}
+[debug] [2025-07-16T23:28:23.702Z] assigned listening specs for emulators {"user":{"hub":[{"address":"127.0.0.1","family":"IPv4","port":4400}],"ui":[{"address":"127.0.0.1","family":"IPv4","port":4000}],"logging":[{"address":"127.0.0.1","family":"IPv4","port":4500}],"auth":[{"address":"127.0.0.1","family":"IPv4","port":9099}],"firestore":[{"address":"127.0.0.1","family":"IPv4","port":8080}],"firestore.websocket":[{"address":"127.0.0.1","family":"IPv4","port":9150}]},"metadata":{"message":"assigned listening specs for emulators"}}
+[debug] [2025-07-16T23:28:23.704Z] [hub] writing locator at /tmp/hub-goflow-routemaker.json
+[debug] [2025-07-16T23:28:23.708Z] Ignoring unsupported arg: auto_download {"metadata":{"emulator":{"name":"firestore"},"message":"Ignoring unsupported arg: auto_download"}}
+[debug] [2025-07-16T23:28:23.708Z] Ignoring unsupported arg: single_project_mode_error {"metadata":{"emulator":{"name":"firestore"},"message":"Ignoring unsupported arg: single_project_mode_error"}}
+[debug] [2025-07-16T23:28:23.709Z] Starting Firestore Emulator with command {"binary":"java","args":["-Djava.net.preferIPv4Stack=true","-Dgoogle.cloud_firestore.debug_log_level=FINE","-Duser.language=en","-jar","/home/james_paul/.cache/firebase/emulators/cloud-firestore-emulator-v1.19.8.jar","--host","127.0.0.1","--port",8080,"--websocket_port",9150,"--project_id","goflow-routemaker","--rules","/home/james_paul/GoFlow-app/goflow-routemaker/firestore.rules","--single_project_mode",true],"optionalArgs":["port","webchannel_port","host","rules","websocket_port","functions_emulator","seed_from_export","project_id","single_project_mode"],"joinArgs":false,"shell":false,"port":8080} {"metadata":{"emulator":{"name":"firestore"},"message":"Starting Firestore Emulator with command {\"binary\":\"java\",\"args\":[\"-Djava.net.preferIPv4Stack=true\",\"-Dgoogle.cloud_firestore.debug_log_level=FINE\",\"-Duser.language=en\",\"-jar\",\"/home/james_paul/.cache/firebase/emulators/cloud-firestore-emulator-v1.19.8.jar\",\"--host\",\"127.0.0.1\",\"--port\",8080,\"--websocket_port\",9150,\"--project_id\",\"goflow-routemaker\",\"--rules\",\"/home/james_paul/GoFlow-app/goflow-routemaker/firestore.rules\",\"--single_project_mode\",true],\"optionalArgs\":[\"port\",\"webchannel_port\",\"host\",\"rules\",\"websocket_port\",\"functions_emulator\",\"seed_from_export\",\"project_id\",\"single_project_mode\"],\"joinArgs\":false,\"shell\":false,\"port\":8080}"}}
+[info] i  firestore: Firestore Emulator logging to firestore-debug.log {"metadata":{"emulator":{"name":"firestore"},"message":"Firestore Emulator logging to \u001b[1mfirestore-debug.log\u001b[22m"}}
+[debug] [2025-07-16T23:28:24.624Z] Jul 16, 2025 7:28:24 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketServer start
+INFO: Started WebSocket server on ws://127.0.0.1:9150
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Jul 16, 2025 7:28:24 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketServer start\nINFO: Started WebSocket server on ws://127.0.0.1:9150\n"}}
+[debug] [2025-07-16T23:28:24.695Z] API endpoint: http:// {"metadata":{"emulator":{"name":"firestore"},"message":"API endpoint: http://"}}
+[debug] [2025-07-16T23:28:24.696Z] 127.0.0.1:8080
+If you are using a library that supports the FIRESTORE_EMULATOR_HOST environment variable, run:
+
+   export FIRESTORE_EMULATOR_HOST=127.0.0.1:8080
+
+If you are running a Firestore in Datastore Mode project, run:
+
+   export DATASTORE_EMULATOR_HOST=127.0.0.1:8080
+
+Note: Support for Datastore Mode is in preview. If you encounter any bugs please file at https://github.com/firebase/firebase-tools/issues.
+Dev App Server is now running.
+
+ {"metadata":{"emulator":{"name":"firestore"},"message":"127.0.0.1:8080\nIf you are using a library that supports the FIRESTORE_EMULATOR_HOST environment variable, run:\n\n   export FIRESTORE_EMULATOR_HOST=127.0.0.1:8080\n\nIf you are running a Firestore in Datastore Mode project, run:\n\n   export DATASTORE_EMULATOR_HOST=127.0.0.1:8080\n\nNote: Support for Datastore Mode is in preview. If you encounter any bugs please file at https://github.com/firebase/firebase-tools/issues.\nDev App Server is now running.\n\n"}}
+[info] ✔  firestore: Firestore Emulator UI websocket is running on 9150. {"metadata":{"emulator":{"name":"firestore"},"message":"Firestore Emulator UI websocket is running on 9150."}}
+[debug] [2025-07-16T23:28:27.483Z] Could not find VSCode notification endpoint: FetchError: request to http://localhost:40001/vscode/notify failed, reason: connect ECONNREFUSED 127.0.0.1:40001. If you are not running the Firebase Data Connect VSCode extension, this is expected and not an issue.
+[info] 
+┌─────────────────────────────────────────────────────────────┐
+│ ✔  All emulators ready! It is now safe to connect your app. │
+│ i  View Emulator UI at http://127.0.0.1:4000/               │
+└─────────────────────────────────────────────────────────────┘
+
+┌────────────────┬────────────────┬─────────────────────────────────┐
+│ Emulator       │ Host:Port      │ View in Emulator UI             │
+├────────────────┼────────────────┼─────────────────────────────────┤
+│ Authentication │ 127.0.0.1:9099 │ http://127.0.0.1:4000/auth      │
+├────────────────┼────────────────┼─────────────────────────────────┤
+│ Firestore      │ 127.0.0.1:8080 │ http://127.0.0.1:4000/firestore │
+└────────────────┴────────────────┴─────────────────────────────────┘
+  Emulator Hub host: 127.0.0.1 port: 4400
+  Other reserved ports: 4500, 9150
+
+Issues? Report them at https://github.com/firebase/firebase-tools/issues and attach the *-debug.log files.
+ 
+[debug] [2025-07-16T23:28:43.185Z] Jul 16, 2025 7:28:43 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel
+INFO: Connected to new websocket client
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Jul 16, 2025 7:28:43 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel\nINFO: Connected to new websocket client\n"}}
+[debug] [2025-07-16T23:28:44.971Z] Jul 16, 2025 7:28:44 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected non-HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Jul 16, 2025 7:28:44 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected non-HTTP/2 connection.\n"}}
+[debug] [2025-07-16T23:28:45.054Z] Jul 16, 2025 7:28:45 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead
+INFO: Detected HTTP/2 connection.
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Jul 16, 2025 7:28:45 PM io.gapi.emulators.netty.HttpVersionRoutingHandler channelRead\nINFO: Detected HTTP/2 connection.\n"}}
+[debug] [2025-07-17T02:01:05.584Z] Jul 16, 2025 10:01:05 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed
+INFO: Websocket client disconnected
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Jul 16, 2025 10:01:05 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler channelClosed\nINFO: Websocket client disconnected\n"}}
+[debug] [2025-07-17T20:53:16.144Z] Jul 17, 2025 4:53:16 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel
+INFO: Connected to new websocket client
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Jul 17, 2025 4:53:16 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketChannelHandler initChannel\nINFO: Connected to new websocket client\n"}}
+[debug] [2025-07-17T21:27:35.613Z] ----------------------------------------------------------------------
+[debug] [2025-07-17T21:27:35.615Z] Command:       /home/james_paul/.nvm/versions/node/v24.3.0/bin/node /home/james_paul/.nvm/versions/node/v24.3.0/bin/firebase emulators:start
+[debug] [2025-07-17T21:27:35.615Z] CLI Version:   14.9.0
+[debug] [2025-07-17T21:27:35.615Z] Platform:      linux
+[debug] [2025-07-17T21:27:35.615Z] Node Version:  v24.3.0
+[debug] [2025-07-17T21:27:35.615Z] Time:          Thu Jul 17 2025 17:27:35 GMT-0400 (Eastern Daylight Time)
+[debug] [2025-07-17T21:27:35.615Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-07-17T21:27:35.760Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-07-17T21:27:35.761Z] > authorizing via signed-in user (jamesterpaul@gmail.com)
+[debug] [2025-07-17T21:27:35.847Z] openjdk version "21.0.7" 2025-04-15
+
+[debug] [2025-07-17T21:27:35.847Z] OpenJDK Runtime Environment (build 21.0.7+6-Ubuntu-0ubuntu124.04)
+OpenJDK 64-Bit Server VM (build 21.0.7+6-Ubuntu-0ubuntu124.04, mixed mode, sharing)
+
+[debug] [2025-07-17T21:27:35.854Z] Parsed Java major version: 21
+[info] i  emulators: Starting emulators: auth, firestore {"metadata":{"emulator":{"name":"hub"},"message":"Starting emulators: auth, firestore"}}
+[debug] [2025-07-17T21:27:35.857Z] assigned listening specs for emulators {"user":{"hub":[{"address":"127.0.0.1","family":"IPv4","port":4400}],"ui":[{"address":"127.0.0.1","family":"IPv4","port":4000}],"logging":[{"address":"127.0.0.1","family":"IPv4","port":4500}],"auth":[{"address":"127.0.0.1","family":"IPv4","port":9099}],"firestore":[{"address":"127.0.0.1","family":"IPv4","port":8080}],"firestore.websocket":[{"address":"127.0.0.1","family":"IPv4","port":9150}]},"metadata":{"message":"assigned listening specs for emulators"}}
+[debug] [2025-07-17T21:27:35.859Z] [hub] writing locator at /tmp/hub-goflow-routemaker.json
+[debug] [2025-07-17T21:27:35.864Z] Ignoring unsupported arg: auto_download {"metadata":{"emulator":{"name":"firestore"},"message":"Ignoring unsupported arg: auto_download"}}
+[debug] [2025-07-17T21:27:35.864Z] Ignoring unsupported arg: single_project_mode_error {"metadata":{"emulator":{"name":"firestore"},"message":"Ignoring unsupported arg: single_project_mode_error"}}
+[debug] [2025-07-17T21:27:35.864Z] Starting Firestore Emulator with command {"binary":"java","args":["-Djava.net.preferIPv4Stack=true","-Dgoogle.cloud_firestore.debug_log_level=FINE","-Duser.language=en","-jar","/home/james_paul/.cache/firebase/emulators/cloud-firestore-emulator-v1.19.8.jar","--host","127.0.0.1","--port",8080,"--websocket_port",9150,"--project_id","goflow-routemaker","--rules","/home/james_paul/GoFlow-app/goflow-routemaker/firestore.rules","--single_project_mode",true],"optionalArgs":["port","webchannel_port","host","rules","websocket_port","functions_emulator","seed_from_export","project_id","single_project_mode"],"joinArgs":false,"shell":false,"port":8080} {"metadata":{"emulator":{"name":"firestore"},"message":"Starting Firestore Emulator with command {\"binary\":\"java\",\"args\":[\"-Djava.net.preferIPv4Stack=true\",\"-Dgoogle.cloud_firestore.debug_log_level=FINE\",\"-Duser.language=en\",\"-jar\",\"/home/james_paul/.cache/firebase/emulators/cloud-firestore-emulator-v1.19.8.jar\",\"--host\",\"127.0.0.1\",\"--port\",8080,\"--websocket_port\",9150,\"--project_id\",\"goflow-routemaker\",\"--rules\",\"/home/james_paul/GoFlow-app/goflow-routemaker/firestore.rules\",\"--single_project_mode\",true],\"optionalArgs\":[\"port\",\"webchannel_port\",\"host\",\"rules\",\"websocket_port\",\"functions_emulator\",\"seed_from_export\",\"project_id\",\"single_project_mode\"],\"joinArgs\":false,\"shell\":false,\"port\":8080}"}}
+[info] i  firestore: Firestore Emulator logging to firestore-debug.log {"metadata":{"emulator":{"name":"firestore"},"message":"Firestore Emulator logging to \u001b[1mfirestore-debug.log\u001b[22m"}}
+[debug] [2025-07-17T21:27:36.795Z] Jul 17, 2025 5:27:36 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketServer start
+INFO: Started WebSocket server on ws://127.0.0.1:9150
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Jul 17, 2025 5:27:36 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketServer start\nINFO: Started WebSocket server on ws://127.0.0.1:9150\n"}}
+[debug] [2025-07-17T21:27:36.880Z] API endpoint: http://127.0.0.1:8080 {"metadata":{"emulator":{"name":"firestore"},"message":"API endpoint: http://127.0.0.1:8080"}}
+[debug] [2025-07-17T21:27:36.880Z] 
+If you are using a library that supports the FIRESTORE_EMULATOR_HOST environment variable, run:
+
+   export FIRESTORE_EMULATOR_HOST=127.0.0.1:8080
+
+If you are running a Firestore in Datastore Mode project, run:
+
+   export DATASTORE_EMULATOR_HOST=127.0.0.1:8080
+
+Note: Support for Datastore Mode is in preview. If you encounter any bugs please file at https://github.com/firebase/firebase-tools/issues.
+Dev App Server is now running.
+
+ {"metadata":{"emulator":{"name":"firestore"},"message":"\nIf you are using a library that supports the FIRESTORE_EMULATOR_HOST environment variable, run:\n\n   export FIRESTORE_EMULATOR_HOST=127.0.0.1:8080\n\nIf you are running a Firestore in Datastore Mode project, run:\n\n   export DATASTORE_EMULATOR_HOST=127.0.0.1:8080\n\nNote: Support for Datastore Mode is in preview. If you encounter any bugs please file at https://github.com/firebase/firebase-tools/issues.\nDev App Server is now running.\n\n"}}
+[info] ✔  firestore: Firestore Emulator UI websocket is running on 9150. {"metadata":{"emulator":{"name":"firestore"},"message":"Firestore Emulator UI websocket is running on 9150."}}
+[debug] [2025-07-17T21:27:39.821Z] Could not find VSCode notification endpoint: FetchError: request to http://localhost:40001/vscode/notify failed, reason: connect ECONNREFUSED 127.0.0.1:40001. If you are not running the Firebase Data Connect VSCode extension, this is expected and not an issue.
+[info] 
+┌─────────────────────────────────────────────────────────────┐
+│ ✔  All emulators ready! It is now safe to connect your app. │
+│ i  View Emulator UI at http://127.0.0.1:4000/               │
+└─────────────────────────────────────────────────────────────┘
+
+┌────────────────┬────────────────┬─────────────────────────────────┐
+│ Emulator       │ Host:Port      │ View in Emulator UI             │
+├────────────────┼────────────────┼─────────────────────────────────┤
+│ Authentication │ 127.0.0.1:9099 │ http://127.0.0.1:4000/auth      │
+├────────────────┼────────────────┼─────────────────────────────────┤
+│ Firestore      │ 127.0.0.1:8080 │ http://127.0.0.1:4000/firestore │
+└────────────────┴────────────────┴─────────────────────────────────┘
+  Emulator Hub host: 127.0.0.1 port: 4400
+  Other reserved ports: 4500, 9150
+
+Issues? Report them at https://github.com/firebase/firebase-tools/issues and attach the *-debug.log files.
+ 

@@ -111,8 +111,8 @@ export default function SignUpPage() {
         placeholder={placeholder}
         required
         className="shadow appearance-none border border-border rounded-lg w-full py-3 px-4
-                    text-foreground leading-tight focus:outline-none focus:ring-2 focus:ring-primary
-                    focus:border-transparent bg-input"
+                       text-foreground leading-tight focus:outline-none focus:ring-2 focus:ring-primary
+                       focus:border-transparent bg-input"
         />
     </div>
     );
@@ -127,44 +127,44 @@ export default function SignUpPage() {
 
         {/* Step 1: Choose Sign-up Type */}
         {signupType === null && (
-                    <div className="space-y-6"> {/* Increased spacing */}
-                        <h3 className="text-lg font-semibold text-center text-foreground mb-4">How would you like to sign up?</h3>
+                        <div className="space-y-6"> {/* Increased spacing */}
+                            <h3 className="text-lg font-semibold text-center text-foreground mb-4">How would you like to sign up?</h3>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4"> {/* Grid for side-by-side cards on larger screens */}
-                            {/* Individual Signup Card */}
-                            <button
-                                type="button" // Important for buttons not in a form
-                                onClick={() => setSignupType(SignupType.INDIVIDUAL)}
-                                className={`
-                                    flex flex-col items-center justify-center p-6 rounded-lg border-2
-                                    transition-all duration-200 ease-in-out
-                                    ${signupType === SignupType.INDIVIDUAL ? 'border-primary bg-primary-muted' : 'border-border bg-input hover:border-primary-hover'}
-                                    text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-75
-                                `}
-                            >
-                                {/* <UserIcon className="h-10 w-10 text-primary mb-3" /> Example icon */}
-                                <span className="font-semibold text-lg text-center">Sign up by myself</span>
-                                <p className="text-sm text-muted-foreground text-center mt-1">For personal use</p>
-                            </button>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4"> {/* Grid for side-by-side cards on larger screens */}
+                                {/* Individual Signup Card */}
+                                <button
+                                    type="button" // Important for buttons not in a form
+                                    onClick={() => setSignupType(SignupType.INDIVIDUAL)}
+                                    className={`
+                                        flex flex-col items-center justify-center p-6 rounded-lg border-2
+                                        transition-all duration-200 ease-in-out
+                                        ${signupType === SignupType.INDIVIDUAL ? 'border-primary bg-primary-muted' : 'border-border bg-input hover:border-primary-hover'}
+                                        text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-75
+                                    `}
+                                >
+                                    {/* <UserIcon className="h-10 w-10 text-primary mb-3" /> Example icon */}
+                                    <span className="font-semibold text-lg text-center">Sign up by myself</span>
+                                    <p className="text-sm text-muted-foreground text-center mt-1">For personal use</p>
+                                </button>
 
-                            {/* Organization Signup Card */}
-                            <button
-                                type="button" // Important for buttons not in a form
-                                onClick={() => setSignupType(SignupType.ORGANIZATION)}
-                                className={`
-                                    flex flex-col items-center justify-center p-6 rounded-lg border-2
-                                    transition-all duration-200 ease-in-out
-                                    ${signupType === SignupType.ORGANIZATION ? 'border-primary bg-primary-muted' : 'border-border bg-input hover:border-primary-hover'}
-                                    text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-75
-                                `}
-                            >
-                                {/* <BuildingOfficeIcon className="h-10 w-10 text-primary mb-3" /> Example icon */}
-                                <span className="font-semibold text-lg text-center">Sign up with an organization</span>
-                                <p className="text-sm text-muted-foreground text-center mt-1">Join an existing team</p>
-                            </button>
+                                {/* Organization Signup Card */}
+                                <button
+                                    type="button" // Important for buttons not in a form
+                                    onClick={() => setSignupType(SignupType.ORGANIZATION)}
+                                    className={`
+                                        flex flex-col items-center justify-center p-6 rounded-lg border-2
+                                        transition-all duration-200 ease-in-out
+                                        ${signupType === SignupType.ORGANIZATION ? 'border-primary bg-primary-muted' : 'border-border bg-input hover:border-primary-hover'}
+                                        text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-75
+                                    `}
+                                >
+                                    {/* <BuildingOfficeIcon className="h-10 w-10 text-primary mb-3" /> Example icon */}
+                                    <span className="font-semibold text-lg text-center">Sign up with an organization</span>
+                                    <p className="text-sm text-muted-foreground text-center mt-1">Join an existing team</p>
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                )}
+                    )}
 
         {/* Step 2: Organization Details (if selected) or Registration Form */}
         {signupType !== null && (
@@ -191,22 +191,31 @@ export default function SignUpPage() {
             <button
                 type="submit"
                 className="mt-6 w-full bg-primary hover:bg-primary-hover text-primary-foreground font-bold py-3 px-6 rounded-lg
-                            shadow-lg transition-colors duration-300 focus:outline-none focus:ring-2
-                            focus:ring-primary focus:ring-opacity-75"
+                                 shadow-lg transition-colors duration-300 focus:outline-none focus:ring-2
+                                 focus:ring-primary focus:ring-opacity-75"
             >
                 Sign Up
             </button>
             {/* Back button for the form */}
             <button
+                type="button"
                 onClick={() => setSignupType(null)} // Go back to type selection
                 className="mt-4 w-full bg-muted hover:bg-muted-foreground text-foreground font-bold py-2 px-4 rounded-lg
-                            transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-muted
-                            focus:ring-opacity-75"
+                                 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-muted
+                                 focus:ring-opacity-75"
             >
                 Back
             </button>
             </form>
         )}
+        
+        {/* Link to Login Page */}
+        <div className="text-center mt-6">
+            <a href="/login" className="text-sm text-muted-foreground transition-colors">
+                Already have an account? <span className="font-semibold text-primary">Login</span>
+            </a>
+        </div>
+
         </div>
     </div>
     );

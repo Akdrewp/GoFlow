@@ -54,7 +54,7 @@ export const canUserAccessData = async (
     // This block catches errors from `isValidUserToken` (authentication failure)
     // or any errors during the authorization step. It returns false for any failure.
     console.error("Access check failed during token validation or permission check:", (error as Error).message);
-    return false;
+    throw (error);
   }
 };
 
@@ -69,7 +69,6 @@ export const getDataForResource = async (
   token: string,
   resourceId: string
 ): Promise<{ success: boolean; data?: string; error?: string }> => {
-  // 1. Verify if the user has access to the resource.
   const hasAccess = await canUserAccessData(token, resourceId);
 
   if (!hasAccess) {

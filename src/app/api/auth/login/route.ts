@@ -3,7 +3,7 @@ import "server-only";
 // app/api/auth/login/route.ts
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { adminAuth } from '@/api/firebase/firebaseAdmin'; // Your admin SDK setup
+import { adminAuth } from '@/api/firebase/firebaseAdmin';
 
 export async function POST(request: Request) {
   try {

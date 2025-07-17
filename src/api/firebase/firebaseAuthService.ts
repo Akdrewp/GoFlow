@@ -81,6 +81,8 @@ export const firebaseAuthService: AuthService = {
      */
     signUpIndividual: async (formData: UserSignUpIndividual): Promise<Response> => {
       try {
+        
+        //Create new user via admin auth
         const response: UserCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
 
         if (response.user) {
@@ -94,6 +96,7 @@ export const firebaseAuthService: AuthService = {
           };
           const idToken = await auth.currentUser?.getIdToken();
 
+          //Have endpoint add user to database along with requisite fields
           const databaseResponse = await fetch(databaseSignUpApiEndpoint, {
             method: 'POST',
             headers: {

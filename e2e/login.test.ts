@@ -6,7 +6,9 @@ import { firebaseAuthService } from "@/api/firebase/firebaseAuthService";
 
 const NEXT_PUBLIC_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
-const apiEndpoint = `${NEXT_PUBLIC_BASE_URL}/api/auth/signup`;
+const SignUpApiEndpoint = `${NEXT_PUBLIC_BASE_URL}/api/auth/signup`;
+
+const loginApiEndpoint = `${NEXT_PUBLIC_BASE_URL}/api/auth/login`;
 
 const authClient = getAuth();
 
@@ -66,7 +68,7 @@ describe('Login API Route E2E Tests', () => {
             };
 
             //Add user to database via api route
-            const databaseResponse = await fetch(apiEndpoint, {
+            const databaseResponse = await fetch(SignUpApiEndpoint, {
                 method: 'POST',
                 headers: commonHeaders,
                 body: JSON.stringify({
@@ -112,7 +114,7 @@ describe('Login API Route E2E Tests', () => {
         // 2. Verify the API response is successful
         expect(response.status).toBe(200);
         const responseBody = await response.json();
-        expect(responseBody.success).toBe(true);
+        expect(responseBody.status).toBe('success');
 
         // 3. Verify the Set-Cookie header
         const setCookieHeader = response.headers.get('Set-Cookie');
@@ -130,4 +132,38 @@ describe('Login API Route E2E Tests', () => {
         }
     });
 
+    // Test Case 2: Token is missing
+    test('should respond with a fail when there is no token', async () => {
+        // Call the API route directly without an Authorization header
+        const response = await fetch(loginApiEndpoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+
+        // Verify the response status and body
+        expect(response.status).toBe(401);
+        const responseBody = await response.json();
+        expect(responseBody.status).toBe('fail');
+        expect(responseBody.message).toBe('Authorization token required.');
+    });
+
+    // Test Case 3: Token is invalid
+    test('should respond with an error when the token is invalid', async () => {
+        // Call the API route directly with a deliberately invalid token
+        const response = await fetch(loginApiEndpoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer this-is-not-a-valid-token',
+            },
+        });
+        
+        // Verify the response status and body
+        expect(response.status).toBe(401);
+        const responseBody = await response.json();
+        expect(responseBody.status).toBe('error');
+        expect(responseBody.message).toBe('Authentication failed');
+    });
 });
