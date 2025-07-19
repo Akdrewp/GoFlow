@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { firebaseAuthService } from "@/api/firebase/firebaseAuthService";
+import { redirect } from 'next/navigation';
 
 // LoginPage component for user authentication
 export default function Login() {
@@ -19,6 +20,10 @@ export default function Login() {
         setIsLoading(true);
         setError(''); // Clear previous errors
 
+        //Redirect cannot be called in a try/catch as
+        //it throws an error to redirect
+        let shouldRedirect = false;
+
         try {
             const response = await firebaseAuthService.login.loginWithEmail({
                 email: email,
@@ -27,9 +32,9 @@ export default function Login() {
 
             if (response.ok) {
                 console.log('Login successful, session cookie set.');
-                // On success, you would typically redirect the user to their dashboard.
-                // For example: window.location.href = '/dashboard';
-                // For this example, we'll just log it.
+
+                //Set it here to be read outside try/catch
+                shouldRedirect = true;
             } else {
                 const errorData = await response.json();
                 setError(errorData.message || 'An unknown error occurred.');
@@ -40,6 +45,11 @@ export default function Login() {
             setError((e as Error).message || 'Failed to log in. Please check your credentials.');
         } finally {
             setIsLoading(false);
+        }
+
+        //If login was ok then redirect to dashboard
+        if (shouldRedirect) {
+            redirect('/dashboard');
         }
     };
 

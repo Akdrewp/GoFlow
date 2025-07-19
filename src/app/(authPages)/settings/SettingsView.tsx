@@ -3,15 +3,18 @@
 import { useState } from 'react';
 import { useEffect } from 'react';
 
+import { GeneralSettings } from '@/app/(authPages)/settings/settingsOptions/GeneralSettings';
+import { OrganizationSettings } from '@/app/(authPages)/settings/settingsOptions/OrganizationSettings';
+
 export default function SettingsView({ data }: { data: string }) {
 
   useEffect(() => {
     console.log('Settings page received data:', data);
   }, [data]);
 
-  const [activeTab, setActiveTab] = useState('General');
+  const [activeTab, setActiveTab] = useState(GeneralSettings.element);
 
-  const navItems = ['General', 'Organization'];
+  const navItems = [GeneralSettings, OrganizationSettings];
 
   return (
     <div className="mx-auto w-full max-w-6xl">
@@ -27,33 +30,22 @@ export default function SettingsView({ data }: { data: string }) {
             <nav className="flex space-x-2 lg:flex-col lg:space-x-0 lg:space-y-1">
               {navItems.map((item) => (
                 <button
-                  key={item}
-                  onClick={() => setActiveTab(item)}
+                  key={item.name}
+                  onClick={() => setActiveTab(item.element)}
                   className={`inline-flex items-center whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50
                     ${
-                      activeTab === item
+                      activeTab === item.element
                         ? 'bg-muted text-foreground'
                         : 'hover:bg-muted/50 hover:text-foreground text-muted-foreground'
                     }`}
                 >
-                  {item}
+                  {item.name}
                 </button>
               ))}
             </nav>
           </aside>
           <div className="flex-1 lg:max-w-4xl">
-            {activeTab === 'General' && (
-              <div className="p-6 rounded-lg border bg-card text-card-foreground">
-                <h2 className="text-xl font-semibold">General Settings</h2>
-                <p className="text-muted-foreground mt-2">Content for General settings will be displayed here.</p>
-              </div>
-            )}
-            {activeTab === 'Organization' && (
-              <div className="p-6 rounded-lg border bg-card text-card-foreground">
-                <h2 className="text-xl font-semibold">Organization Settings</h2>
-                <p className="text-muted-foreground mt-2">Content for Organization settings will be displayed here.</p>
-              </div>
-            )}
+            {activeTab}
           </div>
         </div>
       </div>

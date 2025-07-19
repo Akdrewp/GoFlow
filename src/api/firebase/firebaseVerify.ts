@@ -27,6 +27,7 @@ export const isValidUserToken = async (token: string): Promise<DecodedIdToken> =
 /**
  * Safely verifies if a user can access a specific resource. It handles
  * both authentication (token verification) and authorization (permission check).
+ * @todo
  * @param token The user's Firebase ID token for authentication.
  * @param resourceId The unique identifier for the resource being accessed.
  * @returns A promise that resolves to `true` if the user has access,
