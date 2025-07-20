@@ -40,8 +40,7 @@ export const firebaseDatabase: Database = {
 
     /**
      * Adds a new organization's details to the 'organizations' collection.
-     * The organization's Firebase Auth UID (`organization.uid`) is used as the document ID.
-     * The custom `organizationId` field is stored within the document.
+     * Stored in /organizations/{organizationId}
      *
      * @param organization - The organization's data.
      * @returns A Promise that resolves when the operation is complete.
@@ -49,13 +48,12 @@ export const firebaseDatabase: Database = {
      */
     addOrganizationToDatabase: async (organization: Organization): Promise<void> => {
         try {
-            // The document ID for an organization is its Firebase Auth UID (organization.uid)
-            const orgDocId = organization.uid;
+            // The document is the organizationId
+            const orgDocId = organization.organizationId;
 
             await setDoc(doc(db, "organizations", orgDocId), {
                 name: organization.name,
                 email: organization.email,
-                uid: organization.uid, // This is the Firebase Auth UID (and doc ID)
                 organizationId: organization.organizationId, // This is the *custom* organization ID field
                 createdBy: organization.createdBy,
                 createdAt: organization.createdAt,

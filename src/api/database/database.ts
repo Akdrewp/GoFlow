@@ -10,7 +10,6 @@ export interface UserProfile {
 export interface Organization {
     name: string,
     email: string,
-    uid: string,
     createdAt: Date,
     organizationId: string,
     createdBy: string,
@@ -30,7 +29,6 @@ export const userProfileSchema = z.object({
 export const organizationSchema = z.object({
   name: z.string(),
   email: z.string(),
-  uid: z.string(),
   createdAt: z.coerce.date(),
   organizationId: z.string(),
   createdBy: z.string()
