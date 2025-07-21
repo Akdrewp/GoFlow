@@ -3,6 +3,7 @@ import { getAuth } from "firebase/auth";
 
 import { adminAuth, adminDb } from "@/api/firebase/firebaseAdmin";
 import { firebaseAuthService } from "@/api/firebase/firebaseAuthService"; 
+import { clearFirestoreAuth, clearFirestoreDB } from "./cleanUpEmulators";
 
 const NEXT_PUBLIC_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
@@ -11,26 +12,6 @@ const SignUpApiEndpoint = `${NEXT_PUBLIC_BASE_URL}/api/auth/signup`;
 const loginApiEndpoint = `${NEXT_PUBLIC_BASE_URL}/api/auth/login`;
 
 const authClient = getAuth();
-
-const clearFirestoreAuth = async () => {
-    //Deletes 1000 top users
-    const topUsers = await adminAuth.listUsers();
-    topUsers.users.forEach( (user) => {
-        void (async () => {
-            await adminAuth.deleteUser(user.uid);
-        })();
-    });
-};
-
-const clearFirestoreDB = async () => {
-    // Get a reference to the 'users' collection
-    const usersCollectionRef = adminDb.collection('users');
-
-    // Use recursiveDelete on the collection reference
-    // This will delete all documents and subcollections within 'users'.
-    await adminDb.recursiveDelete(usersCollectionRef);
-    console.log("Firestore 'users' collection and its subcollections (if any) recursively deleted.");
-};
 
 
 describe('Login API Route E2E Tests', () => {

@@ -5,6 +5,10 @@ import React, { useState } from 'react';
 // Placeholder for a service that would handle API calls
 // import { organizationService } from '@/api/organizationService';
 
+const NEXT_PUBLIC_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+const organizationsCreateEndpoint = `${NEXT_PUBLIC_BASE_URL}/api/organizations`;
+
+
 function CreateOrganizationForm() {
     const [orgName, setOrgName] = useState('');
     const [orgEmail, setOrgEmail] = useState('');
@@ -20,20 +24,39 @@ function CreateOrganizationForm() {
 
         try {
             console.log('Creating organization with:', { orgName, orgEmail, orgNumber });
-            // In a real application, you would call your backend service here.
-            // const result = await organizationService.create({ orgName, orgEmail, orgNumber });
-            
-            // if (result.success) {
-            //    console.log('Organization created successfully!');
-            //    // You would likely want to refresh the page or user data here
-            //    window.location.reload(); 
-            // } else {
-            //    setError(result.error || 'Failed to create organization.');
-            // }
 
-            // Simulating a successful API call for now
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            alert('Organization created successfully! (This is a placeholder)');
+            // 3. Send the token to the API route to create a session cookie
+            const sessionResponse = await fetch(organizationsCreateEndpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name: orgName,
+                    email: orgEmail,
+                    organizationId: orgNumber
+                }),
+            });
+
+            const showMessage = (msg: string) => {
+                const messageBox = document.createElement('div');
+                messageBox.className = "fixed inset-0 flex items-center justify-center z-50 p-4";
+                messageBox.innerHTML = `
+                <div class="bg-card text-foreground p-6 rounded-lg shadow-xl max-w-sm text-center">
+                    <p class="text-lg font-semibold mb-4">${msg}</p>
+                    <button class="bg-primary hover:bg-primary-hover text-primary-foreground font-bold py-2 px-4 rounded-md" onclick="this.parentNode.parentNode.remove()">
+                    OK
+                    </button>
+                </div>
+                `;
+                document.body.appendChild(messageBox);
+            };
+
+            const parsedSessionResponse = await sessionResponse.json();
+
+            console.log("SESSION response: ", parsedSessionResponse);
+
+            showMessage('Organization successfully created (Check console for data)');
 
 
         } catch (e) {
