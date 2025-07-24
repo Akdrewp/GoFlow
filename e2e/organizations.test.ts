@@ -135,7 +135,7 @@ describe('Login API Route E2E Tests', () => {
         expect(responseBody.message).toBe('Authentication required.');
     });
 
-        // Test Case 3: Invalid Input (Zod Validation Failure)
+    // Test Case 3: Invalid Input (Zod Validation Failure)
     test('should fail with a 400 Bad Request if the input data is invalid', async () => {
         // Missing 'name' field, which should be caught by the Zod schema
         const invalidOrgData = {

@@ -1,9 +1,11 @@
 // import "server-only";
 
-import { collection, doc, setDoc, getDoc, getDocs, query, where, } from "firebase/firestore";
+import { collection, doc, setDoc, getDoc, updateDoc, getDocs, query, where, } from "firebase/firestore";
 import { db } from "./firebaseConfig";
 
 import { Database, UserProfile, Organization} from "@/api/database/database";
+
+import { adminAuth } from './firebaseAdmin';
 
 
 // Export an object that adheres to the IDatabaseService interface
@@ -41,7 +43,7 @@ export const firebaseDatabase: Database = {
     /**
      * Adds a new organization's details to the 'organizations' collection.
      * Stored in /organizations/{organizationId}
-     *
+     * Adds user createdBy as an admin employee
      * @param organization - The organization's data.
      * @returns A Promise that resolves when the operation is complete.
      * @throws {Error} If the database operation fails.
@@ -50,8 +52,9 @@ export const firebaseDatabase: Database = {
         try {
             // The document is the organizationId
             const orgDocId = organization.organizationId;
-
-            await setDoc(doc(db, "organizations", orgDocId), {
+            const organizationDoc = doc(db, "organizations", orgDocId);
+            //Create organization
+            await setDoc(organizationDoc, {
                 name: organization.name,
                 email: organization.email,
                 organizationId: organization.organizationId, // This is the *custom* organization ID field
@@ -59,6 +62,34 @@ export const firebaseDatabase: Database = {
                 createdAt: organization.createdAt,
             });
             console.log("Organization document added with ID:", orgDocId);
+
+            //Add organization information to user who created the organization
+            const createdByUserId = organization.createdBy;
+            const createdByUserDoc = doc(db, "users", createdByUserId);
+            await updateDoc(createdByUserDoc, {
+                organizationId: organization.organizationId,
+                employeeId: 1
+            });
+
+            //Get user profile of createdBy
+            const createdByUserRecord = await adminAuth.getUser(createdByUserId);
+            //Cast to string to prevent typescirpt error
+            //Fields guarunteed to be defined since user being signed up and verified is
+            //precondition
+            const createdByUsername = (createdByUserRecord.displayName as string);
+            const createdByEmail = (createdByUserRecord.email as string);
+            //Create employees document under organization with createdBy user as only employee
+            const organizationEmployeesDoc = doc(db, "organizations/employees", createdByUserId);
+            await setDoc(organizationEmployeesDoc, {
+                name: createdByUsername,
+                email: createdByEmail,
+                role: "admin",
+                status: "active",
+                employeeId: "1",
+                uid: createdByUserId,
+            });
+
+
         } catch (e) {
             console.error("Error adding organization to database:", e);
             throw new Error(`Failed to add organization to database: ${(e as Error).message || 'Unknown error'}`);

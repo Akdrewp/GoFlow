@@ -5,6 +5,11 @@ import SettingsView from "./SettingsView";
 import { withServerAuth } from "@/app/lib/server-auth";
 import { getDataForResource } from "@/api/firebase/firebaseVerify";
 
+//Used for fetching requisite organization settings
+const getOrganizationSettingsData = () => {
+  const organizationRefId = `/organizations/`;
+};
+
 export default async function Settings() {
 
   const result = await withServerAuth((token) => {

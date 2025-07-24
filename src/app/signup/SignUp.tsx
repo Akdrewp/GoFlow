@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { redirect } from 'next/navigation';
 
 import { SignupType } from '@/api/auth/authService';
 import { firebaseAuthService } from "@/api/firebase/firebaseAuthService";
@@ -88,6 +89,9 @@ export default function SignUpPage() {
             };
 
             showMessage('Sign Up Successful! (Check console for data)');
+
+            //Signup done redirect to dashboard
+            redirect('/dashboard');
         })();
     };
 

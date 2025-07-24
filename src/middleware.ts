@@ -26,15 +26,6 @@ export default async function middleware(req: NextRequest) {
   if (isProtectedRoute && !token) {
     return NextResponse.redirect(new URL('/login', req.nextUrl));
   }
-
-  const isSignupPage = path.includes('/signup');
-  // 5. Redirect to /dashboard if the user is authenticated and is trying to access /signup
-  if (
-    isSignupPage &&
-    token
-  ) {
-    return NextResponse.redirect(new URL('/dashboard', req.nextUrl));
-  }
  
   return NextResponse.next();
 }

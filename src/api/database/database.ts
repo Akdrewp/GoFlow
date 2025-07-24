@@ -15,6 +15,22 @@ export interface Organization {
     createdBy: string,
 }
 
+//Employee's are added before they signup
+//Before an employee signs up status is inactive
+//signifying the employee hasn't signed up yet
+/**
+ * @todo Create enums for status and role
+ * Not sure what the status and roles should be
+ */
+export interface Employee {
+    name: string,
+    email: string,
+    role: string,
+    status: string,
+    employeeId?: string,
+    uid?: string,
+}
+
 import { z } from "zod";
 
 export const userProfileSchema = z.object({

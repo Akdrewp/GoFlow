@@ -9,6 +9,7 @@ const NEXT_PUBLIC_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localho
 const organizationsCreateEndpoint = `${NEXT_PUBLIC_BASE_URL}/api/organizations`;
 
 
+
 function CreateOrganizationForm() {
     const [orgName, setOrgName] = useState('');
     const [orgEmail, setOrgEmail] = useState('');
@@ -155,11 +156,18 @@ function CreateOrganizationForm() {
     );
 }
 
+function OrganizationFormSettings({ data }: { data: string }) {
+
+    console.log("Organization form settings", data);
+
+    return (
+        <div className="p-6 rounded-lg border bg-card text-card-foreground">
+            <CreateOrganizationForm />
+        </div>
+    );
+}
+
 export const OrganizationSettings = {
   name: 'Organization',
-  element: (
-    <div className="p-6 rounded-lg border bg-card text-card-foreground">
-      <CreateOrganizationForm />
-    </div>
-  ),
+  component: OrganizationFormSettings
 };

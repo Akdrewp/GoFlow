@@ -88,11 +88,11 @@ export default function Login() {
                 <h2 className="text-3xl font-bold text-center mb-6 text-foreground">Login to Your Account</h2>
                 
                 <form onSubmit={
-                      (e) => {
-                        void (async () => {
-                          await handleSubmit(e);
-                        })();
-                      }
+                        (e) => {
+                            void (async () => {
+                                await handleSubmit(e);
+                            })();
+                        }
                     }>
                     {renderInputField('email', 'Email', 'email', email, setEmail, 'your.email@example.com')}
                     {renderInputField('password', 'Password', 'password', password, setPassword, 'Enter your password')}
@@ -112,6 +112,13 @@ export default function Login() {
                         {isLoading ? 'Logging in...' : 'Login'}
                     </button>
                 </form>
+
+                {/* Link to Sign Up Page */}
+                <div className="text-center mt-6">
+                    <a href="/signup" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                        Don`&apos`t have an account? <span className="font-semibold text-primary">Sign Up</span>
+                    </a>
+                </div>
             </div>
         </div>
     );
