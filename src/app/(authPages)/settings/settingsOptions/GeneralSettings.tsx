@@ -1,4 +1,6 @@
-function GeneralSettingsElement({ data }: { data: string }) {
+import { DocumentData } from "firebase/firestore";
+
+function GeneralSettingsElement({ data }: { data: DocumentData | null }) {
 
     console.log("Organization form settings", data);
 

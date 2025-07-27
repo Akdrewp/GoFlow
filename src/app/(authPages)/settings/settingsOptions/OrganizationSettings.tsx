@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { DocumentData } from 'firebase/firestore';
 
 // Placeholder for a service that would handle API calls
 // import { organizationService } from '@/api/organizationService';
@@ -156,18 +157,63 @@ function CreateOrganizationForm() {
     );
 }
 
-function OrganizationFormSettings({ data }: { data: string }) {
+//Function OrgnaizationSettingsUser = { just display name, organizationId, and employeeId for now}
 
-    console.log("Organization form settings", data);
-
+/**
+ * A simple component to display the user's organization details.
+ * @param name - The name of the organization.
+ * @param organizationId - The organization's unique ID.
+ * @param employeeId - The user's employee ID within the organization.
+ */
+function OrganizationSettingsUser({ name, organizationId, employeeId }: { name: string, organizationId: string, employeeId: string }) {
     return (
-        <div className="p-6 rounded-lg border bg-card text-card-foreground">
-            <CreateOrganizationForm />
+        <div>
+            <div className="mb-4">
+                <h3 className="text-lg font-medium text-foreground">Organization Name</h3>
+                <p className="text-sm text-muted-foreground">{name}</p>
+            </div>
+            <div className="mb-4">
+                <h3 className="text-lg font-medium text-foreground">Organization ID</h3>
+                <p className="text-sm text-muted-foreground">{organizationId}</p>
+            </div>
+            <div>
+                <h3 className="text-lg font-medium text-foreground">Your Employee ID</h3>
+                <p className="text-sm text-muted-foreground">{employeeId}</p>
+            </div>
         </div>
     );
 }
 
+function OrganizationSettingsComponent({ data }: { data: DocumentData | null }) {
+
+    console.log("Organization form settings", data);
+
+    // If data has DocumentData then user is part of an organization.
+    // Then render Organzation Settings page
+    if (data) {
+        return (
+            <div className="p-6 rounded-lg border bg-card text-card-foreground">
+                <h2 className="text-xl font-semibold mb-4">Your Organization</h2>
+                <OrganizationSettingsUser 
+                    name={data.name || 'N/A'} 
+                    organizationId={data.organizationId || 'N/A'}
+                    // This assumes the user's employeeId will be fetched and passed separately
+                    // or added to the organization data. For now, we'll placeholder it.
+                    employeeId={data.userEmployeeId || 'N/A'} 
+                />
+            </div>
+        );
+    } else {
+        // User is not part of an organization just render create orgnaization form
+        return (
+            <div className="p-6 rounded-lg border bg-card text-card-foreground">
+                <CreateOrganizationForm />
+            </div>
+        );
+    }
+}
+
 export const OrganizationSettings = {
   name: 'Organization',
-  component: OrganizationFormSettings
+  component: OrganizationSettingsComponent
 };

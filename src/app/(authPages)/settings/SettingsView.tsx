@@ -1,16 +1,23 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { DocumentData } from 'firebase/firestore';
 
 // Assuming these are in the correct path
 import { GeneralSettings } from '@/app/(authPages)/settings/settingsOptions/GeneralSettings';
 import { OrganizationSettings } from '@/app/(authPages)/settings/settingsOptions/OrganizationSettings';
 
-export default function SettingsView({ data }: { data: string }) {
+interface SettingsData {
+    generalData: DocumentData | null;
+    organizationData: DocumentData | null;
+}
 
+export default function SettingsView({ settingsData }: { settingsData: SettingsData }) {
+
+  //Console log for settingData
   useEffect(() => {
-    console.log('Settings page received data:', data);
-  }, [data]);
+      console.log('SettingsView received structured data:', settingsData);
+  }, [settingsData]);
 
   // Store the *name* of the active tab, not the element itself.
   const [activeTab, setActiveTab] = useState(GeneralSettings.name);
@@ -19,6 +26,13 @@ export default function SettingsView({ data }: { data: string }) {
 
   // Find the component to render based on the active tab's name.
   const ActiveComponent = navItems.find(item => item.name === activeTab)?.component;
+
+    const dataMap: { [key: string]: DocumentData | null } = {
+        "General": settingsData.generalData,
+        "Organization": settingsData.organizationData,
+    };
+
+  const dataForActiveComponent = dataMap[activeTab];
 
   return (
     <div className="mx-auto w-full max-w-6xl">
@@ -50,7 +64,7 @@ export default function SettingsView({ data }: { data: string }) {
           </aside>
           <div className="flex-1 lg:max-w-4xl">
             {/* Render the active component and pass the data prop to it */}
-            {ActiveComponent && <ActiveComponent data={data} />}
+            {ActiveComponent && <ActiveComponent data={dataForActiveComponent} />}
           </div>
         </div>
       </div>
