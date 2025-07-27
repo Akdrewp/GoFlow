@@ -44,7 +44,7 @@ export async function organizationsRoute(request: NextRequest) {
     const resourceId = `organizations/${organizationId}`;
     const parsedCanUserAccessData = await canUserAccessData(token, resourceId, AccessType.WRITE); //User is tring to write to organizations
 
-    const organizationAlreadyExists = await firebaseDatabase.organizationExists(organizationId);
+    const organizationAlreadyExists = await firebaseDatabase.organization.exists(organizationId);
     if (organizationAlreadyExists) {
       return NextResponse.json(
           { status: "fail", message: "Organization with passed id already exists" },
@@ -55,7 +55,7 @@ export async function organizationsRoute(request: NextRequest) {
     //User has permission and data matches schema
     //Organization doesn't already exist
     //Continue with making organization
-    await firebaseDatabase.addOrganizationToDatabase({
+    await firebaseDatabase.organization.add({
       name: name,
       email: email,
       organizationId: organizationId,

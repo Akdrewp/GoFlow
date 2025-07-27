@@ -94,7 +94,7 @@ export async function signUpRoute(request: NextRequest) {
     
     // Token matches provided data
     // Proceed with adding account to database
-    await firebaseDatabase.addUserToDatabase(parsedReq);
+    await firebaseDatabase.user.add(parsedReq);
     console.log("SERVER LOG: === All unique key checks passed, returning 201 Success === Adding user to database");
     return NextResponse.json(
       { status: "success", message: "User account succesfully added to database", data: isValidUserFormData.data },

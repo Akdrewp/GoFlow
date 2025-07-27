@@ -1,7 +1,10 @@
 import { z } from 'zod';
 
+import { doc, DocumentData, getDoc } from 'firebase/firestore';
+
 import { DecodedIdToken } from 'firebase-admin/auth';
 import { adminAuth } from './firebaseAdmin'; // Assuming adminAuth is imported
+import { db } from './firebaseConfig';
 
 export enum AccessType {
   READ = "READ",
@@ -79,7 +82,7 @@ export const canUserAccessData = async (
 export const getDataForResource = async (
   token: string,
   resourceId: string
-): Promise<{ success: boolean; data?: string; error?: string }> => {
+): Promise<{ success: boolean; data?: DocumentData; error?: string }> => {
   const hasAccess = await canUserAccessData(token, resourceId, AccessType.READ);
 
   if (!hasAccess) {
@@ -88,7 +91,23 @@ export const getDataForResource = async (
 
   // 2. If access is granted, fetch and return the data.
   console.log(`Access granted. Fetching data for resource ${resourceId}...`);
-  return { success: true, data: "fakedata" };
+
+  /**
+   * @todo Change this for something more robust
+   * Right now using db from firebaseConfig but not sure whether
+   * mixing uses of adminDb/Auth with normal db/auth should be done
+   */
+  const docRef = doc(db, resourceId);
+  const docSnap = await getDoc(docRef);
+
+  if (!docSnap.exists()) {
+    return { success: false, error: "Resource not found." };
+  }
+
+  // Log the object directly to see its contents.
+  console.log(`Data for resource ${resourceId}:`, docSnap.data());
+
+  return { success: true, data: docSnap.data() };
 };
 
 /**
