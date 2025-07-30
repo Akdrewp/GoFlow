@@ -6,6 +6,7 @@ import { db } from "./firebaseConfig";
 import { Database, UserProfile, Organization} from "@/api/database/database";
 
 import { adminAuth } from './firebaseAdmin';
+import { database } from "firebase-admin";
 
 
 // This object now implements the new, nested Database interface
@@ -81,12 +82,23 @@ export const firebaseDatabase: Database = {
                 });
 
                 // Get user details to add to the employees sub-collection
-                const createdByUserRecord = await adminAuth.getUser(createdByUserId);
-                const createdByUsername = createdByUserRecord.displayName || "Admin User";
-                const createdByEmail = createdByUserRecord.email;
+                const createdByUserProfile = await firebaseDatabase.user.get(createdByUserId);
+
+                /**
+                 * @todo Refactor this to check for this before everything
+                 * if not only using within auth and form checking
+                 */
+                if (!createdByUserProfile) {
+                    throw Error("Invalid createdByUserId");
+                }
+
+                const createdByUsername = createdByUserProfile.name;
+                const createdByEmail = createdByUserProfile.email;
 
                 if (!createdByEmail) {
                     throw new Error("User creating organization must have an email address.");
+                } else if (!createdByUsername) {
+                    throw new Error("User creating organization must have a username.");
                 }
 
                 // Create the employee document within the organization's sub-collection

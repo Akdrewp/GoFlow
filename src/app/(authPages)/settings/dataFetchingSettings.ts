@@ -79,6 +79,6 @@ export const getOrganizationSettingsData = async (token: string): Promise<Organi
     }
   } catch(e) {
     console.log("getOrganizationSettingsData Error: ", e);
-    return null;
+    throw(e);
   }
 };
