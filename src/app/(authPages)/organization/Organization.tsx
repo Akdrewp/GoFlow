@@ -75,7 +75,8 @@ export default async function Organization() {
 
   return (
     <div>
-      <OrganizationDisplay info={OrganizationInfo} employees={employees}/>
+      {/** JSON parse and stringify is for converting to plain objects for NextJS */}
+      <OrganizationDisplay info={JSON.parse(JSON.stringify(OrganizationInfo))} employees={JSON.parse(JSON.stringify(employees))}/> 
     </div>
   );
 }

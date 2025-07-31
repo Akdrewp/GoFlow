@@ -24,9 +24,9 @@ export interface Organization {
  */
 export interface Employee {
     name: string,
-    email: string,
     role: string,
     status: string,
+    email?: string,
     employeeId?: string,
     uid?: string,
 }

@@ -5,9 +5,6 @@ import { db } from "./firebaseConfig";
 
 import { Database, UserProfile, Organization} from "@/api/database/database";
 
-import { adminAuth } from './firebaseAdmin';
-import { database } from "firebase-admin";
-
 
 // This object now implements the new, nested Database interface
 export const firebaseDatabase: Database = {

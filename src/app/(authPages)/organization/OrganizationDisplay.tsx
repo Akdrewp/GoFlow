@@ -1,10 +1,60 @@
-//Change type to sidestep duplicate organization use
-import { Organization as OrganizationType, Employee } from "@/api/database/database";
+'use client'; // This page now contains interactive client components
 
-// --- New Component for Displaying the Employee List ---
-function EmployeeList({ employees }: { employees: Employee[] | null }) {
-    if (!employees || employees.length === 0) {
-        return <p className="text-muted-foreground mt-4">No employees found.</p>;
+import { useState } from 'react';
+import { Organization as OrganizationType, Employee } from "@/api/database/database";
+import { Plus } from 'lucide-react';
+
+// --- Component for Displaying and Managing the Employee List ---
+function EmployeeList({ employees: initialEmployees }: { employees: Employee[] | null }) {
+    const [employees, setEmployees] = useState(initialEmployees);
+    const [isAdding, setIsAdding] = useState(false);
+    
+    // State for the new employee form
+    const [newName, setNewName] = useState('');
+    const [newRole, setNewRole] = useState('');
+    const [newEmployeeId, setNewEmployeeId] = useState('');
+
+    const handleAddNew = () => {
+        setIsAdding(true);
+    };
+
+    const handleCancel = () => {
+        setIsAdding(false);
+        // Clear input fields
+        setNewName('');
+        setNewRole('');
+        setNewEmployeeId('');
+    };
+
+    const handleSave = async () => {
+        // In a real app, you would call an API route here to save the new employee.
+        // The API would validate the data and write it to Firestore.
+        console.log('Saving new employee:', { name: newName, role: newRole, employeeId: newEmployeeId });
+        
+        // For demonstration, we'll add it to the local state.
+        const newEmployee: Employee = {
+            name: newName,
+            role: newRole,
+            employeeId: newEmployeeId,
+            status: 'invited', // New employees are 'invited' by default
+        };
+        setEmployees([...(employees || []), newEmployee]);
+
+        // After saving, exit the "add" mode and clear the form
+        handleCancel();
+    };
+
+
+    //If the organization has no employees show no employees message
+    if (!employees || employees.length === 0 && !isAdding) {
+        return (
+            <div className="text-center mt-8">
+                <p className="text-muted-foreground mb-4">No employees found.</p>
+                <button onClick={handleAddNew} className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4 py-2">
+                    <Plus className="mr-2 h-4 w-4" /> Add Employee
+                </button>
+            </div>
+        );
     }
 
     return (
@@ -13,16 +63,16 @@ function EmployeeList({ employees }: { employees: Employee[] | null }) {
             <div className="rounded-lg border bg-card text-card-foreground">
                 <div className="divide-y divide-border">
                     {/* Table Header */}
-                    <div className="grid grid-cols-4 gap-4 px-4 py-3 font-semibold">
-                        <div>Name</div>
+                    <div className="grid grid-cols-5 gap-4 px-4 py-3 font-semibold">
+                        <div className="col-span-2">Name</div>
                         <div>Role</div>
                         <div>Status</div>
                         <div>Employee ID</div>
                     </div>
                     {/* Table Body */}
                     {employees.map((employee, index) => (
-                        <div key={index} className="grid grid-cols-4 gap-4 px-4 py-3 text-muted-foreground">
-                            <div>{employee.name}</div>
+                        <div key={index} className="grid grid-cols-5 gap-4 px-4 py-3 text-muted-foreground items-center">
+                            <div className="col-span-2">{employee.name}</div>
                             <div>{employee.role}</div>
                             <div>
                                 <span className={`px-2 py-1 text-xs font-medium rounded-full ${
@@ -36,12 +86,47 @@ function EmployeeList({ employees }: { employees: Employee[] | null }) {
                             <div>{employee.employeeId}</div>
                         </div>
                     ))}
+                    {/* Inline Form for Adding New Employee */}
+                    {isAdding && (
+                        <div className="grid grid-cols-5 gap-4 px-4 py-3 items-center bg-muted/50">
+                            <div className="col-span-2">
+                                <input type="text" placeholder="Full Name" value={newName} onChange={(e) => setNewName(e.target.value)} className="bg-input border border-border rounded-md w-full p-2 text-sm" />
+                            </div>
+                            <div>
+                                <input type="text" placeholder="Role (e.g., Driver)" value={newRole} onChange={(e) => setNewRole(e.target.value)} className="bg-input border border-border rounded-md w-full p-2 text-sm" />
+                            </div>
+                            <div className="text-xs font-medium text-muted-foreground">Invited</div>
+                            <div>
+                                <input type="text" placeholder="Employee ID" value={newEmployeeId} onChange={(e) => setNewEmployeeId(e.target.value)} className="bg-input border border-border rounded-md w-full p-2 text-sm" />
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <button onClick={() => {
+                                    void (async () => {
+                                        await handleSave();
+                                    })();
+                            }} className="bg-primary text-primary-foreground h-8 px-3 rounded-md text-sm">Save</button>
+                                <button onClick={ () => {
+                                    void (async () => {
+                                        await handleCancel();
+                                    })();
+                                }} className="bg-muted text-muted-foreground h-8 px-3 rounded-md text-sm">Cancel</button>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
+             {/* "Add Employee" Button */}
+            {!isAdding && (
+                <div className="mt-4">
+                    <button onClick={handleAddNew} className="inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-4 py-2 border border-input bg-transparent shadow-sm hover:bg-accent hover:text-accent-foreground">
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add Employee
+                    </button>
+                </div>
+            )}
         </div>
     );
 }
-
 
 // --- Updated Component to Display Organization Info and the Employee List ---
 export function OrganizationDisplay({ info, employees }: { info: OrganizationType | null, employees: Employee[] | null }) {
