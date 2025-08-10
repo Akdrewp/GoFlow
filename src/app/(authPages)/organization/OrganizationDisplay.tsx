@@ -4,6 +4,10 @@ import { useState } from 'react';
 import { Organization as OrganizationType, Employee } from "@/api/database/database";
 import { Plus } from 'lucide-react';
 
+// organizationInfo global variable to allow apiRoute to use organizationId
+// Will be set in OrganizationDisplay
+let organizationInfo: OrganizationType;
+
 // --- Component for Displaying and Managing the Employee List ---
 function EmployeeList({ employees: initialEmployees }: { employees: Employee[] | null }) {
     const [employees, setEmployees] = useState(initialEmployees);
@@ -27,21 +31,49 @@ function EmployeeList({ employees: initialEmployees }: { employees: Employee[] |
     };
 
     const handleSave = async () => {
-        // In a real app, you would call an API route here to save the new employee.
-        // The API would validate the data and write it to Firestore.
-        console.log('Saving new employee:', { name: newName, role: newRole, employeeId: newEmployeeId });
-        
-        // For demonstration, we'll add it to the local state.
-        const newEmployee: Employee = {
-            name: newName,
-            role: newRole,
+        /**
+         * @todo 'invited' might not be something to have in the form
+         * could just be automatically set to invited
+         */
+        const newEmployeeData = { 
+            name: newName, 
+            role: newRole, 
             employeeId: newEmployeeId,
-            status: 'invited', // New employees are 'invited' by default
+            status: "invited"
         };
-        setEmployees([...(employees || []), newEmployee]);
 
-        // After saving, exit the "add" mode and clear the form
-        handleCancel();
+        try {
+            // Construct the API endpoint with the dynamic organizationId
+            const apiRoute = `/api/organizations/${organizationInfo.organizationId}/employees`;
+
+            const response = await fetch(apiRoute, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(newEmployeeData),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to add employee.');
+            }
+
+            const result = await response.json();
+            console.log('API Response:', result); 
+
+            // Optimistically update the UI with the new employee data
+            const newEmployee: Employee = {
+                ...newEmployeeData,
+                status: 'invited',
+            };
+            setEmployees([...(employees || []), newEmployee]);
+
+            handleCancel(); // Clear form on success
+            
+        } catch (e) {
+            console.error("Error saving employee:", e);
+        }
     };
 
 
@@ -140,6 +172,8 @@ export function OrganizationDisplay({ info, employees }: { info: OrganizationTyp
             </div>
         );
     }
+
+    organizationInfo = info;
 
     return (
         <div>

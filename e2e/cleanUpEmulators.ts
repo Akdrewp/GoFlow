@@ -14,7 +14,7 @@ export const clearFirestoreDB = async () => {
     // Get a reference to the 'users' collection
     const usersCollectionRef = adminDb.collection('users');
 
-    // Get a reference to the 'users' collection
+    // Get a reference to the 'organizations' collection
     const organizationsCollectionRef = adminDb.collection('organizations');
 
     // Use recursiveDelete on the collection reference

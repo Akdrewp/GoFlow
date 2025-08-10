@@ -12,9 +12,9 @@ import { FirebaseAuthError } from "firebase-admin/auth";
 export async function organizationsRoute(request: NextRequest) {
 
   try {
-    //Check sent data agianst organization schema
-    //Only check for name, email, and organizationId since
-    //Those are the form data
+    // Check sent data agianst organization schema
+    // Only check for name, email, and organizationId since
+    // Those are the form data
     const formOrganizationSchema = organizationSchema.pick({name : true, email: true, organizationId: true});
     const parsedReq = await request.json();
     const isValidUserFormData = formOrganizationSchema.safeParse(parsedReq);
@@ -43,6 +43,14 @@ export async function organizationsRoute(request: NextRequest) {
     //Get resourceId and check whether user can create an organization
     const resourceId = `organizations/${organizationId}`;
     const parsedCanUserAccessData = await canUserAccessData(token, resourceId, AccessType.WRITE); //User is tring to write to organizations
+
+    /**
+     * @todo If user not allowed to create an account
+     * This is always be defined but I might change it or the function name
+     */
+    if (!parsedCanUserAccessData) {
+
+    }
 
     const organizationAlreadyExists = await firebaseDatabase.organization.exists(organizationId);
     if (organizationAlreadyExists) {

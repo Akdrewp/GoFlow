@@ -42,7 +42,8 @@ export async function signUpRoute(request: NextRequest) {
         { status: 400 }); //Bad Request User Error
     }
 
-    const { uid, name, email } = isValidUserFormData.data; // Destructure validated data
+    // organizationId and employeeId may be undefined here if signing up individually
+    const { uid, name, email, organizationId, employeeId } = isValidUserFormData.data;
 
     // --- Duplicate Key Checks ---
 
@@ -94,12 +95,30 @@ export async function signUpRoute(request: NextRequest) {
     
     // Token matches provided data
     // Proceed with adding account to database
-    await firebaseDatabase.user.add(parsedReq);
-    console.log("SERVER LOG: === All unique key checks passed, returning 201 Success === Adding user to database");
-    return NextResponse.json(
-      { status: "success", message: "User account succesfully added to database", data: isValidUserFormData.data },
-      { status: 201 } // 201 Created is appropriate for successful creation
-    );
+
+    // If signing up with organization
+    if (organizationId && employeeId) {
+      /**
+       * @todo for now don't do anything special
+       */
+      await firebaseDatabase.user.add(parsedReq);
+
+      console.log("SERVER LOG: === All unique key checks passed, returning 201 Success === Adding organization user to database");
+      return NextResponse.json(
+        { status: "success", message: "User account succesfully added to database", data: isValidUserFormData.data },
+        { status: 201 } // 201 Created is appropriate for successful creation
+      );
+
+    } else { // Signing up individually
+      // Add user to database
+      await firebaseDatabase.user.add(parsedReq);
+
+      console.log("SERVER LOG: === All unique key checks passed, returning 201 Success === Adding user to database");
+      return NextResponse.json(
+        { status: "success", message: "User account succesfully added to database", data: isValidUserFormData.data },
+        { status: 201 } // 201 Created is appropriate for successful creation
+      );
+    }
 
   } catch (e) { 
     console.error("SERVER LOG: === API Route Error caught in catch block ===", e);

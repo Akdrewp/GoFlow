@@ -3,7 +3,7 @@
 import { collection, doc, setDoc, getDoc, updateDoc, getDocs, query, where, } from "firebase/firestore";
 import { db } from "./firebaseConfig";
 
-import { Database, UserProfile, Organization} from "@/api/database/database";
+import { Database, UserProfile, Organization, Employee } from "@/api/database/database";
 
 
 // This object now implements the new, nested Database interface
@@ -11,9 +11,33 @@ export const firebaseDatabase: Database = {
     user: {
         /**
          * Adds or updates a user's profile information in the 'users' collection.
+         * throws Error if userProfile includes orgnaizationId and employeeId
+         * but orgnization does not exists, employee does not exists, or
+         * employee already has an associated account
          */
         add: async (userProfile: UserProfile): Promise<void> => {
             try {
+                // If signing up with organization
+                if(userProfile.employeeId && userProfile.organizationId) {
+
+                    // If organization does not exist
+                    if ( !(await firebaseDatabase.organization.exists(userProfile.organizationId)) ) {
+                        throw new Error("Organization with passed organizationId does not exist");
+                    }
+
+                    // Check if employee exists and is not associated with any user yet
+                    const employeeExistsInOrg = await firebaseDatabase.employee.existsInOrg(userProfile.organizationId, userProfile.employeeId);
+                    const isEmployeeAlreadyAssociated = await firebaseDatabase.employee.isAssociated(userProfile.employeeId);
+                    if (employeeExistsInOrg){
+                        if (isEmployeeAlreadyAssociated) {
+                            throw new Error("Employee with passed employeeId already associated with an account");
+                        }
+                    }
+
+                    // User is in organization and is not associated with an organization yet
+                    // Activate user with user information
+                    await firebaseDatabase.employee.activate(userProfile.organizationId, userProfile.employeeId, userProfile.uid);
+                }
                 await setDoc(doc(db, "users", userProfile.uid), {
                     name: userProfile.name,
                     email: userProfile.email,
@@ -34,6 +58,9 @@ export const firebaseDatabase: Database = {
          */
         get: async (uid: string): Promise<UserProfile | null> => {
             try {
+                /**
+                 * @todo use of getDoc in these methods probably should delegate to firebaseVerify
+                 */
                 const userDocRef = doc(db, "users", uid);
                 const docSnap = await getDoc(userDocRef);
 
@@ -71,11 +98,15 @@ export const firebaseDatabase: Database = {
                 console.log("Organization document added with ID:", orgDocId);
 
                 // Update the user who created the organization
+                /**
+                 * @todo Decide what to do about employeeId of person who created organization
+                 */
+                const creatorEmployeeId = "1"; 
                 const createdByUserId = organization.createdBy;
                 const createdByUserDoc = doc(db, "users", createdByUserId);
                 await updateDoc(createdByUserDoc, {
                     organizationId: organization.organizationId,
-                    employeeId: "1", // Assuming the creator is employee #1
+                    employeeId: creatorEmployeeId, // Assuming the creator is employee #1
                 });
 
                 // Get user details to add to the employees sub-collection
@@ -98,14 +129,14 @@ export const firebaseDatabase: Database = {
                     throw new Error("User creating organization must have a username.");
                 }
 
-                // Create the employee document within the organization's sub-collection
-                const organizationEmployeesDoc = doc(db, `organizations/${orgDocId}/employees`, createdByUserId);
-                await setDoc(organizationEmployeesDoc, {
-                    name: createdByUsername,
+                // Organization is created in database
+                // Add creator as employee
+                await firebaseDatabase.organization.addEmployee(organization.organizationId,
+                    {name: createdByUsername,
                     email: createdByEmail,
                     role: "admin",
                     status: "active",
-                    employeeId: "1",
+                    employeeId: creatorEmployeeId,
                     uid: createdByUserId,
                 });
 
@@ -127,6 +158,22 @@ export const firebaseDatabase: Database = {
             } catch (e) {
                 console.error("Error checking organization existence:", e);
                 throw new Error(`Failed to check organization existence: ${(e as Error).message || 'Unknown error'}`);
+            }
+        },
+
+        addEmployee: async (organizationId: string, employeeData: Employee): Promise<void> => {
+            try {
+                // The path is contextual to the organization
+                const employeeDocRef = doc(db, `organizations/${organizationId}/employees`, employeeData.employeeId);
+                
+                await setDoc(employeeDocRef, {
+                    ...employeeData,
+                });
+
+                console.log(`Employee ${employeeData.employeeId} added to organization ${organizationId}`);
+            } catch (e) {
+                console.error("Error adding employee:", e);
+                throw new Error(`Failed to add employee: ${(e as Error).message}`);
             }
         },
     },
@@ -160,6 +207,31 @@ export const firebaseDatabase: Database = {
             } catch (e) {
                 console.error("Error checking if employee ID is already associated with a user:", e);
                 throw new Error(`Failed to check employee ID association: ${(e as Error).message || 'Unknown error'}`);
+            }
+        },
+
+        /**
+         * Updates an existing employee record to link a Firebase Auth UID
+         * and set their status to "active".
+         * @param organizationId The ID of the organization.
+         * @param employeeId The ID of the employee document.
+         * @param uid The Firebase Auth UID of the user to link.
+         */
+        activate: async (organizationId: string, employeeId: string, uid: string): Promise<void> => {
+            try {
+                // Path to the specific employee document
+                const employeeDocRef = doc(db, `organizations/${organizationId}/employees`, employeeId);
+                
+                // Use updateDoc to change only specific fields
+                await updateDoc(employeeDocRef, {
+                    uid: uid,
+                    status: "active"
+                });
+
+                console.log(`Employee ${employeeId} in org ${organizationId} activated for user ${uid}.`);
+            } catch (e) {
+                console.error("Error activating employee:", e);
+                throw new Error(`Failed to activate employee: ${(e as Error).message}`);
             }
         },
     }

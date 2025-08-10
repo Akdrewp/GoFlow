@@ -22,6 +22,11 @@ const getEmployeesForOrganization = async (organizationId: string): Promise<Empl
             return [];
         }
 
+        console.log("Organization.tsx getEmployeesForOrganization CONSOLE LOG:");
+        querySnapshot.docs.forEach((doc, index) => {
+            console.log(`  Employee ${index + 1}:`, doc.data());
+        });
+
         const employees = querySnapshot.docs.map(doc => doc.data() as Employee);
         return employees;
     } catch (e) {

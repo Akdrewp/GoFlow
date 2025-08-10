@@ -26,8 +26,8 @@ export interface Employee {
     name: string,
     role: string,
     status: string,
+    employeeId: string,
     email?: string,
-    employeeId?: string,
     uid?: string,
 }
 
@@ -50,12 +50,24 @@ export const organizationSchema = z.object({
   createdBy: z.string()
 });
 
+export const employeeSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  role: z.string().min(1, "Role is required"),
+  status: z.enum(["invited", "active"]),
+  employeeId: z.string().min(1, "Employee ID is required"),
+  email: z.string().email().optional(),
+  uid: z.string().optional(),
+});
+
 export interface Database {
     user: {
         /**
          * Adds or updates a user's profile information in the 'users' collection.
          * @param userProfile - The user's profile data.
          * @returns A Promise that resolves when the operation is complete.
+         * @throws Error if userProfile includes orgnaizationId and employeeId
+         * but orgnization does not exist, employee does not exist, or
+         * employee already has an associated account.
          */
         add(userProfile: UserProfile): Promise<void>;
 
@@ -81,6 +93,15 @@ export interface Database {
          * @returns A Promise resolving to true if the organization exists, false otherwise.
          */
         exists(organizationId: string): Promise<boolean>;
+
+        /**
+         * Adds employee with specified data to organization with organizationId
+         * @param organizationId The organizationId of the organization to add employee to
+         * @param employeeData Employee data
+         * @returns A Promise resolving to true if the employee was added
+         * @throws Error if employee could not be added
+         */
+        addEmployee(organizationId: string, employeeData: Employee): Promise<void>;
     };
     
     employee: {
@@ -98,5 +119,14 @@ export interface Database {
          * @returns A Promise resolving to true if a user with this employeeId already exists, false otherwise.
          */
         isAssociated(employeeId: string): Promise<boolean>;
+
+        /**
+         * Updates an existing employee record to link a Firebase Auth UID
+         * and set their status to "active".
+         * @param organizationId The ID of the organization.
+         * @param employeeId The ID of the employee document.
+         * @param uid The Firebase Auth UID of the user to link.
+         */
+        activate(organizationId: string, employeeId: string, uid: string): Promise<void>
     };
 }

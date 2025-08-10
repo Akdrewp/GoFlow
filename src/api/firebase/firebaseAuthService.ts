@@ -140,6 +140,8 @@ export const firebaseAuthService: AuthService = {
      */
     signUpOrganization: async (formData: UserSignUpOrganization): Promise<Response> => {
       try {
+
+        // Add user to firebase auth
         const userResponse: UserCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
 
         if (!userResponse.user) {
@@ -160,6 +162,7 @@ export const firebaseAuthService: AuthService = {
         
         const idToken = await auth.currentUser?.getIdToken();
 
+        // Add user to database
         const databaseResponse = await fetch(databaseSignUpApiEndpoint, {
           method: 'POST',
           headers: { 
