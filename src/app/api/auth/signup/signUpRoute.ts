@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from "@/api/firebase/firebaseConfig";
 import { adminAuth } from "@/api/firebase/firebaseAdmin";
 import { userProfileSchema } from "@/api/database/database";
-import { firebaseDatabase } from '@/api/firebase/firestoreDatabase';
+import { firebaseDatabase, firebaseDatabaseError } from '@/api/firebase/firestoreDatabase';
 
 import { collection, doc, getDoc, getDocs, query, where, } from "firebase/firestore";
 import { FirebaseAuthError } from "firebase-admin/auth";
@@ -139,6 +139,14 @@ export async function signUpRoute(request: NextRequest) {
             { status: "fail", message: "User not found in Firebase Authentication (UID mismatch). Please ensure account was created successfully." },
             { status: 404 } // Not Found
         );
+    }
+
+    if (e instanceof firebaseDatabaseError ) {
+      console.log("SERVER LOG: === Returning 400 - Database adding error ===");
+      return NextResponse.json(
+        { status: "fail", message: (e as Error).message },
+        { status: 400 }
+      );
     }
 
     // Catch other unexpected errors

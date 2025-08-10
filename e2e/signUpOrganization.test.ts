@@ -40,11 +40,9 @@ describe('Organization Signup API Route E2E Tests', () => {
             const employeeDocRef = adminDb.collection(`organizations/${testOrg.organizationId}/employees`).doc(invitedEmployee.employeeId);
             await employeeDocRef.set({
                 name: invitedEmployee.name,
-                email: invitedEmployee.email,
                 role: invitedEmployee.role,
                 employeeId: invitedEmployee.employeeId,
                 status: "invited", // The user is not yet active
-                uid: null, // The UID is null because the user hasn't signed up yet
             });
 
         } catch (e) {
@@ -94,5 +92,83 @@ describe('Organization Signup API Route E2E Tests', () => {
         expect(employeeDoc.exists).toBe(true);
         expect(employeeDoc.data()?.status).toBe('active');
         expect(employeeDoc.data()?.uid).toBe(createdUid); // The UID should now be linked
+    });
+
+    // Test Case 2: Employee ID does not exist
+    test('should fail if the employeeId does not exist in the organization', async () => {
+        const nonExistentEmployeeId = "EMP-DOES-NOT-EXIST";
+
+        // 1. Call the service with an employeeId that was never created
+        const apiResponse = await firebaseAuthService.signUp.signUpOrganization({
+            name: "Ghost User",
+            email: "ghost@testcorp.com",
+            password: "password123",
+            organizationId: testOrg.organizationId,
+            employeeId: nonExistentEmployeeId,
+        });
+
+        // 2. Verify the API returned a failure response
+        expect(apiResponse.ok).toBe(false);
+        expect(apiResponse.status).toBe(400); // Or the specific status code your API returns for this error
+
+        // 3. Verify the error message in the response body
+        const responseBody = await apiResponse.json();
+        expect(responseBody.message).toContain("Employee with passed employeeId does not exist in this organization");
+    });
+
+    // Test Case 3: Organization ID does not exist
+    test('should fail if the organizationId does not exist', async () => {
+        const nonExistentOrgId = "ORG-DOES-NOT-EXIST";
+
+        // 1. Call the service with an organizationId that was never created
+        const apiResponse = await firebaseAuthService.signUp.signUpOrganization({
+            name: invitedEmployee.name,
+            email: invitedEmployee.email,
+            password: invitedEmployee.password,
+            organizationId: nonExistentOrgId,
+            employeeId: invitedEmployee.employeeId,
+        });
+
+        // 2. Verify the API returned a failure response
+        expect(apiResponse.ok).toBe(false);
+        expect(apiResponse.status).toBe(400); // Assuming a 400 Bad Request for this validation error
+
+        // 3. Verify the error message in the response body
+        const responseBody = await apiResponse.json();
+        expect(responseBody.message).toContain("Organization with passed organizationId does not exist");
+    });
+
+    // Test Case 4: Employee ID is already associated with an account
+    test('should fail if the employeeId is already associated with another user', async () => {
+        // 1. First, simulate that another user has already claimed this employee ID
+        const firstUser = await adminAuth.createUser({ email: 'first.user@test.com', password: 'password123' });
+        await adminDb.collection('users').doc(firstUser.uid).set({
+            name: 'First User',
+            email: 'first.user@test.com',
+            organizationId: testOrg.organizationId,
+            employeeId: invitedEmployee.employeeId, // This user claims the ID
+        });
+        // Also update the employee record to "active"
+        await adminDb.collection(`organizations/${testOrg.organizationId}/employees`).doc(invitedEmployee.employeeId).update({
+            status: 'active',
+            uid: firstUser.uid,
+        });
+
+        // 2. Now, a second user tries to sign up with the SAME employeeId
+        const apiResponse = await firebaseAuthService.signUp.signUpOrganization({
+            name: invitedEmployee.name,
+            email: invitedEmployee.email, // This email is trying to claim the same spot
+            password: invitedEmployee.password,
+            organizationId: testOrg.organizationId,
+            employeeId: invitedEmployee.employeeId,
+        });
+
+        // 3. Verify the API correctly returns a conflict error
+        expect(apiResponse.ok).toBe(false);
+        expect(apiResponse.status).toBe(400);
+        
+        // 4. Verify the error message
+        const responseBody = await apiResponse.json();
+        expect(responseBody.message).toContain("Employee with passed employeeId already associated with an account");
     });
 });

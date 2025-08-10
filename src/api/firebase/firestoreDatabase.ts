@@ -5,6 +5,7 @@ import { db } from "./firebaseConfig";
 
 import { Database, UserProfile, Organization, Employee } from "@/api/database/database";
 
+export class firebaseDatabaseError extends Error {}
 
 // This object now implements the new, nested Database interface
 export const firebaseDatabase: Database = {
@@ -22,7 +23,7 @@ export const firebaseDatabase: Database = {
 
                     // If organization does not exist
                     if ( !(await firebaseDatabase.organization.exists(userProfile.organizationId)) ) {
-                        throw new Error("Organization with passed organizationId does not exist");
+                        throw new firebaseDatabaseError("Organization with passed organizationId does not exist");
                     }
 
                     // Check if employee exists and is not associated with any user yet
@@ -30,13 +31,17 @@ export const firebaseDatabase: Database = {
                     const isEmployeeAlreadyAssociated = await firebaseDatabase.employee.isAssociated(userProfile.employeeId);
                     if (employeeExistsInOrg){
                         if (isEmployeeAlreadyAssociated) {
-                            throw new Error("Employee with passed employeeId already associated with an account");
+                            throw new firebaseDatabaseError("Employee with passed employeeId already associated with an account");
                         }
-                    }
 
-                    // User is in organization and is not associated with an organization yet
-                    // Activate user with user information
-                    await firebaseDatabase.employee.activate(userProfile.organizationId, userProfile.employeeId, userProfile.uid);
+                        // User is in organization and is not associated with an organization yet
+                        // Activate user with user information
+                        await firebaseDatabase.employee.activate(userProfile.organizationId, userProfile.employeeId, userProfile.uid);
+                    } else {
+                        // Organization exists but employee id is not in organization
+                        throw new firebaseDatabaseError("Employee with passed employeeId does not exist in this organization");
+
+                    }
                 }
                 await setDoc(doc(db, "users", userProfile.uid), {
                     name: userProfile.name,
@@ -48,8 +53,14 @@ export const firebaseDatabase: Database = {
                 });
                 console.log("User document added/updated with UID:", userProfile.uid);
             } catch (e) {
+
                 console.error("Error adding user to database:", e);
-                throw new Error(`Failed to add user to database: ${(e as Error).message || 'Unknown error'}`);
+
+                if (e instanceof firebaseDatabaseError) {
+                    throw(e);
+                } else {
+                    throw new Error(`Failed to add user to database: ${(e as Error).message || 'Unknown error'}`);
+                }
             }
         },
 
@@ -188,6 +199,11 @@ export const firebaseDatabase: Database = {
                 const employeesRef = collection(db, `organizations/${organizationId}/employees`);
                 const q = query(employeesRef, where("employeeId", "==", employeeId));
                 const querySnapshot = await getDocs(q);
+
+                querySnapshot.docs.forEach((doc) => {
+                    console.log("firebaseDatabase.employee.existsInOrg CONSOLE LOG Doc data: ", doc.data());
+                });
+
                 return !querySnapshot.empty;
             } catch (e) {
                 console.error("Error checking employee ID validity within organization:", e);
