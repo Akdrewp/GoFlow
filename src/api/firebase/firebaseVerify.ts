@@ -77,37 +77,37 @@ export const canUserAccessData = async (
  * @param token The user's Firebase ID token for authentication.
  * @param resourceId The unique identifier for the resource being accessed.
  * @returns A promise that resolves to an object containing the requested
- * data if access is granted, or an error message if it is denied.
+ * data
+ * @throws Error if user cannot access data or data does not exists
  */
 export const getDataForResource = async (
   token: string,
   resourceId: string
-): Promise<{ success: boolean; data?: DocumentData; error?: string }> => {
-  const hasAccess = await canUserAccessData(token, resourceId, AccessType.READ);
-
-  if (!hasAccess) {
-    return { success: false, error: "Access denied. User is not authorized to view this resource." };
-  }
+): Promise<DocumentData> => {
+  
+  // Check if user can read the data
+  // This will throw an error if not
+  await canUserAccessData(token, resourceId, AccessType.READ);
 
   // 2. If access is granted, fetch and return the data.
   console.log(`Access granted. Fetching data for resource ${resourceId}...`);
 
-  /**
-   * @todo Change this for something more robust
-   * Right now using db from firebaseConfig but not sure whether
-   * mixing uses of adminDb/Auth with normal db/auth should be done
-   */
+  // Using client db firebase rules apply and will throw an error
+  // if user is not allowed to access data creating a second layer
+  // of authentication
   const docRef = doc(db, resourceId);
   const docSnap = await getDoc(docRef);
 
+  // This should already be taken care of by canUserAccessData
+  // but checking whether it exists again is fine
   if (!docSnap.exists()) {
-    return { success: false, error: "Resource not found." };
+    throw new Error("data with passed resourceId does not exist");
   }
 
   // Log the object directly to see its contents.
   console.log(`Data for resource ${resourceId}:`, docSnap.data());
 
-  return { success: true, data: docSnap.data() };
+  return docSnap.data();
 };
 
 /**
@@ -117,14 +117,15 @@ export const getDataForResource = async (
  * @param resourceId The unique identifier for the resource being updated
  * @param resourceData resourceData to be added to a doc must follow zod type
  * @returns A promise that resolves to an object containing the requested
- * data if access is granted, or an error message if it is denied.
+ * data
+ * @throws Error if user cannot access data or data does not exists
  */
 export const updateResource = async <T extends z.ZodTypeAny>(
   token: string,
   resourceId: string,
   resourceData: z.infer<T>, // Data MUST match the schema's inferred type
   schema: T                  // The Zod schema itself
-): Promise<{ success: boolean; data?: z.infer<T>; error?: string }> => {
+): Promise<z.infer<T>> => {
   
   const validation = schema.safeParse(resourceData);
   if (!validation.success) {

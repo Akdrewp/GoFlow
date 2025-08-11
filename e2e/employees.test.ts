@@ -76,13 +76,11 @@ describe('Add Employee API Route E2E Tests', () => {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                // This route will need a session cookie for authentication
                 'Cookie': `session-token=${validUserToken}`
             },
             body: JSON.stringify(newEmployeeData),
         });
 
-        // For this initial test, we're just checking the placeholder response
         const responseBody = await response.json();
         console.log("employees.test.ts CONSOLE LOG \n employeesRoute response message: ", responseBody.message);
         expect(response.status).toBe(201);

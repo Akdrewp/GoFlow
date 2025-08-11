@@ -160,6 +160,7 @@ export const firebaseAuthService: AuthService = {
           createdAt: new Date(),
         };
         
+        // Need idToken to call /auth/signUp
         const idToken = await auth.currentUser?.getIdToken();
 
         // Add user to database

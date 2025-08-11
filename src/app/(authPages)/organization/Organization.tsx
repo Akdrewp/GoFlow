@@ -46,19 +46,14 @@ const getOrganizationInfo = async (token: string): Promise<OrganizationType | nu
     // If user is part of organization get organization info
     if(userInfo?.organizationId && userInfo?.employeeId) {
       const organizationResourceId = `/organizations/${userInfo.organizationId}`;
+
+      // If user does not have access then this will throw an error
       const organizationDocumentData = await getDataForResource(token, organizationResourceId);
-
-      // Data should be defined since it was success but check for typescript
-      if (organizationDocumentData.success && organizationDocumentData?.data) {
         
-        // Cast data to organization interface and return
-        const organizationData = organizationDocumentData.data as OrganizationType;
-        return organizationData;
+      // Safe to assume data is defined and fite schema
+      const organizationData = organizationDocumentData.data as OrganizationType;
+      return organizationData;
 
-      } else { //organizationData.success is false
-        //Some reason the query went wrong
-        throw(new Error(organizationDocumentData.error as string));
-      }
     } else { // If user is not part of an organization
       // Return null
       return null;

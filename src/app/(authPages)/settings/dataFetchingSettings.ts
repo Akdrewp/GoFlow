@@ -22,24 +22,17 @@ export const getGeneralSettingsData = async (token: string): Promise<Organizatio
       const organizationResourceId = `/organizations/${userInfo.organizationId}`;
       const organizationDocumentData = await getDataForResource(token, organizationResourceId);
 
-      // Data should be defined since it was success but check for typescript
-      if (organizationDocumentData.success && organizationDocumentData?.data) {
-        
-        // Cast data to organization interface and return
-        const organizationData = organizationDocumentData.data as Organization;
-        return organizationData;
+      // Cast data to organization interface and return
+      const organizationData = organizationDocumentData.data as Organization;
+      return organizationData;
 
-      } else { //organizationData.success is false
-        //Some reason the query went wrong
-        throw(new Error(organizationDocumentData.error as string));
-      }
     } else { // If user is not part of an organization
       // Return null
       return null;
     }
   } catch(e) {
     console.log("getOrganizationSettingsData Error: ", e);
-    return null;
+    throw(e);
   }
 };
 
@@ -62,17 +55,10 @@ export const getOrganizationSettingsData = async (token: string): Promise<Organi
       const organizationResourceId = `/organizations/${userInfo.organizationId}`;
       const organizationDocumentData = await getDataForResource(token, organizationResourceId);
 
-      // Data should be defined since it was success but check for typescript
-      if (organizationDocumentData.success && organizationDocumentData?.data) {
-        
-        // Cast data to organization interface and return
-        const organizationData = organizationDocumentData.data as Organization;
-        return organizationData;
+      // Cast data to organization interface and return
+      const organizationData = organizationDocumentData.data as Organization;
+      return organizationData;
 
-      } else { //organizationData.success is false
-        //Some reason the query went wrong
-        throw(new Error(organizationDocumentData.error as string));
-      }
     } else { // If user is not part of an organization
       // Return null
       return null;
