@@ -1,3 +1,5 @@
+import "server-only";
+
 import { z } from 'zod';
 
 import { doc, DocumentData, getDoc } from 'firebase/firestore';
@@ -141,5 +143,5 @@ export const updateResource = async <T extends z.ZodTypeAny>(
 
   // ... update Firestore with validatedData ...
 
-  return { success: true, data: validatedData };
+  return validatedData;
 };

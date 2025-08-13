@@ -23,7 +23,7 @@ export const getGeneralSettingsData = async (token: string): Promise<Organizatio
       const organizationDocumentData = await getDataForResource(token, organizationResourceId);
 
       // Cast data to organization interface and return
-      const organizationData = organizationDocumentData.data as Organization;
+      const organizationData = organizationDocumentData as Organization;
       return organizationData;
 
     } else { // If user is not part of an organization
@@ -56,7 +56,7 @@ export const getOrganizationSettingsData = async (token: string): Promise<Organi
       const organizationDocumentData = await getDataForResource(token, organizationResourceId);
 
       // Cast data to organization interface and return
-      const organizationData = organizationDocumentData.data as Organization;
+      const organizationData = organizationDocumentData as Organization;
       return organizationData;
 
     } else { // If user is not part of an organization

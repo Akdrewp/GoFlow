@@ -1,3 +1,5 @@
+import { DocumentData } from "firebase-admin/firestore";
+
 export interface UserProfile {
     name: string,
     email: string,
@@ -128,5 +130,24 @@ export interface Database {
          * @param uid The Firebase Auth UID of the user to link.
          */
         activate(organizationId: string, employeeId: string, uid: string): Promise<void>
+    };
+
+    generic: {
+        /**
+         * Fetches any document from the database by its full path.
+         * @param resourceId - The full path to the document (e.g., "users/uid123").
+         * @returns A Promise resolving to the document's data if found
+         * @throws Error if data is not found
+         */
+        get(resourceId: string): Promise<DocumentData>;
+
+        /**
+         * Updates a document with the provided data after validating it against a schema.
+         * @param resourceId - The full path to the document to update.
+         * @param data - The data to update the document with.
+         * @param schema - The Zod schema to validate the data against.
+         * @returns A Promise that resolves when the update is complete.
+         */
+        update<T extends z.ZodTypeAny>(resourceId: string, data: z.infer<T>, schema: T): Promise<void>;
     };
 }

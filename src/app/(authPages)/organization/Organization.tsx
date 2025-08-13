@@ -51,7 +51,7 @@ const getOrganizationInfo = async (token: string): Promise<OrganizationType | nu
       const organizationDocumentData = await getDataForResource(token, organizationResourceId);
         
       // Safe to assume data is defined and fite schema
-      const organizationData = organizationDocumentData.data as OrganizationType;
+      const organizationData = organizationDocumentData as OrganizationType;
       return organizationData;
 
     } else { // If user is not part of an organization
