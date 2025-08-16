@@ -7,6 +7,8 @@ import { doc, DocumentData, getDoc } from 'firebase/firestore';
 import { DecodedIdToken } from 'firebase-admin/auth';
 import { adminAuth } from './firebaseAdmin'; // Assuming adminAuth is imported
 import { db } from './firebaseConfig';
+import { organizationDatabase, userDatabase } from "./firestoreDatabase";
+import { Organization } from "../database/database";
 
 export enum AccessType {
   READ = "READ",
@@ -52,7 +54,14 @@ export const canUserAccessData = async (
   accessType: AccessType,
 ): Promise<DecodedIdToken> => {
   try {
+
     const decodedIdToken = await isValidUserToken(token);
+
+    // Verify that the user has a profile in your database
+    const userProfile = await userDatabase.get(decodedIdToken.uid);
+    if (!userProfile) {
+      throw new Error(`User with UID ${decodedIdToken.uid} is authenticated but has no database profile.`);
+    }
     
     /**
      * @todo Replace with check permissions logic
@@ -144,4 +153,96 @@ export const updateResource = async <T extends z.ZodTypeAny>(
   // ... update Firestore with validatedData ...
 
   return validatedData;
+};
+
+export const organizationService = {
+  /**
+   * Handles creating a new organization.
+   * Adds organization to the database and adds the creator as
+   * employee
+   * @param organization - The organization's data.
+   * @returns A Promise that resolves when the operation is complete.
+   */
+  create: async (token: string, organization: Organization): Promise<void> => {
+    try {
+
+      // Make sure user can write to organizations
+      const decodedIdToken = await canUserAccessData(token, `organizations/${organization.organizationId}`, AccessType.WRITE);
+
+      // Document id is organizationId
+      const organizationId = organization.organizationId;
+      const organizationAlreadyExists = await organizationDatabase.exists(organizationId);
+
+      if (organizationAlreadyExists) {
+        throw new Error("Organization with passed organization id already exists");
+      }
+
+      // Add the organization to the database
+      await organizationDatabase.add(organization);
+
+      const createdByUserProfile = await userDatabase.get(decodedIdToken.uid);
+
+      // Add creator as employee with employeeId = 1
+      const creatorEmployeeId = "1"; 
+      const createdByUserId = organization.createdBy;
+      const createdByUsername = createdByUserProfile.name;
+      const createdByEmail = createdByUserProfile.email;
+      await organizationDatabase.addEmployee(organization.organizationId,{
+        name: createdByUsername,
+        email: createdByEmail,
+        role: "admin",
+        status: "active",
+        employeeId: creatorEmployeeId,
+        uid: createdByUserId,
+      });
+
+      // Update user information in database
+      userDatabase.
+
+
+    } catch (e) {
+      console.error("Error adding organization to database:", e);
+      throw new Error(`Failed to add organization to database: ${(e as Error).message || 'Unknown error'}`);
+    }
+  },
+
+  /**
+   * Checks if an organization with the given ID exists.
+   * @param organizationId - The ID of the organization to check.
+   * @returns A Promise resolving to true if the organization exists, false otherwise.
+   */
+  exists: async (customOrganizationId: string): Promise<boolean> => {
+    try {
+      // A direct get is more efficient than a query if the doc ID is the custom ID
+      const orgDocRef = doc(db, "organizations", customOrganizationId);
+      const docSnap = await getDoc(orgDocRef);
+      return docSnap.exists();
+    } catch (e) {
+      console.error("Error checking organization existence:", e);
+      throw new Error(`Failed to check organization existence: ${(e as Error).message || 'Unknown error'}`);
+    }
+  },
+
+  /**
+   * Adds employee with specified data to organization with organizationId
+   * @param organizationId The organizationId of the organization to add employee to
+   * @param employeeData Employee data
+   * @returns A Promise resolving to true if the employee was added
+   * @throws Error if employee could not be added
+   */
+  addEmployee: async (organizationId: string, employeeData: Employee): Promise<void> => {
+    try {
+      // The path is contextual to the organization
+      const employeeDocRef = doc(db, `organizations/${organizationId}/employees`, employeeData.employeeId);
+      
+      await setDoc(employeeDocRef, {
+        ...employeeData,
+      });
+
+      console.log(`Employee ${employeeData.employeeId} added to organization ${organizationId}`);
+    } catch (e) {
+      console.error("Error adding employee:", e);
+      throw new Error(`Failed to add employee: ${(e as Error).message}`);
+    }
+  },
 };

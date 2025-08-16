@@ -69,9 +69,10 @@ export const userDatabase = {
   /**
    * Fetches a user's profile from the 'users' collection by their UID.
    * @param uid - The user's Firebase Auth UID.
-   * @returns A Promise resolving to the UserProfile if found, otherwise null.
+   * @returns A Promise resolving to the UserProfile if found
+   * @throws Error if user is not found
    */
-  get: async (uid: string): Promise<UserProfile | null> => {
+  get: async (uid: string): Promise<UserProfile> => {
     try {
       /**
        * @todo use of getDoc in these methods probably should delegate to firebaseVerify
@@ -79,10 +80,6 @@ export const userDatabase = {
       const userDocRef = doc(db, "users", uid);
       const docSnap = await getDoc(userDocRef);
 
-      if (!docSnap.exists()) {
-        console.log(`No user found with UID: ${uid}`);
-        return null;
-      }
       // It's a good practice to validate the data with Zod here before casting
       return docSnap.data() as UserProfile;
     } catch (e) {
@@ -90,6 +87,10 @@ export const userDatabase = {
       throw new Error(`Failed to get user profile: ${(e as Error).message || 'Unknown error'}`);
     }
   },
+
+  /**
+   * @param updateUserProfile new user profile to follow
+   */
 };
 
 export const organizationDatabase = {
@@ -111,51 +112,6 @@ export const organizationDatabase = {
         createdBy: organization.createdBy,
         createdAt: organization.createdAt,
       });
-      console.log("Organization document added with ID:", orgDocId);
-
-      // Update the user who created the organization
-      /**
-       * @todo Decide what to do about employeeId of person who created organization
-       */
-      const creatorEmployeeId = "1"; 
-      const createdByUserId = organization.createdBy;
-      const createdByUserDoc = doc(db, "users", createdByUserId);
-      await updateDoc(createdByUserDoc, {
-        organizationId: organization.organizationId,
-        employeeId: creatorEmployeeId, // Assuming the creator is employee #1
-      });
-
-      // Get user details to add to the employees sub-collection
-      const createdByUserProfile = await userDatabase.get(createdByUserId);
-
-      /**
-       * @todo Refactor this to check for this before everything
-       * if not only using within auth and form checking
-       */
-      if (!createdByUserProfile) {
-        throw Error("Invalid createdByUserId");
-      }
-
-      const createdByUsername = createdByUserProfile.name;
-      const createdByEmail = createdByUserProfile.email;
-
-      if (!createdByEmail) {
-        throw new Error("User creating organization must have an email address.");
-      } else if (!createdByUsername) {
-        throw new Error("User creating organization must have a username.");
-      }
-
-      // Organization is created in database
-      // Add creator as employee
-      await organizationDatabase.addEmployee(organization.organizationId,
-        {name: createdByUsername,
-        email: createdByEmail,
-        role: "admin",
-        status: "active",
-        employeeId: creatorEmployeeId,
-        uid: createdByUserId,
-      });
-
     } catch (e) {
       console.error("Error adding organization to database:", e);
       throw new Error(`Failed to add organization to database: ${(e as Error).message || 'Unknown error'}`);
