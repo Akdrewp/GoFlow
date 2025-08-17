@@ -189,6 +189,6 @@ describe('Login API Route E2E Tests', () => {
     expect(conflictResponse.status).toBe(409);
     const responseBody = await conflictResponse.json();
     expect(responseBody.status).toBe('fail');
-    expect(responseBody.message).toBe('Organization with passed id already exists');
+    expect(responseBody.message).toBe('Organization with passed organizationId already exists');
   });
 });

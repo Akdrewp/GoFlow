@@ -3,9 +3,8 @@ import "server-only";
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from "next/headers";
 
-import { canUserAccessData, AccessType } from "@/api/firebase/firebaseVerify";
+import { FirebaseVerifyError, isValidUserToken, organizationService } from "@/api/firebase/firebaseVerify";
 import { organizationSchema } from "@/api/database/database";
-import { firebaseDatabase } from "@/api/firebase/firestoreDatabase";
 import { FirebaseAuthError } from "firebase-admin/auth";
 
 //For creating an organization
@@ -40,35 +39,15 @@ export async function organizationsRoute(request: NextRequest) {
       );
     }
 
-    //Get resourceId and check whether user can create an organization
-    const resourceId = `organizations/${organizationId}`;
-    const parsedCanUserAccessData = await canUserAccessData(token, resourceId, AccessType.WRITE); //User is tring to write to organizations
+    const userDecodedIdToken = await isValidUserToken(token);
 
-    /**
-     * @todo If user not allowed to create an account
-     * This is always be defined but I might change it or the function name
-     */
-    if (!parsedCanUserAccessData) {
-
-    }
-
-    const organizationAlreadyExists = await firebaseDatabase.organization.exists(organizationId);
-    if (organizationAlreadyExists) {
-      return NextResponse.json(
-          { status: "fail", message: "Organization with passed id already exists" },
-          { status: 409 } //Conflict
-      );
-    }
-
-    //User has permission and data matches schema
-    //Organization doesn't already exist
-    //Continue with making organization
-    await firebaseDatabase.organization.add({
+    // This checks for any duplicate organizations
+    await organizationService.create(token, {
       name: name,
       email: email,
       organizationId: organizationId,
       createdAt: new Date(),
-      createdBy: parsedCanUserAccessData.uid,
+      createdBy: userDecodedIdToken.uid,
     });
 
     //Organization added successfully
@@ -83,12 +62,19 @@ export async function organizationsRoute(request: NextRequest) {
         { status: "error", message: `Firebase Auth error: ${e.message}`},
         { status: 400 } //Bad Request User Error
       );
-    } else {
-        return NextResponse.json(
-          { status: "error", message: `Unknown error ${(e as Error).message}`},
-          { status: 500 } //Internal server error
-        );
     }
+
+    if (e instanceof FirebaseVerifyError) {
+      return NextResponse.json(
+        { status: "fail", message: e.message },
+        { status: e.code }
+      );
+    }
+
+    return NextResponse.json(
+      { status: "error", message: `Unknown error ${(e as Error).message}`},
+      { status: 500 } //Internal server error
+    );
   }
 
 }

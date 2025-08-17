@@ -20,49 +20,21 @@ export const userDatabase = {
    */
   add: async (userProfile: UserProfile): Promise<void> => {
     try {
-      // If signing up with organization
-      if(userProfile.employeeId && userProfile.organizationId) {
 
-        // If organization does not exist
-        if ( !(await organizationDatabase.exists(userProfile.organizationId)) ) {
-          throw new firebaseDatabaseError("Organization with passed organizationId does not exist");
-        }
-
-        // Check if employee exists and is not associated with any user yet
-        const employeeExistsInOrg = await employeeDatabase.existsInOrg(userProfile.organizationId, userProfile.employeeId);
-        const isEmployeeAlreadyAssociated = await employeeDatabase.isAssociated(userProfile.employeeId);
-        if (employeeExistsInOrg) {
-          if (isEmployeeAlreadyAssociated) {
-            throw new firebaseDatabaseError("Employee with passed employeeId already associated with an account");
-          }
-
-          // User is in organization and is not associated with an organization yet
-          // Activate user with user information
-          await employeeDatabase.activate(userProfile.organizationId, userProfile.employeeId, userProfile.uid);
-        } else {
-          // Organization exists but employee id is not in organization
-          throw new firebaseDatabaseError("Employee with passed employeeId does not exist in this organization");
-
-        }
-      }
+      // Add user to database
       await setDoc(doc(db, "users", userProfile.uid), {
-        name: userProfile.name,
-        email: userProfile.email,
-        uid: userProfile.uid,
-        ...(userProfile.organizationId && { organizationId: userProfile.organizationId }),
-        ...(userProfile.employeeId && { employeeId: userProfile.employeeId }),
-        createdAt: userProfile.createdAt || new Date(),
+          name: userProfile.name,
+          email: userProfile.email,
+          uid: userProfile.uid,
+          ...(userProfile.organizationId && { organizationId: userProfile.organizationId }),
+          ...(userProfile.employeeId && { employeeId: userProfile.employeeId }),
+          createdAt: userProfile.createdAt || new Date(),
       });
       console.log("User document added/updated with UID:", userProfile.uid);
     } catch (e) {
-
       console.error("Error adding user to database:", e);
-
-      if (e instanceof firebaseDatabaseError) {
-        throw(e);
-      } else {
-        throw new Error(`Failed to add user to database: ${(e as Error).message || 'Unknown error'}`);
-      }
+      // Re-throw a generic error for the service layer to handle.
+      throw new Error(`Failed to add user to database: ${(e as Error).message}`);
     }
   },
 
@@ -80,6 +52,8 @@ export const userDatabase = {
       const userDocRef = doc(db, "users", uid);
       const docSnap = await getDoc(userDocRef);
 
+      console.log("firestoreDatabase userDatabase get CONSOLE LOG getDoc(uid) = docSnap.data(): ", docSnap.data());
+
       // It's a good practice to validate the data with Zod here before casting
       return docSnap.data() as UserProfile;
     } catch (e) {
@@ -89,8 +63,33 @@ export const userDatabase = {
   },
 
   /**
-   * @param updateUserProfile new user profile to follow
+   * Updates an existing user's profile in the database.
+   * @param uid The UID of the user to update.
+   * @param userProfile An object containing the new profile data to apply.
+   * @returns A Promise that resolves with the updated user profile data.
+   * @throws An error if the user document does not exist or the update fails.
+   * @todo not sure whether to use Partial for userProfile or require the entire
+   * UserProfile objects
    */
+  update: async (uid: string, userProfile: Partial<UserProfile>): Promise<UserProfile> => {
+
+    try {
+        const userDocRef = doc(db, "users", uid);
+        
+        // updateDoc will throw an error if the document doesn't exist.
+        await updateDoc(userDocRef, userProfile);
+
+        console.log(`User profile for UID ${uid} successfully updated.`);
+
+        // Fetch the updated document to return the full, merged profile
+        const updatedDoc = await getDoc(userDocRef);
+        return updatedDoc.data() as UserProfile;
+
+    } catch (e) {
+        console.error(`Error updating user profile for UID ${uid}:`, e);
+        throw new Error(`Failed to update user profile: ${(e as Error).message || 'Unknown error'}`);
+    }
+  }
 };
 
 export const organizationDatabase = {

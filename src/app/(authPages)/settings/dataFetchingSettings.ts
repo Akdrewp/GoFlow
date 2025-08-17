@@ -1,5 +1,4 @@
-import { getDataForResource, isValidUserToken } from "@/api/firebase/firebaseVerify";
-import { firebaseDatabase } from "@/api/firebase/firestoreDatabase";
+import { getDataForResource, isValidUserToken, userService } from "@/api/firebase/firebaseVerify";
 
 import { Organization } from "@/api/database/database";
 
@@ -15,7 +14,7 @@ export const getGeneralSettingsData = async (token: string): Promise<Organizatio
     // Get userInfo
     const userDecodedIdToken = await isValidUserToken(token);
     const userUid = userDecodedIdToken.uid;
-    const userInfo = await firebaseDatabase.user.get(userUid);
+    const userInfo = await userService.get(token, userUid);
 
     // If user is part of organization get organization info
     if(userInfo?.organizationId && userInfo?.employeeId) {
@@ -48,7 +47,7 @@ export const getOrganizationSettingsData = async (token: string): Promise<Organi
     // Get userInfo
     const userDecodedIdToken = await isValidUserToken(token);
     const userUid = userDecodedIdToken.uid;
-    const userInfo = await firebaseDatabase.user.get(userUid);
+    const userInfo = await userService.get(token, userUid);
 
     // If user is part of organization get organization info
     if(userInfo?.organizationId && userInfo?.employeeId) {

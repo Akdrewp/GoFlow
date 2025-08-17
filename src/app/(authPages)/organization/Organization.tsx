@@ -1,5 +1,4 @@
-import { getDataForResource, isValidUserToken } from "@/api/firebase/firebaseVerify";
-import { firebaseDatabase } from "@/api/firebase/firestoreDatabase";
+import { getDataForResource, isValidUserToken, userService } from "@/api/firebase/firebaseVerify";
 import { withServerAuth } from "@/app/lib/server-auth";
 //Change type to sidestep duplicate organization use
 import { Organization as OrganizationType, Employee } from "@/api/database/database";
@@ -41,7 +40,7 @@ const getOrganizationInfo = async (token: string): Promise<OrganizationType | nu
     // Get userInfo
     const userDecodedIdToken = await isValidUserToken(token);
     const userUid = userDecodedIdToken.uid;
-    const userInfo = await firebaseDatabase.user.get(userUid);
+    const userInfo = await userService.get(token, userUid);
 
     // If user is part of organization get organization info
     if(userInfo?.organizationId && userInfo?.employeeId) {

@@ -7,12 +7,22 @@ import { doc, DocumentData, getDoc } from 'firebase/firestore';
 import { DecodedIdToken } from 'firebase-admin/auth';
 import { adminAuth } from './firebaseAdmin'; // Assuming adminAuth is imported
 import { db } from './firebaseConfig';
-import { organizationDatabase, userDatabase } from "./firestoreDatabase";
-import { Organization } from "../database/database";
+import { employeeDatabase, organizationDatabase, userDatabase, firebaseDatabaseError } from "./firestoreDatabase";
+import { Organization, Employee, UserProfile } from "../database/database";
 
 export enum AccessType {
   READ = "READ",
   WRITE = "WRITE",
+}
+
+export class FirebaseVerifyError extends Error {
+    public readonly code: number;
+
+    constructor(message: string, code: number) {
+        super(message);
+        this.name = "FirebaseVerifyError";
+        this.code = code;
+    }
 }
 
 /**
@@ -42,7 +52,7 @@ export const isValidUserToken = async (token: string): Promise<DecodedIdToken> =
  * Safely verifies if a user can access a specific resource 
  * with specified permissions. It handles
  * both authentication (token verification) and authorization (permission check).
- * @todo
+ * @todo Check if user is in the database
  * @param token The user's Firebase ID token for authentication.
  * @param resourceId The unique identifier for the resource being accessed.
  * @throws An error if the token is null, invalid, or expired. Or user does not have access
@@ -174,7 +184,7 @@ export const organizationService = {
       const organizationAlreadyExists = await organizationDatabase.exists(organizationId);
 
       if (organizationAlreadyExists) {
-        throw new Error("Organization with passed organization id already exists");
+        throw new FirebaseVerifyError("Organization with passed organizationId already exists", 409);
       }
 
       // Add the organization to the database
@@ -197,29 +207,16 @@ export const organizationService = {
       });
 
       // Update user information in database
-      userDatabase.
+      // Add employeeId and organizationId to account
+      await userDatabase.update(createdByUserId, {
+        employeeId: creatorEmployeeId,
+        organizationId: organizationId,
+      });
 
 
     } catch (e) {
       console.error("Error adding organization to database:", e);
-      throw new Error(`Failed to add organization to database: ${(e as Error).message || 'Unknown error'}`);
-    }
-  },
-
-  /**
-   * Checks if an organization with the given ID exists.
-   * @param organizationId - The ID of the organization to check.
-   * @returns A Promise resolving to true if the organization exists, false otherwise.
-   */
-  exists: async (customOrganizationId: string): Promise<boolean> => {
-    try {
-      // A direct get is more efficient than a query if the doc ID is the custom ID
-      const orgDocRef = doc(db, "organizations", customOrganizationId);
-      const docSnap = await getDoc(orgDocRef);
-      return docSnap.exists();
-    } catch (e) {
-      console.error("Error checking organization existence:", e);
-      throw new Error(`Failed to check organization existence: ${(e as Error).message || 'Unknown error'}`);
+      throw(e);
     }
   },
 
@@ -230,19 +227,120 @@ export const organizationService = {
    * @returns A Promise resolving to true if the employee was added
    * @throws Error if employee could not be added
    */
-  addEmployee: async (organizationId: string, employeeData: Employee): Promise<void> => {
+  addEmployee: async (token: string, organizationId: string, employeeData: Employee): Promise<void> => {
     try {
-      // The path is contextual to the organization
-      const employeeDocRef = doc(db, `organizations/${organizationId}/employees`, employeeData.employeeId);
-      
-      await setDoc(employeeDocRef, {
-        ...employeeData,
-      });
 
-      console.log(`Employee ${employeeData.employeeId} added to organization ${organizationId}`);
+      // Make sure user can write to employees
+      await canUserAccessData(token, `organizations/${organizationId}/employees`, AccessType.WRITE);
+
+      // Make sure it's not a duplicate employeeId
+      const employeeIdAlreadyExists = await employeeDatabase.existsInOrg(organizationId, employeeData.employeeId);
+      if (employeeIdAlreadyExists) {
+        throw new FirebaseVerifyError("Employee with passed employeeId already exists", 409); //Conflict
+      }
+
+      // Add employee to organization
+      await organizationDatabase.addEmployee(organizationId, employeeData);
+
     } catch (e) {
       console.error("Error adding employee:", e);
-      throw new Error(`Failed to add employee: ${(e as Error).message}`);
+      throw(e);
     }
   },
+};
+
+export const userService = {
+  /**
+   * Adds or updates a user's profile information in the 'users' collection.
+   * @param userProfile - The user's profile data.
+   * @returns A Promise that resolves when the operation is complete.
+   * @throws Error if userProfile includes orgnaizationId and employeeId
+   * but orgnization does not exist, employee does not exist, or
+   * employee already has an associated account.
+   */
+  add: async (userProfile: UserProfile): Promise<void> => {
+    try {
+      if (userProfile.employeeId && userProfile.organizationId) {
+        const { organizationId, employeeId, uid } = userProfile;
+
+        // Check if the organization exists
+        if (!(await organizationDatabase.exists(organizationId))) {
+            throw new firebaseDatabaseError("Organization with passed organizationId does not exist");
+        }
+
+        // Check if employee exists in organization
+        const employeeExists = await employeeDatabase.existsInOrg(organizationId, employeeId);
+        if (!employeeExists) {
+            throw new firebaseDatabaseError("Employee with passed employeeId does not exist in this organization");
+        }
+
+        // Check if employee already has an account associated with it
+        const isAssociated = await employeeDatabase.isAssociated(employeeId);
+        if (isAssociated) {
+            throw new firebaseDatabaseError("Employee with passed employeeId already associated with an account");
+        }
+
+        // Activate the employee record
+        await employeeDatabase.activate(organizationId, employeeId, uid);
+      }
+
+      // --- This runs for BOTH individual and organization sign-ups ---
+      await userDatabase.add(userProfile);
+
+      console.log("User document added/updated with UID: ", userProfile.uid);
+    } catch (e) {
+
+      console.error("Error adding user to database:", e);
+
+      if (e instanceof firebaseDatabaseError) {
+        throw(e);
+      } else {
+        throw new Error(`Failed to add user to database: ${(e as Error).message || 'Unknown error'}`);
+      }
+    }
+  },
+
+  /**
+   * Fetches a user's profile from the 'users' collection by their UID.
+   * @param uid - The user's Firebase Auth UID.
+   * @returns A Promise resolving to the UserProfile if found
+   * @throws Error if user is not found
+   */
+  get: async (token: string, uid: string): Promise<UserProfile> => {
+    try {
+
+      await canUserAccessData(token, `users/${uid}`, AccessType.READ);
+
+      const userProfile = await userDatabase.get(uid);
+
+      return userProfile;
+    } catch (e) {
+      console.error(`Error getting user profile for UID ${uid}:`, e);
+      throw new Error(`Failed to get user profile: ${(e as Error).message || 'Unknown error'}`);
+    }
+  },
+
+  /**
+   * Updates an existing user's profile in the database.
+   * @param uid The UID of the user to update.
+   * @param userProfile An object containing the new profile data to apply.
+   * @returns A Promise that resolves with the updated user profile data.
+   * @throws An error if the user document does not exist or the update fails.
+   * @todo not sure whether to use Partial for userProfile or require the entire
+   * UserProfile objects
+   */
+  update: async (token: string, uid: string, userProfile: Partial<UserProfile>): Promise<UserProfile> => {
+
+    try {
+      await canUserAccessData(token, `users/${uid}`, AccessType.READ);
+
+      const userProfileUpdated = await userDatabase.update(uid, userProfile);
+
+      return userProfileUpdated;
+
+    } catch (e) {
+        console.error(`Error updating user profile for UID ${uid}:`, e);
+        throw new Error(`Failed to update user profile: ${(e as Error).message || 'Unknown error'}`);
+    }
+  }
 };
