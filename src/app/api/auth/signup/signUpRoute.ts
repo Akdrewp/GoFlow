@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from "@/api/firebase/firebaseConfig";
 import { adminAuth } from "@/api/firebase/firebaseAdmin";
 import { userProfileSchema } from "@/api/database/database";
-import { firebaseDatabaseError } from '@/api/firebase/firestoreDatabase';
+import { FirebaseDatabaseError } from '@/api/firebase/firestoreDatabase';
 import { userService } from "@/api/firebase/firebaseVerify";
 
 import { collection, doc, getDoc, getDocs, query, where, } from "firebase/firestore";
@@ -142,11 +142,11 @@ export async function signUpRoute(request: NextRequest) {
         );
     }
 
-    if (e instanceof firebaseDatabaseError ) {
+    if (e instanceof FirebaseDatabaseError ) {
       console.log("SERVER LOG: === Returning 400 - Database adding error ===");
       return NextResponse.json(
         { status: "fail", message: (e as Error).message },
-        { status: 400 }
+        { status: e.code }
       );
     }
 

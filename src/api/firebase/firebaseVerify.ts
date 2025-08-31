@@ -7,8 +7,8 @@ import { doc, DocumentData, getDoc } from 'firebase/firestore';
 import { DecodedIdToken } from 'firebase-admin/auth';
 import { adminAuth } from './firebaseAdmin'; // Assuming adminAuth is imported
 import { db } from './firebaseConfig';
-import { employeeDatabase, organizationDatabase, userDatabase, firebaseDatabaseError } from "./firestoreDatabase";
-import { Organization, Employee, UserProfile } from "../database/database";
+import { employeeDatabase, organizationDatabase, userDatabase, permissionsDatabase } from "./firestoreDatabase";
+import { Organization, Employee, UserProfile, ORGANIZATION_RESOURCES, Role } from "../database/database";
 
 export enum AccessType {
   READ = "READ",
@@ -16,13 +16,13 @@ export enum AccessType {
 }
 
 export class FirebaseVerifyError extends Error {
-    public readonly code: number;
+  public readonly code: number;
 
-    constructor(message: string, code: number) {
-        super(message);
-        this.name = "FirebaseVerifyError";
-        this.code = code;
-    }
+  constructor(message: string, code: number) {
+    super(message);
+    this.name = "FirebaseVerifyError";
+    this.code = code;
+  }
 }
 
 /**
@@ -33,18 +33,18 @@ export class FirebaseVerifyError extends Error {
  */
 export const isValidUserToken = async (token: string): Promise<DecodedIdToken> => {
   try {
-    // Quick check to avoid running if null
-    if (!token) {
-      throw new Error("Token is null or undefined.");
-    }
-    // Check if token is valid
-    const decodedIdToken = await adminAuth.verifyIdToken(token);
-    // If token is valid, return the decoded data
-    return decodedIdToken;
+  // Quick check to avoid running if null
+  if (!token) {
+    throw new Error("Token is null or undefined.");
+  }
+  // Check if token is valid
+  const decodedIdToken = await adminAuth.verifyIdToken(token);
+  // If token is valid, return the decoded data
+  return decodedIdToken;
   } catch (e) {
-    // Token is invalid
-    console.error("Error validating token:", e);
-    throw new Error("Authentication token is invalid or expired.");
+  // Token is invalid
+  console.error("Error validating token:", e);
+  throw new Error("Authentication token is invalid or expired.");
   }
 };
 
@@ -52,7 +52,6 @@ export const isValidUserToken = async (token: string): Promise<DecodedIdToken> =
  * Safely verifies if a user can access a specific resource 
  * with specified permissions. It handles
  * both authentication (token verification) and authorization (permission check).
- * @todo Check if user is in the database
  * @param token The user's Firebase ID token for authentication.
  * @param resourceId The unique identifier for the resource being accessed.
  * @throws An error if the token is null, invalid, or expired. Or user does not have access
@@ -65,6 +64,8 @@ export const canUserAccessData = async (
 ): Promise<DecodedIdToken> => {
   try {
 
+    console.log("canUserAccessData CONSOLE LOG resourceId: ", resourceId);
+
     const decodedIdToken = await isValidUserToken(token);
 
     // Verify that the user has a profile in your database
@@ -72,15 +73,51 @@ export const canUserAccessData = async (
     if (!userProfile) {
       throw new Error(`User with UID ${decodedIdToken.uid} is authenticated but has no database profile.`);
     }
-    
-    /**
-     * @todo Replace with check permissions logic
-     */
-    const hasPermission = true;
 
-    if (!hasPermission) {
-      // The user is authenticated, but not authorized. Throw a specific error.
-      throw new Error(`User ${decodedIdToken.uid} is not authorized to ${accessType} resource ${resourceId}.`);
+    // If trying to access organization resource
+    if(ORGANIZATION_RESOURCES.some(resource => resourceId.includes(resource))) {
+
+      console.log("canUserAccessData CONSOLE LOG resource is organization");
+
+      // If user is not part of an organization throw error
+      if (!userProfile.employeeId || !userProfile.organizationId) {
+        throw new FirebaseVerifyError("User is not part of an organization, missing organizationId or employeeId", 403);
+      }
+
+      const userOrganizationId = userProfile.organizationId;
+      
+      const userEmployeeProfile = await organizationDatabase.getEmployee(userProfile.organizationId, userProfile.employeeId);
+      const userEmployeeRoleId = userEmployeeProfile?.roleId;
+      // See if user can access the data
+      const accessStatus = await permissionsDatabase.getAccessStatus(userOrganizationId, userEmployeeRoleId, resourceId, accessType);
+
+      if (!accessStatus) {
+        // The user is authenticated, but not authorized. Throw a specific error.
+        throw new FirebaseVerifyError(`User does not have permission for accessType: ${accessType} on resourceId: ${resourceId}`, 403);
+      }
+    } else { // User is trying to access data from their profile
+
+      console.log("canUserAccessData CONSOLE LOG resource is user resource: ", resourceId);
+
+      // resourceId should be of the form "users/fooId" where fooId is the userId
+
+      // The regular expression to match "users/{fooId}"
+      const validResourceRegex = /^users\/([^/]+)$/;
+
+      // Check if resourceId matches expected resourceId
+      const isValidResourceId = resourceId.match(validResourceRegex);
+      if (!isValidResourceId) {
+        throw new FirebaseVerifyError(`Invalid resourceId provided`, 400);
+      }
+
+      // Split users from fooId 
+      const pathSegments = resourceId.split('/');
+      const resourceUserId = pathSegments[1];
+
+      // Check if user is getting their own resource
+      if (resourceUserId != userProfile.uid) {
+        throw new FirebaseVerifyError(`User does not have permission for accessType: ${accessType} on resourceId: ${resourceId}`, 403);
+      }
     }
 
     // If we get here, everything is valid.
@@ -122,7 +159,7 @@ export const getDataForResource = async (
   // This should already be taken care of by canUserAccessData
   // but checking whether it exists again is fine
   if (!docSnap.exists()) {
-    throw new Error("data with passed resourceId does not exist");
+  throw new Error("data with passed resourceId does not exist");
   }
 
   // Log the object directly to see its contents.
@@ -144,20 +181,19 @@ export const getDataForResource = async (
 export const updateResource = async <T extends z.ZodTypeAny>(
   token: string,
   resourceId: string,
-  resourceData: z.infer<T>, // Data MUST match the schema's inferred type
-  schema: T                  // The Zod schema itself
+  resourceData: z.infer<T>,
+  schema: T
 ): Promise<z.infer<T>> => {
   
   const validation = schema.safeParse(resourceData);
   if (!validation.success) {
-    // Handle validation error
-    return { success: false, error: "Invalid data provided." };
+  // Handle validation error
+  return { success: false, error: "Invalid data provided." };
   }
 
   //See if user can perform such actions on the resource
   await canUserAccessData(token, resourceId, AccessType.WRITE);
 
-  // `validation.data` is now fully typed
   const validatedData = validation.data; 
 
   // ... update Firestore with validatedData ...
@@ -176,9 +212,13 @@ export const organizationService = {
   create: async (token: string, organization: Organization): Promise<void> => {
     try {
 
-      // Make sure user can write to organizations
-      const decodedIdToken = await canUserAccessData(token, `organizations/${organization.organizationId}`, AccessType.WRITE);
+      // Verify and get user profile
+      const decodedIdToken = await isValidUserToken(token);
+      const createdByUserProfile = await userDatabase.get(decodedIdToken.uid);
 
+      // Only a user not part of an organization can create an organization
+      
+      
       // Document id is organizationId
       const organizationId = organization.organizationId;
       const organizationAlreadyExists = await organizationDatabase.exists(organizationId);
@@ -190,7 +230,21 @@ export const organizationService = {
       // Add the organization to the database
       await organizationDatabase.add(organization);
 
-      const createdByUserProfile = await userDatabase.get(decodedIdToken.uid);
+      // Create permission set with full access to all resources
+      const adminPermissions = ORGANIZATION_RESOURCES.reduce((accumulator, resource) => {
+        // For each resource in the array, add a new key to our accumulator object.
+        accumulator[resource] = { read: true, write: true };
+        return accumulator;
+      }, {} as Role['permissions']); // Start with an empty object of the correct type
+
+      // Create admin role with full permissions
+      const adminRole = {
+        name: "admin",
+        permissions: adminPermissions
+      };
+
+      // Add admin role to database
+      await organizationDatabase.addRole(organizationId, "admin", adminRole);
 
       // Add creator as employee with employeeId = 1
       const creatorEmployeeId = "1"; 
@@ -200,7 +254,7 @@ export const organizationService = {
       await organizationDatabase.addEmployee(organization.organizationId,{
         name: createdByUsername,
         email: createdByEmail,
-        role: "admin",
+        roleId: "admin",
         status: "active",
         employeeId: creatorEmployeeId,
         uid: createdByUserId,
@@ -228,24 +282,24 @@ export const organizationService = {
    * @throws Error if employee could not be added
    */
   addEmployee: async (token: string, organizationId: string, employeeData: Employee): Promise<void> => {
-    try {
+  try {
 
-      // Make sure user can write to employees
-      await canUserAccessData(token, `organizations/${organizationId}/employees`, AccessType.WRITE);
+    // Make sure user can write to employees
+    await canUserAccessData(token, `organizations/${organizationId}/employees`, AccessType.WRITE);
 
-      // Make sure it's not a duplicate employeeId
-      const employeeIdAlreadyExists = await employeeDatabase.existsInOrg(organizationId, employeeData.employeeId);
-      if (employeeIdAlreadyExists) {
-        throw new FirebaseVerifyError("Employee with passed employeeId already exists", 409); //Conflict
-      }
-
-      // Add employee to organization
-      await organizationDatabase.addEmployee(organizationId, employeeData);
-
-    } catch (e) {
-      console.error("Error adding employee:", e);
-      throw(e);
+    // Make sure it's not a duplicate employeeId
+    const employeeIdAlreadyExists = await employeeDatabase.existsInOrg(organizationId, employeeData.employeeId);
+    if (employeeIdAlreadyExists) {
+    throw new FirebaseVerifyError("Employee with passed employeeId already exists", 409); //Conflict
     }
+
+    // Add employee to organization
+    await organizationDatabase.addEmployee(organizationId, employeeData);
+
+  } catch (e) {
+    console.error("Error adding employee:", e);
+    throw(e);
+  }
   },
 };
 
@@ -259,45 +313,48 @@ export const userService = {
    * employee already has an associated account.
    */
   add: async (userProfile: UserProfile): Promise<void> => {
-    try {
-      if (userProfile.employeeId && userProfile.organizationId) {
-        const { organizationId, employeeId, uid } = userProfile;
+  try {
+    if (userProfile.employeeId && userProfile.organizationId) {
+      const { organizationId, employeeId, uid } = userProfile;
 
-        // Check if the organization exists
-        if (!(await organizationDatabase.exists(organizationId))) {
-            throw new firebaseDatabaseError("Organization with passed organizationId does not exist");
-        }
-
-        // Check if employee exists in organization
-        const employeeExists = await employeeDatabase.existsInOrg(organizationId, employeeId);
-        if (!employeeExists) {
-            throw new firebaseDatabaseError("Employee with passed employeeId does not exist in this organization");
-        }
-
-        // Check if employee already has an account associated with it
-        const isAssociated = await employeeDatabase.isAssociated(employeeId);
-        if (isAssociated) {
-            throw new firebaseDatabaseError("Employee with passed employeeId already associated with an account");
-        }
-
-        // Activate the employee record
-        await employeeDatabase.activate(organizationId, employeeId, uid);
+      // Check if the organization exists
+      if (!(await organizationDatabase.exists(organizationId))) {
+        // 400 Bad Request: The client provided an invalid organization ID.
+        throw new FirebaseVerifyError("Organization with passed organizationId does not exist", 400);
       }
 
-      // --- This runs for BOTH individual and organization sign-ups ---
-      await userDatabase.add(userProfile);
-
-      console.log("User document added/updated with UID: ", userProfile.uid);
-    } catch (e) {
-
-      console.error("Error adding user to database:", e);
-
-      if (e instanceof firebaseDatabaseError) {
-        throw(e);
-      } else {
-        throw new Error(`Failed to add user to database: ${(e as Error).message || 'Unknown error'}`);
+      // Check if employee exists in organization
+      const employeeExists = await employeeDatabase.existsInOrg(organizationId, employeeId);
+      if (!employeeExists) {
+        // 400 Bad Request: The client provided an invalid employee ID for this org.
+        throw new FirebaseVerifyError("Employee with passed employeeId does not exist in this organization", 400);
       }
+
+      // Check if employee already has an account associated with it
+      const isAssociated = await employeeDatabase.isAssociated(employeeId);
+      if (isAssociated) {
+        // 409 Conflict: The request cannot be completed because the employee is already linked.
+        throw new FirebaseVerifyError("Employee with passed employeeId already associated with an account", 409);
+      }
+
+      // Activate the employee record
+      await employeeDatabase.activate(organizationId, employeeId, uid);
     }
+
+    // --- This runs for BOTH individual and organization sign-ups ---
+    await userDatabase.add(userProfile);
+
+    console.log("User document added/updated with UID: ", userProfile.uid);
+  } catch (e) {
+    console.error("Error adding user to database:", e);
+
+    // Re-throw specific business logic errors or a generic one
+    if (e instanceof FirebaseVerifyError) {
+      throw e;
+    } else {
+      throw new Error(`Failed to add user to database: ${(e as Error).message || 'Unknown error'}`);
+    }
+  }
   },
 
   /**
@@ -307,17 +364,17 @@ export const userService = {
    * @throws Error if user is not found
    */
   get: async (token: string, uid: string): Promise<UserProfile> => {
-    try {
+  try {
 
-      await canUserAccessData(token, `users/${uid}`, AccessType.READ);
+    await canUserAccessData(token, `users/${uid}`, AccessType.READ);
 
-      const userProfile = await userDatabase.get(uid);
+    const userProfile = await userDatabase.get(uid);
 
-      return userProfile;
-    } catch (e) {
-      console.error(`Error getting user profile for UID ${uid}:`, e);
-      throw new Error(`Failed to get user profile: ${(e as Error).message || 'Unknown error'}`);
-    }
+    return userProfile;
+  } catch (e) {
+    console.error(`Error getting user profile for UID ${uid}:`, e);
+    throw new Error(`Failed to get user profile: ${(e as Error).message || 'Unknown error'}`);
+  }
   },
 
   /**
@@ -331,16 +388,16 @@ export const userService = {
    */
   update: async (token: string, uid: string, userProfile: Partial<UserProfile>): Promise<UserProfile> => {
 
-    try {
-      await canUserAccessData(token, `users/${uid}`, AccessType.READ);
+  try {
+    await canUserAccessData(token, `users/${uid}`, AccessType.READ);
 
-      const userProfileUpdated = await userDatabase.update(uid, userProfile);
+    const userProfileUpdated = await userDatabase.update(uid, userProfile);
 
-      return userProfileUpdated;
+    return userProfileUpdated;
 
-    } catch (e) {
-        console.error(`Error updating user profile for UID ${uid}:`, e);
-        throw new Error(`Failed to update user profile: ${(e as Error).message || 'Unknown error'}`);
-    }
+  } catch (e) {
+    console.error(`Error updating user profile for UID ${uid}:`, e);
+    throw new Error(`Failed to update user profile: ${(e as Error).message || 'Unknown error'}`);
+  }
   }
 };

@@ -13,7 +13,7 @@ describe('Organization Signup API Route E2E Tests', () => {
   const invitedEmployee = {
     name: "Jane Doe",
     email: "jane.doe@testcorp.com",
-    role: "Driver",
+    roleId: "Driver",
     employeeId: "EMP001",
     password: "password123"
   };
@@ -37,7 +37,7 @@ describe('Organization Signup API Route E2E Tests', () => {
       const employeeDocRef = adminDb.collection(`organizations/${testOrg.organizationId}/employees`).doc(invitedEmployee.employeeId);
       await employeeDocRef.set({
         name: invitedEmployee.name,
-        role: invitedEmployee.role,
+        roleId: invitedEmployee.roleId,
         employeeId: invitedEmployee.employeeId,
         status: "invited", // The user is not yet active
       });

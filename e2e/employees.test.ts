@@ -72,7 +72,7 @@ describe('Add Employee API Route E2E Tests', () => {
   test('should successfully add a new employee to an organization', async () => {
     const newEmployeeData = {
       name: "New Hire",
-      role: "Driver",
+      roleId: "Driver",
       employeeId: "EMP456",
       status: "invited"
     };
@@ -121,7 +121,7 @@ describe('Add Employee API Route E2E Tests', () => {
     expect(missingRoleBody.status).toBe('fail');
 
     // --- Scenario: Missing 'name' ---
-    const missingNameData = { role: "Driver", employeeId: "EMP789", status: "invited" };
+    const missingNameData = { roleId: "Driver", employeeId: "EMP789", status: "invited" };
     const missingNameResponse = await fetch(apiRoute, {
       method: 'POST',
       headers: commonHeaders,
@@ -132,7 +132,7 @@ describe('Add Employee API Route E2E Tests', () => {
     expect(missingNameBody.status).toBe('fail');
 
     // --- Scenario: Missing 'employeeId' ---
-    const missingEmployeeIdData = { name: "Incomplete Hire", role: "Driver", status: "invited" };
+    const missingEmployeeIdData = { name: "Incomplete Hire", roleId: "Driver", status: "invited" };
     const missingEmployeeIdResponse = await fetch(apiRoute, {
       method: 'POST',
       headers: commonHeaders,
@@ -143,7 +143,7 @@ describe('Add Employee API Route E2E Tests', () => {
     expect(missingEmployeeIdBody.status).toBe('fail');
 
     // --- Scenario: Missing 'status' ---
-    const missingStatusData = { name: "Incomplete Hire", role: "Driver", employeeId: "EMP789" };
+    const missingStatusData = { name: "Incomplete Hire", roleId: "Driver", employeeId: "EMP789" };
     const missingStatusResponse = await fetch(apiRoute, {
       method: 'POST',
       headers: commonHeaders,
@@ -159,7 +159,7 @@ describe('Add Employee API Route E2E Tests', () => {
   test('should fail with a 409 Conflict if the employeeId already exists', async () => {
     const employeeData = {
       name: "First Hire",
-      role: "Driver",
+      roleId: "Driver",
       employeeId: "EMP999",
       status: "invited"
     };
@@ -182,7 +182,7 @@ describe('Add Employee API Route E2E Tests', () => {
     // 2. Attempt to add another employee with the SAME employeeId
     const duplicateData = {
       name: "Second Hire",
-      role: "Technician",
+      roleId: "Technician",
       employeeId: "EMP999", // Same ID
       status: "invited"
     };

@@ -27,7 +27,7 @@ export async function employeesRoute(
     }
 
     //Destructure form data
-    const { name, role, status, employeeId } = isValidUserFormData.data;
+    const { name, roleId, status, employeeId } = isValidUserFormData.data;
 
     //Get session token
     const userCookies = await cookies();
@@ -44,7 +44,7 @@ export async function employeesRoute(
     // This checks for duplicate employeeId
     await organizationService.addEmployee(token, organizationId, {
       name: name,
-      role: role,
+      roleId: roleId,
       status: status,
       employeeId: employeeId
     });

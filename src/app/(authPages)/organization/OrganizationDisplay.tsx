@@ -31,13 +31,11 @@ function EmployeeList({ employees: initialEmployees }: { employees: Employee[] |
     };
 
     const handleSave = async () => {
-        /**
-         * @todo 'invited' might not be something to have in the form
-         * could just be automatically set to invited
-         */
+        // Store the data and set status as "invited"
+        // default since employee hasn't signed up yet
         const newEmployeeData = { 
             name: newName, 
-            role: newRole, 
+            roleId: newRole, 
             employeeId: newEmployeeId,
             status: "invited"
         };
@@ -105,7 +103,7 @@ function EmployeeList({ employees: initialEmployees }: { employees: Employee[] |
                     {employees.map((employee, index) => (
                         <div key={index} className="grid grid-cols-5 gap-4 px-4 py-3 text-muted-foreground items-center">
                             <div className="col-span-2">{employee.name}</div>
-                            <div>{employee.role}</div>
+                            <div>{employee.roleId}</div>
                             <div>
                                 <span className={`px-2 py-1 text-xs font-medium rounded-full ${
                                     employee.status === 'active' 
