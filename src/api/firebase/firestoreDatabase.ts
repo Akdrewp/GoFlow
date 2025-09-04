@@ -1,4 +1,4 @@
-import "server-only";
+// import "server-only";
 
 import { z } from "zod";
 
@@ -216,6 +216,37 @@ export const organizationDatabase = {
       // Re-throw the error to be handled by the calling business logic layer.
       throw new Error(`Failed to add role: ${(error as Error).message}`);
     }
+  },
+
+  /**
+   * Fetches a specific role document from an organization's 'roles' sub-collection.
+   * @param organizationId The ID of the organization where the role is defined.
+   * @param roleId The ID of the role to fetch.
+   * @returns A promise that resolves to the Role object if found
+   * @throws An error if the database read operation fails or the roleId does not exist in the organization
+   */
+  getRole: async (organizationId: string, roleId: string): Promise<Role> => {
+      try {
+
+          // Get roleDocPath
+          const roleDocPath = `organizations/${organizationId}/roles/${roleId}`;
+          const roleDocRef = doc(db, roleDocPath);
+
+          // Fetch the document snapshot.
+          const docSnap = await getDoc(roleDocRef);
+
+          if (!docSnap.exists()) {
+              console.log(`Role with ID "${roleId}" not found in organization "${organizationId}".`);
+              throw new FirebaseDatabaseError(`Role with ID "${roleId}" not found in organization `, 400);
+          }
+
+          return docSnap.data() as Role;
+
+      } catch (error) {
+          console.error(`Error fetching role "${roleId}" from organization "${organizationId}":`, error);
+          // Re-throw the error to be handled by the calling business logic layer.
+          throw new Error(`Failed to fetch role: ${(error as Error).message}`);
+      }
   }
 
 
@@ -327,24 +358,55 @@ export const permissionsDatabase = {
    */
   getAccessStatus: async (organizationId: string, roleId: string, resourceType: string, accessType: AccessType): Promise<boolean> => {
     try {
-      // Get the role document
-      const roleDocPath = `organizations/${organizationId}/roles/${roleId}`;
-      const roleDocRef = doc(db, roleDocPath);
-      const roleDocSnap = await getDoc(roleDocRef);
 
-      // If there is no role associated with the information throw error
-      if (!roleDocSnap.exists) {
-        throw new Error(`Role with ID "${roleId}" not found in organization "${organizationId}".`);
-      }
+      const roleData = await organizationDatabase.getRole(organizationId, roleId);
 
-      const roleData = roleDocSnap.data();
+      console.log("getAccessStatus CONSOLE LOG roleData(roleDocSnap.data()): ", roleData);
+
       if (!roleData?.permissions) {
         // The role exists but has no permissions defined, so deny access.
+        // Should never happen but check edge case
         return false;
       }
 
-      // Check permissions map
-      const hasPermission = roleData.permissions[resourceType]?.[accessType.toLowerCase()];
+      /**
+       * resourceType is of the form 'organizations/ORG123/collectionName'
+       * when checking access on a collection
+       * OR
+       * resourceType is of the form 'organizations/ORG123/collectionName/documentId'
+       * when checking access on a certain document in a collection
+       */
+      const pathSegements = resourceType.split("/");
+
+      // Check if resourceType segments is odd and is of the form
+      // 'organizations/ORG123/collectionName'
+      if (pathSegements.length % 2 != 0) {
+        const collectionName = pathSegements.at(-1) as string;
+        const hasPermission = roleData.permissions[collectionName]?.[accessType];
+
+        return hasPermission;
+      }
+
+      // pathSegments is even and
+      // is of the form 'organizations/ORG123/collectionName/documentId'
+      const collectionName = pathSegements.at(-2) as string;
+      const documentId = pathSegements.at(-1) as string;
+
+      // Check permissions map with specified collection and access type
+      const hasPermission = roleData.permissions[collectionName]?.[accessType];
+
+      // Check if trying to write to an employee document
+      if (accessType == AccessType.WRITE && collectionName == "employees" && documentId) {
+        // Get role of employee trying to write to
+        const requestedEmployeeRole = await organizationDatabase.getRole(organizationId, documentId);
+
+        // Check if requesters permission level is greater than
+        // permission level of employee trying to write to
+        if (requestedEmployeeRole.level >= roleData.level) {
+          return false;
+        }
+
+      }
 
       // return the permissions result
       return hasPermission == true;

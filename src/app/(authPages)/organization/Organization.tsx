@@ -44,7 +44,7 @@ const getOrganizationInfo = async (token: string): Promise<OrganizationType | nu
 
     // If user is part of organization get organization info
     if(userInfo?.organizationId && userInfo?.employeeId) {
-      const organizationResourceId = `/organizations/${userInfo.organizationId}`;
+      const organizationResourceId = `organizations/${userInfo.organizationId}`;
 
       // If user does not have access then this will throw an error
       const organizationDocumentData = await getDataForResource(token, organizationResourceId);

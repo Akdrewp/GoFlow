@@ -3,6 +3,7 @@ import { getAuth } from "firebase/auth";
 
 import { adminAuth, adminDb } from "@/api/firebase/firebaseAdmin";
 import { clearFirestoreAuth, clearFirestoreDB } from "./cleanUpEmulators";
+import { userService } from "@/api/firebase/firebaseVerify";
 
 //Api endpoints used for testing
 const NEXT_PUBLIC_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
@@ -20,7 +21,6 @@ describe('Login API Route E2E Tests', () => {
     password: "password123",
   };
 
-  // At the top of your test file (outside any describe or test blocks)
   let validUserToken: string;
   let validUserUid: string; // To store the UID of the user whose token we are using
 
@@ -176,12 +176,35 @@ describe('Login API Route E2E Tests', () => {
     });
     expect(initialResponse.status).toBe(201); // Ensure the first one was created
 
+    const conflictOrgIdUser = {
+      email: "conflictOrgIdUser@gmail.com",
+      password: "password",
+      displayName: "conflictOrgIdUser"
+    };
+
+    // Create the admin user in Auth
+    const adminUserRecord = await adminAuth.createUser(conflictOrgIdUser);
+    const adminUid = adminUserRecord.uid;
+
+    // Sign in as the user to get a valid ID token
+    const conflictOrgUserCredential = await signInWithEmailAndPassword(authClient, conflictOrgIdUser.email, conflictOrgIdUser.password);
+    const conflictOrgIdUserToken = await conflictOrgUserCredential.user.getIdToken();
+
+    // Add conflictOrgIdUser to database
+    await userService.add({
+      name: conflictOrgIdUser.displayName,
+      email: conflictOrgIdUser.email,
+      uid: adminUid,
+      createdAt: new Date(),
+    });
+
+
     // Now, try to create it again with the same ID
     const conflictResponse = await fetch(organizationsCreateEndpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Cookie': `session-token=${validUserToken}`
+        'Cookie': `session-token=${conflictOrgIdUserToken}`
       },
       body: JSON.stringify(orgData),
     });

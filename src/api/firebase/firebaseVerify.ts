@@ -1,4 +1,4 @@
-import "server-only";
+// import "server-only";
 
 import { z } from 'zod';
 
@@ -11,8 +11,8 @@ import { employeeDatabase, organizationDatabase, userDatabase, permissionsDataba
 import { Organization, Employee, UserProfile, ORGANIZATION_RESOURCES, Role } from "../database/database";
 
 export enum AccessType {
-  READ = "READ",
-  WRITE = "WRITE",
+  READ = "read",
+  WRITE = "write",
 }
 
 export class FirebaseVerifyError extends Error {
@@ -48,6 +48,7 @@ export const isValidUserToken = async (token: string): Promise<DecodedIdToken> =
   }
 };
 
+
 /**
  * Safely verifies if a user can access a specific resource 
  * with specified permissions. It handles
@@ -74,27 +75,65 @@ export const canUserAccessData = async (
       throw new Error(`User with UID ${decodedIdToken.uid} is authenticated but has no database profile.`);
     }
 
-    // If trying to access organization resource
-    if(ORGANIZATION_RESOURCES.some(resource => resourceId.includes(resource))) {
+    // Check if trying to access organization resource
+    const isOrganizationResource = ORGANIZATION_RESOURCES.some(resource => resourceId.includes(resource));
+    if (isOrganizationResource) {
 
-      console.log("canUserAccessData CONSOLE LOG resource is organization");
+      console.log("canUserAccessData CONSOLE LOG resource is organization", resourceId);
 
       // If user is not part of an organization throw error
       if (!userProfile.employeeId || !userProfile.organizationId) {
-        throw new FirebaseVerifyError("User is not part of an organization, missing organizationId or employeeId", 403);
+        throw new FirebaseVerifyError(
+          "User is not part of an organization, missing organizationId or employeeId",
+          403 // Forbidden
+        );
       }
 
-      const userOrganizationId = userProfile.organizationId;
-      
       const userEmployeeProfile = await organizationDatabase.getEmployee(userProfile.organizationId, userProfile.employeeId);
       const userEmployeeRoleId = userEmployeeProfile?.roleId;
-      // See if user can access the data
-      const accessStatus = await permissionsDatabase.getAccessStatus(userOrganizationId, userEmployeeRoleId, resourceId, accessType);
+
+      // Check if segments is an odd number meaning
+      // user is trying to write a new document to a collection
+      // resourceId is of form "organizations/orgId/collectionName"
+      const oddNumberedPathSegmentRegex = /^organizations\/[^\/]+(?:\/[^\/]+\/[^\/]+)*\/[^\/]+$/;
+      const oddNumberedPathSegmentMatch = resourceId.match(oddNumberedPathSegmentRegex);
+
+      // Organization resources are of the form "organizations/someOrganizationId/someResource/someResourceId"
+      // where someResource/someResourceId is optional
+      const evenNumberedPathSegmentRegex = /^organizations\/([^/]+)(?:\/([^/]+)\/([^/]+))?$/;
+      const evenNumberedPathSegmentMatch = resourceId.match(evenNumberedPathSegmentRegex);
+
+      const resourceSegments = resourceId.split("/");
+
+      // OrganizationId is the second segment
+      const resourceOrgId = resourceSegments[1];
+
+      // Check if resource isn't part of user organization trying to edit
+      if (resourceOrgId != userProfile.organizationId) {
+        throw new FirebaseVerifyError(
+          "Forbidden: User is not a member of the requested organization.", 
+          403 // Forbidden
+        );
+      }
+
+      const accessStatus = await permissionsDatabase.getAccessStatus(userProfile.organizationId, userEmployeeRoleId, resourceId, accessType);
 
       if (!accessStatus) {
         // The user is authenticated, but not authorized. Throw a specific error.
-        throw new FirebaseVerifyError(`User does not have permission for accessType: ${accessType} on resourceId: ${resourceId}`, 403);
+        throw new FirebaseVerifyError(
+          `User does not have permission for accessType: ${accessType} on resourceId: ${resourceId}`,
+          403 // Forbidden
+        );
       }
+
+      if (!(evenNumberedPathSegmentMatch || oddNumberedPathSegmentMatch)) {
+        // Doesn't match required resourceId schema
+        throw new FirebaseVerifyError(
+          "Invalid resourceId provided", 
+          400 // Bad request
+        );     
+      }
+
     } else { // User is trying to access data from their profile
 
       console.log("canUserAccessData CONSOLE LOG resource is user resource: ", resourceId);
@@ -107,7 +146,10 @@ export const canUserAccessData = async (
       // Check if resourceId matches expected resourceId
       const isValidResourceId = resourceId.match(validResourceRegex);
       if (!isValidResourceId) {
-        throw new FirebaseVerifyError(`Invalid resourceId provided`, 400);
+        throw new FirebaseVerifyError(
+          "Invalid resourceId provided",
+          400 // Bad request
+        );
       }
 
       // Split users from fooId 
@@ -116,7 +158,10 @@ export const canUserAccessData = async (
 
       // Check if user is getting their own resource
       if (resourceUserId != userProfile.uid) {
-        throw new FirebaseVerifyError(`User does not have permission for accessType: ${accessType} on resourceId: ${resourceId}`, 403);
+        throw new FirebaseVerifyError(
+          `User does not have permission for accessType: ${accessType} on resourceId: ${resourceId}`,
+          403 // Forbidden
+        );
       }
     }
 
@@ -217,7 +262,9 @@ export const organizationService = {
       const createdByUserProfile = await userDatabase.get(decodedIdToken.uid);
 
       // Only a user not part of an organization can create an organization
-      
+      if (createdByUserProfile?.employeeId || createdByUserProfile?.organizationId) {
+        throw new FirebaseVerifyError("Cannot create an organization if user is already part of an organization", 403);
+      }
       
       // Document id is organizationId
       const organizationId = organization.organizationId;
@@ -240,6 +287,7 @@ export const organizationService = {
       // Create admin role with full permissions
       const adminRole = {
         name: "admin",
+        level: 100,
         permissions: adminPermissions
       };
 
@@ -282,24 +330,24 @@ export const organizationService = {
    * @throws Error if employee could not be added
    */
   addEmployee: async (token: string, organizationId: string, employeeData: Employee): Promise<void> => {
-  try {
+    try {
 
-    // Make sure user can write to employees
-    await canUserAccessData(token, `organizations/${organizationId}/employees`, AccessType.WRITE);
+      // Make sure user can write to employees
+      await canUserAccessData(token, `organizations/${organizationId}/employees`, AccessType.WRITE);
 
-    // Make sure it's not a duplicate employeeId
-    const employeeIdAlreadyExists = await employeeDatabase.existsInOrg(organizationId, employeeData.employeeId);
-    if (employeeIdAlreadyExists) {
-    throw new FirebaseVerifyError("Employee with passed employeeId already exists", 409); //Conflict
+      // Make sure it's not a duplicate employeeId
+      const employeeIdAlreadyExists = await employeeDatabase.existsInOrg(organizationId, employeeData.employeeId);
+      if (employeeIdAlreadyExists) {
+      throw new FirebaseVerifyError("Employee with passed employeeId already exists", 409); //Conflict
+      }
+
+      // Add employee to organization
+      await organizationDatabase.addEmployee(organizationId, employeeData);
+
+    } catch (e) {
+      console.error("Error adding employee:", e);
+      throw(e);
     }
-
-    // Add employee to organization
-    await organizationDatabase.addEmployee(organizationId, employeeData);
-
-  } catch (e) {
-    console.error("Error adding employee:", e);
-    throw(e);
-  }
   },
 };
 
@@ -313,48 +361,48 @@ export const userService = {
    * employee already has an associated account.
    */
   add: async (userProfile: UserProfile): Promise<void> => {
-  try {
-    if (userProfile.employeeId && userProfile.organizationId) {
-      const { organizationId, employeeId, uid } = userProfile;
+    try {
+      if (userProfile.employeeId && userProfile.organizationId) {
+        const { organizationId, employeeId, uid } = userProfile;
 
-      // Check if the organization exists
-      if (!(await organizationDatabase.exists(organizationId))) {
-        // 400 Bad Request: The client provided an invalid organization ID.
-        throw new FirebaseVerifyError("Organization with passed organizationId does not exist", 400);
+        // Check if the organization exists
+        if (!(await organizationDatabase.exists(organizationId))) {
+          // 400 Bad Request: The client provided an invalid organization ID.
+          throw new FirebaseVerifyError("Organization with passed organizationId does not exist", 400);
+        }
+
+        // Check if employee exists in organization
+        const employeeExists = await employeeDatabase.existsInOrg(organizationId, employeeId);
+        if (!employeeExists) {
+          // 400 Bad Request: The client provided an invalid employee ID for this org.
+          throw new FirebaseVerifyError("Employee with passed employeeId does not exist in this organization", 400);
+        }
+
+        // Check if employee already has an account associated with it
+        const isAssociated = await employeeDatabase.isAssociated(employeeId);
+        if (isAssociated) {
+          // 409 Conflict: The request cannot be completed because the employee is already linked.
+          throw new FirebaseVerifyError("Employee with passed employeeId already associated with an account", 409);
+        }
+
+        // Activate the employee record
+        await employeeDatabase.activate(organizationId, employeeId, uid);
       }
 
-      // Check if employee exists in organization
-      const employeeExists = await employeeDatabase.existsInOrg(organizationId, employeeId);
-      if (!employeeExists) {
-        // 400 Bad Request: The client provided an invalid employee ID for this org.
-        throw new FirebaseVerifyError("Employee with passed employeeId does not exist in this organization", 400);
-      }
+      // --- This runs for BOTH individual and organization sign-ups ---
+      await userDatabase.add(userProfile);
 
-      // Check if employee already has an account associated with it
-      const isAssociated = await employeeDatabase.isAssociated(employeeId);
-      if (isAssociated) {
-        // 409 Conflict: The request cannot be completed because the employee is already linked.
-        throw new FirebaseVerifyError("Employee with passed employeeId already associated with an account", 409);
-      }
+      console.log("User document added/updated with UID: ", userProfile.uid);
+    } catch (e) {
+      console.error("Error adding user to database:", e);
 
-      // Activate the employee record
-      await employeeDatabase.activate(organizationId, employeeId, uid);
+      // Re-throw specific business logic errors or a generic one
+      if (e instanceof FirebaseVerifyError) {
+        throw e;
+      } else {
+        throw new Error(`Failed to add user to database: ${(e as Error).message || 'Unknown error'}`);
+      }
     }
-
-    // --- This runs for BOTH individual and organization sign-ups ---
-    await userDatabase.add(userProfile);
-
-    console.log("User document added/updated with UID: ", userProfile.uid);
-  } catch (e) {
-    console.error("Error adding user to database:", e);
-
-    // Re-throw specific business logic errors or a generic one
-    if (e instanceof FirebaseVerifyError) {
-      throw e;
-    } else {
-      throw new Error(`Failed to add user to database: ${(e as Error).message || 'Unknown error'}`);
-    }
-  }
   },
 
   /**

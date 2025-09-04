@@ -1,6 +1,12 @@
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth"; 
+
 import { adminAuth, adminDb } from "@/api/firebase/firebaseAdmin";
 import { firebaseAuthService } from "@/api/firebase/firebaseAuthService";
 import { clearFirestoreAuth, clearFirestoreDB } from "./cleanUpEmulators";
+import { organizationService, userService } from "@/api/firebase/firebaseVerify";
+
+// Client auth instance needed to get an ID token
+const authClient = getAuth();
 
 describe('Organization Signup API Route E2E Tests', () => {
 
@@ -18,6 +24,14 @@ describe('Organization Signup API Route E2E Tests', () => {
     password: "password123"
   };
 
+  const ownerProfile = {
+    name: "Owner Paul",
+    email: "owner@testcorp.com",
+  };
+
+  let validUserToken: string;
+  let adminUid: string;
+
   // This block runs before each test to set up the scenario
   beforeEach(async () => {
     try {
@@ -25,22 +39,39 @@ describe('Organization Signup API Route E2E Tests', () => {
       await clearFirestoreAuth();
       await clearFirestoreDB();
 
-      // 2. Create the organization that the user will join
-      await adminDb.collection('organizations').doc(testOrg.organizationId).set({
-        ...testOrg,
-        ownerUid: "initial-admin-uid", // Placeholder owner
+      // Create the admin user in Auth
+      const adminUserRecord = await adminAuth.createUser({
+        email: ownerProfile.email,
+        password: "password",
+        displayName: ownerProfile.name,
+      });
+      adminUid = adminUserRecord.uid;
+
+      // Sign in as owner
+      const userCredential = await signInWithEmailAndPassword(authClient, ownerProfile.email, "password");
+      validUserToken = await userCredential.user.getIdToken();
+
+      // Add owner user to database
+      await userService.add({
+        name: ownerProfile.name,
+        email: ownerProfile.email,
+        uid: adminUid,
         createdAt: new Date(),
       });
 
-      // 3. Create the "invited" employee record in the organization's sub-collection
-      // This is the record the signup process will look for and activate.
-      const employeeDocRef = adminDb.collection(`organizations/${testOrg.organizationId}/employees`).doc(invitedEmployee.employeeId);
-      await employeeDocRef.set({
-        name: invitedEmployee.name,
-        roleId: invitedEmployee.roleId,
-        employeeId: invitedEmployee.employeeId,
-        status: "invited", // The user is not yet active
+      // Create organization and set ownerUser as createdBy
+      await organizationService.create(validUserToken, {
+        ...testOrg,
+        createdBy: adminUid,
+        createdAt: new Date(),
       });
+
+      // Add invited employee to organization
+      await organizationService.addEmployee(validUserToken, testOrg.organizationId, {
+        ...invitedEmployee,
+        status: "invited"
+      });
+
 
     } catch (e) {
       console.error("Critical Error during beforeEach setup for org signup:", e);
@@ -168,7 +199,7 @@ describe('Organization Signup API Route E2E Tests', () => {
 
     // 3. Verify the API correctly returns a conflict error
     expect(apiResponse.ok).toBe(false);
-    expect(apiResponse.status).toBe(400);
+    expect(apiResponse.status).toBe(409);
     
     // 4. Verify the error message
     const responseBody = await apiResponse.json();

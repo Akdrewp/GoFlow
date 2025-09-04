@@ -32,6 +32,10 @@ export interface PermissionSet {
 // The main interface for a Role document
 export interface Role {
     name: string;
+    // The authorization level of the role
+    // Heiarchy based access where only users with higher roles
+    // can write to documents of lower roles or their own
+    level: number;
     // A map where the key is the resource name (e.g., "trucks")
     // and the value is the set of permissions for that resource.
     permissions: {

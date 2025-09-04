@@ -1,6 +1,7 @@
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth"; 
 import { adminAuth, adminDb } from "@/api/firebase/firebaseAdmin";
 import { clearFirestoreAuth, clearFirestoreDB } from "./cleanUpEmulators";
+import { organizationService, userService } from "@/api/firebase/firebaseVerify";
 
 const NEXT_PUBLIC_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
@@ -37,24 +38,24 @@ describe('Add Employee API Route E2E Tests', () => {
       });
       adminUid = adminUserRecord.uid;
 
-      // Create the organization document in Firestore
-      await adminDb.collection('organizations').doc(testOrg.organizationId).set({
-        ...testOrg,
-        ownerUid: adminUid,
-        createdAt: new Date(),
-      });
-
-      // Add user to database
-      await adminDb.collection('users').doc(adminUid).set({
-        uid: adminUid,
-        email: testUser.email,
-        name: testUser.name,
-        createdAt: new Date(),
-      });
-
       // Sign in as the user to get a valid ID token
       const userCredential = await signInWithEmailAndPassword(authClient, testUser.email, testUser.password);
       validUserToken = await userCredential.user.getIdToken();
+
+      // Add user to database
+      await userService.add({
+        name: testUser.name,
+        email: testUser.email,
+        uid: adminUid,
+        createdAt: new Date(),
+      });
+
+      // Create organization
+      await organizationService.create(validUserToken, {
+        ...testOrg,
+        createdBy: adminUid,
+        createdAt: new Date()
+      });
 
     } catch (e) {
       console.error("Critical Error during beforeEach setup:", e);
@@ -78,9 +79,9 @@ describe('Add Employee API Route E2E Tests', () => {
     };
     
     // Construct the dynamic API route
-    const apiRoute = NEXT_PUBLIC_BASE_URL + `/api/organizations/${testOrg.organizationId}/employees`;
+    const employeesApiRoute = NEXT_PUBLIC_BASE_URL + `/api/organizations/${testOrg.organizationId}/employees`;
 
-    const response = await fetch(apiRoute, {
+    const response = await fetch(employeesApiRoute, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

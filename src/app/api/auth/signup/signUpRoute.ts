@@ -8,10 +8,9 @@ import { db } from "@/api/firebase/firebaseConfig";
 import { adminAuth } from "@/api/firebase/firebaseAdmin";
 import { userProfileSchema } from "@/api/database/database";
 import { FirebaseDatabaseError } from '@/api/firebase/firestoreDatabase';
-import { userService } from "@/api/firebase/firebaseVerify";
+import { FirebaseVerifyError, userService } from "@/api/firebase/firebaseVerify";
 
 import { collection, doc, getDoc, getDocs, query, where, } from "firebase/firestore";
-import { FirebaseAuthError } from "firebase-admin/auth";
 
 
 export async function signUpRoute(request: NextRequest) {
@@ -132,18 +131,14 @@ export async function signUpRoute(request: NextRequest) {
       );
     }
 
-
-    //If it's a firebase Error
-    if (e && typeof e === 'object' && 'code' in e && 'message' in e && e.code && (e as FirebaseAuthError).code.startsWith('auth/')) {
-        console.log(`SERVER LOG: === Returning 404 - User with passed UID NOT found in Firebase Auth ===`);
-        return NextResponse.json(
-            { status: "fail", message: "User not found in Firebase Authentication (UID mismatch). Please ensure account was created successfully." },
-            { status: 404 } // Not Found
-        );
+    if (e instanceof FirebaseDatabaseError ) {
+      return NextResponse.json(
+        { status: "fail", message: (e as Error).message },
+        { status: e.code }
+      );
     }
 
-    if (e instanceof FirebaseDatabaseError ) {
-      console.log("SERVER LOG: === Returning 400 - Database adding error ===");
+    if (e instanceof FirebaseVerifyError) {
       return NextResponse.json(
         { status: "fail", message: (e as Error).message },
         { status: e.code }
