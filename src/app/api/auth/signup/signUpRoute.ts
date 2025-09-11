@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from "@/api/firebase/firebaseConfig";
 import { adminAuth } from "@/api/firebase/firebaseAdmin";
 import { userProfileSchema } from "@/api/database/database";
-import { FirebaseDatabaseError } from '@/api/firebase/firestoreDatabase';
+import { FirestoreDatabaseError } from '@/api/firebase/firestoreDatabase';
 import { FirebaseVerifyError, userService } from "@/api/firebase/firebaseVerify";
 
 import { collection, doc, getDoc, getDocs, query, where, } from "firebase/firestore";
@@ -131,7 +131,7 @@ export async function signUpRoute(request: NextRequest) {
       );
     }
 
-    if (e instanceof FirebaseDatabaseError ) {
+    if (e instanceof FirestoreDatabaseError ) {
       return NextResponse.json(
         { status: "fail", message: (e as Error).message },
         { status: e.code }

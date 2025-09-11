@@ -48,6 +48,108 @@ export const isValidUserToken = async (token: string): Promise<DecodedIdToken> =
   }
 };
 
+const userOwnsOrganizationData = (
+  userEmployeeProfile: Employee,
+  resourceId: string,
+  accessType: AccessType,
+): boolean => {
+
+  const resourceSegments = resourceId.split("/");
+
+  const documentId = resourceSegments.at(-1);
+
+  /**
+   * Check if a user is trying to access
+   * a document they made or is assigned to
+   * 'trucks' or 'calibrationRecords'
+   * 
+   * @todo Finish off with calibration records and trucks
+   * For now just assume of the form 'organizations/orgId/employees/employeeId'
+   */
+  // Check if user is trying to access own employee document
+  if (accessType == AccessType.READ && documentId == userEmployeeProfile.employeeId) {
+    return true;
+  } else {
+    return false;
+  }
+};
+
+/**
+ * Safely verifies if a user can access a specified orgazition route
+ * Helper function for canUserAccessData
+ * @param token The user's Firebase ID token for authentication.
+ * @param resourceId The unique identifier for the resource being accessed.
+ * @throws An error if the token is null, invalid, or expired. Or user does not have access
+ * @returns A promise that resolves if the user can access said resource
+ */
+const canUserAccessOrganizationData = async (
+  userProfile: UserProfile,
+  resourceId: string,
+  accessType: AccessType,
+): Promise<void> => {
+  console.log("canUserAccessData CONSOLE LOG resource is organization", resourceId);
+
+  // If user is not part of an organization throw error
+  if (!userProfile.employeeId || !userProfile.organizationId) {
+    throw new FirebaseVerifyError(
+      "User is not part of an organization, missing organizationId or employeeId",
+      403 // Forbidden
+    );
+  }
+
+  const userEmployeeProfile = await organizationDatabase.getEmployee(userProfile.organizationId, userProfile.employeeId);
+  const userEmployeeRoleId = userEmployeeProfile?.roleId;
+
+  // Check if segments is an odd number meaning
+  // user is trying to write a new document to a collection
+  // resourceId is of form "organizations/orgId/collectionName"
+  const oddNumberedPathSegmentRegex = /^organizations\/[^\/]+(?:\/[^\/]+\/[^\/]+)*\/[^\/]+$/;
+  const oddNumberedPathSegmentMatch = resourceId.match(oddNumberedPathSegmentRegex);
+
+  // Organization resources are of the form "organizations/orgId/someResource/someResourceId"
+  // where someResource/someResourceId is optional
+  const evenNumberedPathSegmentRegex = /^organizations\/([^/]+)(?:\/([^/]+)\/([^/]+))?$/;
+  const evenNumberedPathSegmentMatch = resourceId.match(evenNumberedPathSegmentRegex);
+
+  // Check if resourseId matches schema
+  if (!(evenNumberedPathSegmentMatch || oddNumberedPathSegmentMatch)) {
+    // Doesn't match required resourceId schema
+    throw new FirebaseVerifyError(
+      "Invalid resourceId provided", 
+      400 // Bad request
+    );     
+  }
+
+  const resourceSegments = resourceId.split("/");
+
+  // OrganizationId is the second segment
+  const resourceOrgId = resourceSegments[1];
+
+  // Check if resource isn't part of user organization trying to edit
+  if (resourceOrgId != userProfile.organizationId) {
+    throw new FirebaseVerifyError(
+      "Forbidden: User is not a member of the requested organization.", 
+      403 // Forbidden
+    );
+  }
+
+  // If user "owns" the document let them access
+  if (userOwnsOrganizationData(userEmployeeProfile, resourceId, accessType)) {
+    return;
+  }
+
+  // Otherwise check if user has general permission to access document
+  const accessStatus = await permissionsDatabase.getAccessStatus(userProfile.organizationId, userEmployeeRoleId, resourceId, accessType);
+
+  if (!accessStatus) {
+    // The user is authenticated, but not authorized
+    throw new FirebaseVerifyError(
+      `User does not have permission for accessType: ${accessType} on resourceId: ${resourceId}`,
+      403 // Forbidden
+    );
+  }
+
+};
 
 /**
  * Safely verifies if a user can access a specific resource 
@@ -78,62 +180,11 @@ export const canUserAccessData = async (
     // Check if trying to access organization resource
     const isOrganizationResource = ORGANIZATION_RESOURCES.some(resource => resourceId.includes(resource));
     if (isOrganizationResource) {
+      // Check if user can access this organization data
+      await canUserAccessOrganizationData(userProfile, resourceId, accessType);
 
-      console.log("canUserAccessData CONSOLE LOG resource is organization", resourceId);
-
-      // If user is not part of an organization throw error
-      if (!userProfile.employeeId || !userProfile.organizationId) {
-        throw new FirebaseVerifyError(
-          "User is not part of an organization, missing organizationId or employeeId",
-          403 // Forbidden
-        );
-      }
-
-      const userEmployeeProfile = await organizationDatabase.getEmployee(userProfile.organizationId, userProfile.employeeId);
-      const userEmployeeRoleId = userEmployeeProfile?.roleId;
-
-      // Check if segments is an odd number meaning
-      // user is trying to write a new document to a collection
-      // resourceId is of form "organizations/orgId/collectionName"
-      const oddNumberedPathSegmentRegex = /^organizations\/[^\/]+(?:\/[^\/]+\/[^\/]+)*\/[^\/]+$/;
-      const oddNumberedPathSegmentMatch = resourceId.match(oddNumberedPathSegmentRegex);
-
-      // Organization resources are of the form "organizations/someOrganizationId/someResource/someResourceId"
-      // where someResource/someResourceId is optional
-      const evenNumberedPathSegmentRegex = /^organizations\/([^/]+)(?:\/([^/]+)\/([^/]+))?$/;
-      const evenNumberedPathSegmentMatch = resourceId.match(evenNumberedPathSegmentRegex);
-
-      const resourceSegments = resourceId.split("/");
-
-      // OrganizationId is the second segment
-      const resourceOrgId = resourceSegments[1];
-
-      // Check if resource isn't part of user organization trying to edit
-      if (resourceOrgId != userProfile.organizationId) {
-        throw new FirebaseVerifyError(
-          "Forbidden: User is not a member of the requested organization.", 
-          403 // Forbidden
-        );
-      }
-
-      const accessStatus = await permissionsDatabase.getAccessStatus(userProfile.organizationId, userEmployeeRoleId, resourceId, accessType);
-
-      if (!accessStatus) {
-        // The user is authenticated, but not authorized. Throw a specific error.
-        throw new FirebaseVerifyError(
-          `User does not have permission for accessType: ${accessType} on resourceId: ${resourceId}`,
-          403 // Forbidden
-        );
-      }
-
-      if (!(evenNumberedPathSegmentMatch || oddNumberedPathSegmentMatch)) {
-        // Doesn't match required resourceId schema
-        throw new FirebaseVerifyError(
-          "Invalid resourceId provided", 
-          400 // Bad request
-        );     
-      }
-
+      // Passed auth check
+      return decodedIdToken;
     } else { // User is trying to access data from their profile
 
       console.log("canUserAccessData CONSOLE LOG resource is user resource: ", resourceId);
@@ -163,11 +214,10 @@ export const canUserAccessData = async (
           403 // Forbidden
         );
       }
+
+      // If we get here, everything is valid.
+      return decodedIdToken;
     }
-
-    // If we get here, everything is valid.
-    return decodedIdToken;
-
   } catch (error) {
     // Re-throw the error to be handled by the caller (e.g., the API route)
     console.error("Access check failed:", (error as Error).message);
@@ -282,17 +332,18 @@ export const organizationService = {
         // For each resource in the array, add a new key to our accumulator object.
         accumulator[resource] = { read: true, write: true };
         return accumulator;
-      }, {} as Role['permissions']); // Start with an empty object of the correct type
+      }, {} as Role['permissions']); // Start with an empty object
 
       // Create admin role with full permissions
       const adminRole = {
         name: "admin",
+        roleId: "admin",
         level: 100,
         permissions: adminPermissions
       };
 
       // Add admin role to database
-      await organizationDatabase.addRole(organizationId, "admin", adminRole);
+      await organizationDatabase.addRole(organizationId, adminRole);
 
       // Add creator as employee with employeeId = 1
       const creatorEmployeeId = "1"; 
@@ -323,7 +374,8 @@ export const organizationService = {
   },
 
   /**
-   * Adds employee with specified data to organization with organizationId
+   * Adds employee with specified data to organization/employees database with organizationId
+   * 
    * @param organizationId The organizationId of the organization to add employee to
    * @param employeeData Employee data
    * @returns A Promise resolving to true if the employee was added
@@ -338,7 +390,7 @@ export const organizationService = {
       // Make sure it's not a duplicate employeeId
       const employeeIdAlreadyExists = await employeeDatabase.existsInOrg(organizationId, employeeData.employeeId);
       if (employeeIdAlreadyExists) {
-      throw new FirebaseVerifyError("Employee with passed employeeId already exists", 409); //Conflict
+        throw new FirebaseVerifyError("Employee with passed employeeId already exists", 409); //Conflict
       }
 
       // Add employee to organization
@@ -349,6 +401,42 @@ export const organizationService = {
       throw(e);
     }
   },
+
+  /**
+   * Handles the business logic for adding a new role to an organization.
+   * It verifies the user's permissions and ensures the role does not already exist.
+   * @param token The user's Firebase ID token for authentication.
+   * @param organizationId The ID of the organization to add the role to.
+   * @param roleId The unique ID for the new role.
+   * @param roleData An object containing the new role's data (name and permissions).
+   * @returns A promise that resolves when the role is successfully created.
+   * @throws {FirebaseVerifyError} If the user is not authorized, the role already exists, or for other validation failures.
+   * @throws {Error} For unexpected internal server errors.
+   */
+  addRole: async (token: string, organizationId: string, roleData: Role): Promise<void> => {
+    try {
+      // Check if user can WRITE to roles
+      const resourcePath = `organizations/${organizationId}/roles`;
+      await canUserAccessData(token, resourcePath, AccessType.WRITE);
+
+      // Check if with roleId already exists
+      const roleExists = await organizationDatabase.roleExists(organizationId, roleData.roleId);
+      if (roleExists) {
+        throw new FirebaseVerifyError(
+          `Role with ID "${roleData.roleId}" already exists in this organization.`,
+          409 // Conflict
+        );
+      }
+
+      // Add role to database
+      await organizationDatabase.addRole(organizationId, roleData);
+
+    } catch (e) {
+      console.error("Error in organizationService.addRole:", e);
+      // Re-throw the error to be handled by the API route's catch block.
+      throw(e);
+    }
+  }
 };
 
 export const userService = {

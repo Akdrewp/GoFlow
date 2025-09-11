@@ -18,7 +18,7 @@ export const getGeneralSettingsData = async (token: string): Promise<Organizatio
 
     // If user is part of organization get organization info
     if(userInfo?.organizationId && userInfo?.employeeId) {
-      const organizationResourceId = `/organizations/${userInfo.organizationId}`;
+      const organizationResourceId = `organizations/${userInfo.organizationId}`;
       const organizationDocumentData = await getDataForResource(token, organizationResourceId);
 
       // Cast data to organization interface and return
@@ -51,7 +51,7 @@ export const getOrganizationSettingsData = async (token: string): Promise<Organi
 
     // If user is part of organization get organization info
     if(userInfo?.organizationId && userInfo?.employeeId) {
-      const organizationResourceId = `/organizations/${userInfo.organizationId}`;
+      const organizationResourceId = `organizations/${userInfo.organizationId}`;
       const organizationDocumentData = await getDataForResource(token, organizationResourceId);
 
       // Cast data to organization interface and return

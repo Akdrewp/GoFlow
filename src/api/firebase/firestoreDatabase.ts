@@ -8,14 +8,14 @@ import { db } from "./firebaseConfig";
 import { UserProfile, Organization, Employee, Role } from "@/api/database/database";
 import { AccessType } from "./firebaseVerify";
 
-export class FirebaseDatabaseError extends Error {
-    public readonly code: number;
+export class FirestoreDatabaseError extends Error {
+  public readonly code: number;
 
-    constructor(message: string, code: number) {
-        super(message);
-        this.name = "FirebaseVerifyError";
-        this.code = code;
-    }
+  constructor(message: string, code: number) {
+      super(message);
+      this.name = "FirestoreDatabaseError";
+      this.code = code;
+  }
 }
 
 export const userDatabase = {
@@ -180,7 +180,7 @@ export const organizationDatabase = {
 
           if (!docSnap.exists()) {
               console.log(`Employee with ID ${employeeId} not found in organization ${organizationId}`);
-              throw new FirebaseDatabaseError("Employee with pass employee id not found in organization", 400);
+              throw new FirestoreDatabaseError("Employee with pass employee id not found in organization", 400);
           }
 
           return docSnap.data() as Employee;
@@ -199,20 +199,20 @@ export const organizationDatabase = {
    * @returns A promise that resolves when the role has been successfully added.
    * @throws An error if the database write operation fails.
    */
-  addRole: async (organizationId: string, roleId: string, roleData: Role): Promise<void> => {
+  addRole: async (organizationId: string, roleData: Role): Promise<void> => {
     try {
       
       // Create path to role document in organization
-      const roleDocPath = `organizations/${organizationId}/roles/${roleId}`;
+      const roleDocPath = `organizations/${organizationId}/roles/${roleData.roleId}`;
       const roleDocRef = doc(db, roleDocPath);
 
       // Set role document in database
       await setDoc(roleDocRef, roleData);
 
-      console.log(`Role "${roleId}" successfully added to organization "${organizationId}".`);
+      console.log(`Role "${roleData.roleId}" successfully added to organization "${organizationId}".`);
 
     } catch (error) {
-      console.error(`Error adding role "${roleId}" to organization "${organizationId}":`, error);
+      console.error(`Error adding role "${roleData.roleId}" to organization "${organizationId}":`, error);
       // Re-throw the error to be handled by the calling business logic layer.
       throw new Error(`Failed to add role: ${(error as Error).message}`);
     }
@@ -237,7 +237,7 @@ export const organizationDatabase = {
 
           if (!docSnap.exists()) {
               console.log(`Role with ID "${roleId}" not found in organization "${organizationId}".`);
-              throw new FirebaseDatabaseError(`Role with ID "${roleId}" not found in organization `, 400);
+              throw new FirestoreDatabaseError(`Role with ID "${roleId}" not found in organization `, 400);
           }
 
           return docSnap.data() as Role;
@@ -247,7 +247,24 @@ export const organizationDatabase = {
           // Re-throw the error to be handled by the calling business logic layer.
           throw new Error(`Failed to fetch role: ${(error as Error).message}`);
       }
-  }
+  },
+
+  /**
+   * Checks if a role with the given roleId exists within an organization.
+   * @param organizationId The ID of the organization.
+   * @param roleId The ID of the role to check.
+   * @returns A Promise that resolves to true if the role exists, false otherwise.
+   */
+  roleExists: async (organizationId: string, roleId: string): Promise<boolean> => {
+    try {
+      const roleDocRef = doc(db, `organizations/${organizationId}/roles`, roleId);
+      const docSnap = await getDoc(roleDocRef);
+      return docSnap.exists();
+    } catch (e) {
+      console.error(`Error checking if role "${roleId}" exists:`, e);
+      throw new Error(`Failed to check for role existence: ${(e as Error).message}`);
+    }
+  },
 
 
 };
@@ -351,12 +368,12 @@ export const permissionsDatabase = {
    * grants the requested permission for a given resource type.
    * @param organizationId The ID of the organization where the role is defined.
    * @param roleId The ID of the role to check (e.g., "driver", "admin").
-   * @param resourceType The type of resource being accessed (e.g., "trucks", "employees").
+   * @param resourcePath The path of the resource being requested (e.g., "organizations/employees/user123", "users/uid123")
    * @param accessType The permission being requested ("READ" or "WRITE").
    * @returns A promise that resolves to `true` if access is granted, `false` otherwise.
    * @throws An error if the role document cannot be found, which should be caught by the calling service.
    */
-  getAccessStatus: async (organizationId: string, roleId: string, resourceType: string, accessType: AccessType): Promise<boolean> => {
+  getAccessStatus: async (organizationId: string, roleId: string, resourcePath: string, accessType: AccessType): Promise<boolean> => {
     try {
 
       const roleData = await organizationDatabase.getRole(organizationId, roleId);
@@ -376,7 +393,7 @@ export const permissionsDatabase = {
        * resourceType is of the form 'organizations/ORG123/collectionName/documentId'
        * when checking access on a certain document in a collection
        */
-      const pathSegements = resourceType.split("/");
+      const pathSegements = resourcePath.split("/");
 
       // Check if resourceType segments is odd and is of the form
       // 'organizations/ORG123/collectionName'
@@ -395,24 +412,31 @@ export const permissionsDatabase = {
       // Check permissions map with specified collection and access type
       const hasPermission = roleData.permissions[collectionName]?.[accessType];
 
-      // Check if trying to write to an employee document
-      if (accessType == AccessType.WRITE && collectionName == "employees" && documentId) {
-        // Get role of employee trying to write to
-        const requestedEmployeeRole = await organizationDatabase.getRole(organizationId, documentId);
+      // Check if trying to access to an employee document
+      if (collectionName == "employees" && documentId) {
+        //Check if trying to write to an employee documeny
+        if (accessType == AccessType.WRITE) {
+          /**
+           * Only users with a higher permission level should be able to
+           * write to users with a lower permission level
+           */
 
-        // Check if requesters permission level is greater than
-        // permission level of employee trying to write to
-        if (requestedEmployeeRole.level >= roleData.level) {
-          return false;
+          // Get role of employee trying to write to
+          const requestedEmployeeRole = await organizationDatabase.getRole(organizationId, documentId);
+
+          // Check if requesters permission level is greater than
+          // permission level of employee trying to write to
+          if (requestedEmployeeRole.level >= roleData.level) {
+            return false;
+          }        
         }
-
       }
 
       // return the permissions result
       return hasPermission == true;
 
     } catch (error) {
-      console.error(`Error checking access status for role "${roleId}" on resource "${resourceType}":`, error);
+      console.error(`Error checking access status for role "${roleId}" on resource "${resourcePath}":`, error);
       // Re-throw the error to be handled by the calling business logic layer (e.g., firebaseVerify).
       throw error;
     }

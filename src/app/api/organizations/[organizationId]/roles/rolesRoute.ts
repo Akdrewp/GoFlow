@@ -1,24 +1,18 @@
+import "server-only";
+
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
+import { cookies } from "next/headers";
 
-import { employeeSchema } from '@/api/database/database';
-import { FirebaseVerifyError, organizationService } from '@/api/firebase/firebaseVerify';
-import { FirestoreDatabaseError } from '@/api/firebase/firestoreDatabase';
+import { roleSchema } from "@/api/database/database";
+import { FirebaseVerifyError, isValidUserToken, organizationService, userService } from "@/api/firebase/firebaseVerify";
+import { FirestoreDatabaseError } from "@/api/firebase/firestoreDatabase";
 
-// The second argument to the POST function is a context object
-// that contains the dynamic route parameters.
-// route is /api/organizations/organizationId/employees
-export async function employeesRoute(
-  request: NextRequest, 
-  { organizationId }: { organizationId: string }
-) {
+//For adding a role to an organization
+export async function rolesRoute(request: NextRequest) {
   try {
-    // Check sent data agianst organization schema
-    // Only check for name, email, and organizationId since
-    // Those are the form data
+    // Check if received data matches roles schema
     const parsedReq = await request.json();
-    const isValidUserFormData = employeeSchema.safeParse(parsedReq);
-
+    const isValidUserFormData = roleSchema.safeParse(parsedReq);
     if (!isValidUserFormData.success) {
       console.log("SERVER LOG: === Returning 400 - Zod Validation Failed ===");
       return NextResponse.json(
@@ -28,7 +22,7 @@ export async function employeesRoute(
     }
 
     //Destructure form data
-    const { name, roleId, status, employeeId } = isValidUserFormData.data;
+    const formRoleData = isValidUserFormData.data;
 
     //Get session token
     const userCookies = await cookies();
@@ -42,20 +36,25 @@ export async function employeesRoute(
       );
     }
 
-    // Add employee via firebaseVerify
-    await organizationService.addEmployee(token, organizationId, {
-      name: name,
-      roleId: roleId,
-      status: status,
-      employeeId: employeeId
-    });
+    const decodedIdToken = await isValidUserToken(token);
+    const userProfile = await userService.get(token,  decodedIdToken.uid);
 
+    if (!userProfile.employeeId || !userProfile.organizationId) {
+      return NextResponse.json(
+        { status: "fail", message: "Authentication required." },
+        { status: 403 } // Forbidden
+      );
+    }
+
+    await organizationService.addRole(token, userProfile.organizationId, formRoleData);
+
+    // Role added
     return NextResponse.json(
-      { status: "success", message: "Employee added to organization", data: isValidUserFormData.data },
-      { status: 201 } //Created
+      { status: "success", message: "success" }, 
+      { status: 200 }  //Success
     );
-  } catch (e) {
-
+  } catch(e) {
+  
     if (e instanceof FirebaseVerifyError || e instanceof FirestoreDatabaseError) {
       return NextResponse.json(
         { status: "fail", message: e.message },
