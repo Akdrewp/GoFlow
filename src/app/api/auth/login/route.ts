@@ -1,9 +1,10 @@
 import "server-only";
 
+// app/api/auth/login/route.ts
 import { NextRequest } from 'next/server';
 
-import { signUpRoute } from "./signUpRoute";
+import { loginRoute } from "./loginRoute";
 
 export async function POST(request: NextRequest) {
-  return await signUpRoute(request);
+  return await loginRoute(request);
 }

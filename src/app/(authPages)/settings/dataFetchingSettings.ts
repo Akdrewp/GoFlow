@@ -1,0 +1,75 @@
+import { getDataForResource, isValidUserToken, organizationService, userService } from "@/api/firebase/firebaseVerify";
+
+import { Organization } from "@/api/database/database";
+import { OrgSettingsData } from "./settingsOptions/OrganizationSettings";
+
+/**
+ * 
+ * @todo Complete properly. Copy of getOrganizationSettings to allow testing
+ */
+// Used for fetching requisite organization settings
+// Token already validated by withServerAuth
+export const getGeneralSettingsData = async (token: string): Promise<Organization | null> => {
+
+  try {
+    // Get userInfo
+    const userDecodedIdToken = await isValidUserToken(token);
+    const userUid = userDecodedIdToken.uid;
+    const userInfo = await userService.get(token, userUid);
+
+    // If user is part of organization get organization info
+    if(userInfo?.organizationId && userInfo?.employeeId) {
+      const organizationResourceId = `organizations/${userInfo.organizationId}`;
+      const organizationDocumentData = await getDataForResource(token, organizationResourceId);
+
+      // Cast data to organization interface and return
+      const organizationData = organizationDocumentData as Organization;
+      return organizationData;
+
+    } else { // If user is not part of an organization
+      // Return null
+      return null;
+    }
+  } catch(e) {
+    console.log("getOrganizationSettingsData Error: ", e);
+    throw(e);
+  }
+};
+
+/**
+ * 
+ * @todo Refactor returning null and nesting
+ */
+// Used for fetching requisite organization settings
+// Token already validated by withServerAuth
+export const getOrganizationSettingsData = async (token: string): Promise<OrgSettingsData | null> => {
+
+  try {
+    // Get userInfo
+    const userDecodedIdToken = await isValidUserToken(token);
+    const userUid = userDecodedIdToken.uid;
+    const userInfo = await userService.get(token, userUid);
+
+    // If user is part of organization get organization info
+    if(userInfo?.organizationId && userInfo?.employeeId) {
+      // Get organization and roles
+      const organizationData = await organizationService.get(token, userInfo.organizationId);
+      const rolesData = await organizationService.getRoles(token, userInfo.organizationId);
+      /**
+       * @todo Complete with organizationService.getRoles
+       */
+      return {
+        organization: organizationData,
+        roles: rolesData,
+        userEmployeeId: userInfo.employeeId
+      };
+
+    } else { // If user is not part of an organization
+      // Return null
+      return null;
+    }
+  } catch(e) {
+    console.log("getOrganizationSettingsData Error: ", e);
+    throw(e);
+  }
+};

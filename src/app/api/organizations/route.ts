@@ -2,8 +2,8 @@ import "server-only";
 
 import { NextRequest } from 'next/server';
 
-import { signUpRoute } from "./signUpRoute";
+import { organizationsRoute } from "./organizationsRoute";
 
 export async function POST(request: NextRequest) {
-  return await signUpRoute(request);
+  return await organizationsRoute(request);
 }
