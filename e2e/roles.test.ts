@@ -77,22 +77,6 @@ describe('Roles API Route E2E Tests', () => {
         createdAt: new Date(),
       });
 
-      // Add driver user as an employee
-      await organizationService.addEmployee(
-        adminUserAuthToken, 
-        testOrg1.organizationId,
-        driverUserEmployee
-      );
-
-      // Activate user in organization
-      await userService.add({
-        ...testDriverUser,
-        uid: driverAuthUser.uid,
-        createdAt: new Date(),
-        organizationId: testOrg1.organizationId,
-        employeeId: driverUserEmployee.employeeId
-      });
-
       // Create a driver permissions object with full access
       const driverPermissions = ORGANIZATION_RESOURCES.reduce((accumulator, resource) => {
         if (resource == "roles") {
@@ -113,6 +97,22 @@ describe('Roles API Route E2E Tests', () => {
         permissions: driverPermissions
       };
       await organizationService.addRole(adminUserAuthToken, testOrg1.organizationId, driverRole);
+
+      // Add driver user as an employee
+      await organizationService.addEmployee(
+        adminUserAuthToken, 
+        testOrg1.organizationId,
+        driverUserEmployee
+      );
+
+      // Activate user in organization
+      await userService.add({
+        ...testDriverUser,
+        uid: driverAuthUser.uid,
+        createdAt: new Date(),
+        organizationId: testOrg1.organizationId,
+        employeeId: driverUserEmployee.employeeId
+      });
 
       // Add testOrg2 with testOrg2Admin as admin
 
@@ -222,5 +222,28 @@ describe('Roles API Route E2E Tests', () => {
     for (const check of failingChecks) {
       await expect(check).rejects.toThrow("Forbidden: User is not a member of the requested organization.");
     }
+  });
+
+  // Test Case 5: Invalid Role Assignment
+  test('should fail to add an employee if the specified roleId does not exist', async () => {
+    // This employee data uses a roleId that was never created in the beforeEach block.
+    const employeeWithInvalidRole = {
+      name: "User With Bad Role",
+      roleId: "non_existent_role",
+      status: "invited",
+      employeeId: "3",
+    };
+
+    // The service function call is expected to throw a specific error.
+    const addEmployeeCheck = organizationService.addEmployee(
+      adminUserAuthToken,
+      testOrg1.organizationId,
+      employeeWithInvalidRole
+    );
+
+    // Assert that the promise rejects with our custom error.
+    await expect(addEmployeeCheck).rejects.toThrow(
+      "Employee with passed roleId: non_existent_role does not exists in organization"
+    );
   });
 });

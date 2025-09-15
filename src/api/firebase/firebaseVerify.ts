@@ -414,10 +414,22 @@ export const organizationService = {
       // Make sure user can write to employees
       await canUserAccessData(token, `organizations/${organizationId}/employees`, AccessType.WRITE);
 
-      // Make sure it's not a duplicate employeeId
+      // Check if employee already exists
       const employeeIdAlreadyExists = await employeeDatabase.existsInOrg(organizationId, employeeData.employeeId);
       if (employeeIdAlreadyExists) {
-        throw new FirebaseVerifyError("Employee with passed employeeId already exists", 409); //Conflict
+        throw new FirebaseVerifyError(
+          "Employee with passed employeeId already exists", 
+          409 //Conflict
+        );
+      }
+      
+      //Check if role exists
+      const employeeRoleExists = await organizationDatabase.roleExists(organizationId, employeeData.roleId);
+      if (!employeeRoleExists) {
+        throw new FirebaseVerifyError(
+          `Employee with passed roleId: ${employeeData.roleId} does not exists in organization`, 
+          400 // Bad Request
+        );
       }
 
       // Add employee to organization
