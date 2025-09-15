@@ -4,9 +4,6 @@ import { clearFirestoreAuth, clearFirestoreDB } from "./cleanUpEmulators";
 import { AccessType, canUserAccessData, organizationService, userService } from "@/api/firebase/firebaseVerify";
 import { ORGANIZATION_RESOURCES, Role } from "@/api/database/database";
 
-// API endpoints used for testing
-const NEXT_PUBLIC_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-
 // Client auth instance needed to get an ID token
 const authClient = getAuth();
 
@@ -31,14 +28,27 @@ describe('Roles API Route E2E Tests', () => {
     employeeId: "2",
   };
 
-  const testOrg = {
+  const testOrg1 = {
     name: "TestCo Roles",
     email: "contact@testcoroles.com",
     organizationId: "ROLETEST123"
   };
 
+  const testOrg2 = {
+    name: "TestCo2 Roles",
+    email: "contact@testcoroles2.com",
+    organizationId: "ROLETEST1234"
+  };
+
+  const testOrg2AdminUser = {
+    email: "admin-user2@test.com",
+    name: "Test Admin2",
+    password: "securePassword123",
+  };
+
   let adminUserAuthToken: string;
   let driverUserAuthToken: string;
+  let testOrg2AdminToken: string;
 
   beforeEach(async () => {
     try {
@@ -62,7 +72,7 @@ describe('Roles API Route E2E Tests', () => {
 
       // Create organization with admin as creator
       await organizationService.create(adminUserAuthToken, {
-        ...testOrg,
+        ...testOrg1,
         createdBy: adminAuthUser.uid,
         createdAt: new Date(),
       });
@@ -70,7 +80,7 @@ describe('Roles API Route E2E Tests', () => {
       // Add driver user as an employee
       await organizationService.addEmployee(
         adminUserAuthToken, 
-        testOrg.organizationId,
+        testOrg1.organizationId,
         driverUserEmployee
       );
 
@@ -79,7 +89,7 @@ describe('Roles API Route E2E Tests', () => {
         ...testDriverUser,
         uid: driverAuthUser.uid,
         createdAt: new Date(),
-        organizationId: testOrg.organizationId,
+        organizationId: testOrg1.organizationId,
         employeeId: driverUserEmployee.employeeId
       });
 
@@ -102,8 +112,29 @@ describe('Roles API Route E2E Tests', () => {
         level: 50,
         permissions: driverPermissions
       };
-      await organizationService.addRole(adminUserAuthToken, testOrg.organizationId, driverRole);
+      await organizationService.addRole(adminUserAuthToken, testOrg1.organizationId, driverRole);
 
+      // Add testOrg2 with testOrg2Admin as admin
+
+      // Create testOrg2Admin user
+      const testOrg2AdminAuthUser = await adminAuth.createUser(testOrg2AdminUser);
+
+      // Sign in to get auth token
+      testOrg2AdminToken = await (await signInWithEmailAndPassword(authClient, testOrg2AdminUser.email, testOrg2AdminUser.password)).user.getIdToken();
+
+      // Add testOrg2Admin to database
+      await userService.add({
+        ...testOrg2AdminUser,
+        uid: testOrg2AdminAuthUser.uid,
+        createdAt: new Date(),
+      });
+
+      // Create organization with testOrg2Admin as creator
+      await organizationService.create(testOrg2AdminToken, {
+        ...testOrg2,
+        createdBy: testOrg2AdminAuthUser.uid,
+        createdAt: new Date(),
+      });
 
     } catch (e) {
       console.error("Critical Error during beforeEach setup:", e);
@@ -126,9 +157,9 @@ describe('Roles API Route E2E Tests', () => {
     // Create an array of all the access checks we need to perform for the admin.
     const accessChecks = ORGANIZATION_RESOURCES.flatMap(resource => [
         // Admin should be able to READ the collection
-        canUserAccessData(adminUserAuthToken, `organizations/${testOrg.organizationId}/${resource}`, AccessType.READ),
+        canUserAccessData(adminUserAuthToken, `organizations/${testOrg1.organizationId}/${resource}`, AccessType.READ),
         // Admin should be able to WRITE to the collection
-        canUserAccessData(adminUserAuthToken, `organizations/${testOrg.organizationId}/${resource}`, AccessType.WRITE)
+        canUserAccessData(adminUserAuthToken, `organizations/${testOrg1.organizationId}/${resource}`, AccessType.WRITE)
     ]);
 
     // Run all checks concurrently and expect none of them to throw an error.
@@ -141,17 +172,17 @@ describe('Roles API Route E2E Tests', () => {
   test('driver user should have access to everything but writing to roles and reading employees', async () => {
     // Define the checks that are expected to PASS for a driver
     const passingChecks = [
-      canUserAccessData(driverUserAuthToken, `organizations/${testOrg.organizationId}/roles`, AccessType.READ),
-      canUserAccessData(driverUserAuthToken, `organizations/${testOrg.organizationId}/employees`, AccessType.WRITE),
+      canUserAccessData(driverUserAuthToken, `organizations/${testOrg1.organizationId}/roles`, AccessType.READ),
+      canUserAccessData(driverUserAuthToken, `organizations/${testOrg1.organizationId}/employees`, AccessType.WRITE),
       // Assuming 'trucks' is a resource they should have full access to
-      canUserAccessData(driverUserAuthToken, `organizations/${testOrg.organizationId}/trucks`, AccessType.READ),
-      canUserAccessData(driverUserAuthToken, `organizations/${testOrg.organizationId}/trucks`, AccessType.WRITE),
+      canUserAccessData(driverUserAuthToken, `organizations/${testOrg1.organizationId}/trucks`, AccessType.READ),
+      canUserAccessData(driverUserAuthToken, `organizations/${testOrg1.organizationId}/trucks`, AccessType.WRITE),
     ];
 
     // Define the checks that are expected to FAIL for a driver
     const failingChecks = [
-      canUserAccessData(driverUserAuthToken, `organizations/${testOrg.organizationId}/roles`, AccessType.WRITE),
-      canUserAccessData(driverUserAuthToken, `organizations/${testOrg.organizationId}/employees`, AccessType.READ),
+      canUserAccessData(driverUserAuthToken, `organizations/${testOrg1.organizationId}/roles`, AccessType.WRITE),
+      canUserAccessData(driverUserAuthToken, `organizations/${testOrg1.organizationId}/employees`, AccessType.READ),
     ];
 
     // Verify that all the "passing" checks resolve successfully
@@ -166,12 +197,30 @@ describe('Roles API Route E2E Tests', () => {
   // Test Case 3: Self-Access
   test('driver user should be able to read their own employee record', async () => {
     // Construct the path to the driver's own employee document
-    const selfResourcePath = `organizations/${testOrg.organizationId}/employees/${driverUserEmployee.employeeId}`;
+    const selfResourcePath = `organizations/${testOrg1.organizationId}/employees/${driverUserEmployee.employeeId}`;
     
     // This check should pass because of the self-access rule, even though the driver's
     // role does not have general read access to the 'employees' collection.
     const selfAccessCheck = canUserAccessData(driverUserAuthToken, selfResourcePath, AccessType.READ);
 
     await expect(selfAccessCheck).resolves.toBeDefined();
+  });
+
+  // Test Case 4: Cross-Organization Access
+  test('should prevent users from accessing resources in other organizations', async () => {
+    // A list of checks that should all fail due to cross-organization access attempts.
+    const failingChecks = [
+      // Admin from Org 1 trying to access Org 2
+      canUserAccessData(adminUserAuthToken, `organizations/${testOrg2.organizationId}/employees`, AccessType.READ),
+      // Driver from Org 1 trying to access Org 2
+      canUserAccessData(driverUserAuthToken, `organizations/${testOrg2.organizationId}/roles`, AccessType.READ),
+      // Admin from Org 2 trying to access Org 1
+      canUserAccessData(testOrg2AdminToken, `organizations/${testOrg1.organizationId}/trucks`, AccessType.WRITE),
+    ];
+
+    // Verify that every single check in the list rejects with an error.
+    for (const check of failingChecks) {
+      await expect(check).rejects.toThrow("Forbidden: User is not a member of the requested organization.");
+    }
   });
 });

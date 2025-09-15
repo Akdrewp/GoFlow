@@ -50,7 +50,7 @@ export async function rolesRoute(request: NextRequest) {
 
     // Role added
     return NextResponse.json(
-      { status: "success", message: "success" }, 
+      { status: "success", message: "Role added to organization", data: formRoleData }, 
       { status: 200 }  //Success
     );
   } catch(e) {

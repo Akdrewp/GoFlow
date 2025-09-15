@@ -1,6 +1,7 @@
-import { getDataForResource, isValidUserToken, userService } from "@/api/firebase/firebaseVerify";
+import { getDataForResource, isValidUserToken, organizationService, userService } from "@/api/firebase/firebaseVerify";
 
 import { Organization } from "@/api/database/database";
+import { OrgSettingsData } from "./settingsOptions/OrganizationSettings";
 
 /**
  * 
@@ -41,7 +42,7 @@ export const getGeneralSettingsData = async (token: string): Promise<Organizatio
  */
 // Used for fetching requisite organization settings
 // Token already validated by withServerAuth
-export const getOrganizationSettingsData = async (token: string): Promise<Organization | null> => {
+export const getOrganizationSettingsData = async (token: string): Promise<OrgSettingsData | null> => {
 
   try {
     // Get userInfo
@@ -51,12 +52,17 @@ export const getOrganizationSettingsData = async (token: string): Promise<Organi
 
     // If user is part of organization get organization info
     if(userInfo?.organizationId && userInfo?.employeeId) {
-      const organizationResourceId = `organizations/${userInfo.organizationId}`;
-      const organizationDocumentData = await getDataForResource(token, organizationResourceId);
-
-      // Cast data to organization interface and return
-      const organizationData = organizationDocumentData as Organization;
-      return organizationData;
+      // Get organization and roles
+      const organizationData = await organizationService.get(token, userInfo.organizationId);
+      const rolesData = await organizationService.getRoles(token, userInfo.organizationId);
+      /**
+       * @todo Complete with organizationService.getRoles
+       */
+      return {
+        organization: organizationData,
+        roles: rolesData,
+        userEmployeeId: userInfo.employeeId
+      };
 
     } else { // If user is not part of an organization
       // Return null

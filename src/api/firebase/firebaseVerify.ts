@@ -33,18 +33,18 @@ export class FirebaseVerifyError extends Error {
  */
 export const isValidUserToken = async (token: string): Promise<DecodedIdToken> => {
   try {
-  // Quick check to avoid running if null
-  if (!token) {
-    throw new Error("Token is null or undefined.");
-  }
-  // Check if token is valid
-  const decodedIdToken = await adminAuth.verifyIdToken(token);
-  // If token is valid, return the decoded data
-  return decodedIdToken;
+    // Quick check to avoid running if null
+    if (!token) {
+      throw new Error("Token is null or undefined.");
+    }
+    // Check if token is valid
+    const decodedIdToken = await adminAuth.verifyIdToken(token);
+    // If token is valid, return the decoded data
+    return decodedIdToken;
   } catch (e) {
-  // Token is invalid
-  console.error("Error validating token:", e);
-  throw new Error("Authentication token is invalid or expired.");
+    // Token is invalid
+    console.error("Error validating token:", e);
+    throw new Error("Authentication token is invalid or expired.");
   }
 };
 
@@ -374,6 +374,33 @@ export const organizationService = {
   },
 
   /**
+   * Gets the organization with passed organizationId
+   * @param token token of user trying to access organization
+   * @param organizationId id of organization trying to access
+   * @returns A promise resolving to the found organization
+   * @throws Error if user does not have permissions or organization
+   * does not exist
+   */
+  get: async (token: string, organizationId: string): Promise<Organization> => {
+    try {
+
+      // Make sure user can read organization
+      await canUserAccessData(token, `organizations/${organizationId}`, AccessType.READ);
+
+      //Get and return organization
+      const organization = await organizationDatabase.get(organizationId);
+
+      return organization;
+    } catch (e) {
+      console.error("firebaseVerify organizationService.get Error", e);
+      throw(e);
+    }
+    
+    // Make sure user can read organization
+
+  },
+
+  /**
    * Adds employee with specified data to organization/employees database with organizationId
    * 
    * @param organizationId The organizationId of the organization to add employee to
@@ -432,11 +459,35 @@ export const organizationService = {
       await organizationDatabase.addRole(organizationId, roleData);
 
     } catch (e) {
-      console.error("Error in organizationService.addRole:", e);
+      console.error("Error in organizationService.addRole: ", e);
       // Re-throw the error to be handled by the API route's catch block.
       throw(e);
     }
-  }
+  },
+
+  /**
+   * Fetches all roles for a given organization after verifying the user's access rights.
+   * @param token The user's Firebase ID token for authentication.
+   * @param organizationId The ID of the organization from which to fetch roles.
+   * @returns A promise that resolves to an array of Role objects for the organization.
+   * @throws {FirebaseVerifyError} If the user does not have READ permission for roles in the specified organization.
+   * @throws {Error} For unexpected internal server errors.
+   */
+  getRoles: async (token: string, organizationId: string): Promise<Role[]> => {
+    try {
+      // Check if user can read Roles
+      const resourcePath = `organizations/${organizationId}/roles`;
+      await canUserAccessData(token, resourcePath, AccessType.READ);
+
+      // Get and return roles
+      const roles = await organizationDatabase.getRoles(organizationId);
+      return roles;
+
+    } catch (e) {
+      console.error("Error in organizationService.getRoles: ", e);
+      throw e;
+    }
+  },
 };
 
 export const userService = {

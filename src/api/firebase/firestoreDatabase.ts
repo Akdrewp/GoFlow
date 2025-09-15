@@ -126,6 +126,33 @@ export const organizationDatabase = {
     }
   },
 
+    /**
+   * Fetches a specific organization's document from the database.
+   * @param organizationId - The unique ID of the organization to fetch.
+   * @returns A Promise that resolves to the Organization object if found
+   * @throws An error if the database read operation fails.
+   */
+  get: async (organizationId: string): Promise<Organization> => {
+      try {
+          const orgDocRef = doc(db, "organizations", organizationId);
+          const docSnap = await getDoc(orgDocRef);
+
+          if (!docSnap.exists()) {
+              console.log(`Organization with ID "${organizationId}" not found.`);
+              throw new FirestoreDatabaseError(
+                `Organization with ID "${organizationId}" not found.`,
+                400, // Bad Request
+              );
+          }
+
+          return docSnap.data() as Organization;
+
+      } catch (e) {
+          console.error("Error getting organization from database:", e);
+          throw new Error(`Failed to get organization: ${(e as Error).message}`);
+      }
+  },
+
   /**
    * Checks if an organization with the given ID exists.
    * @param organizationId - The ID of the organization to check.
@@ -246,6 +273,41 @@ export const organizationDatabase = {
           console.error(`Error fetching role "${roleId}" from organization "${organizationId}":`, error);
           // Re-throw the error to be handled by the calling business logic layer.
           throw new Error(`Failed to fetch role: ${(error as Error).message}`);
+      }
+  },
+
+  /**
+   * Fetches all roles for a specific organization.
+   * @param organizationId The ID of the organization from which to fetch roles.
+   * @returns A promise that resolves to an array of Role objects. The array will be empty if no roles are found.
+   * @throws An error if the database read operation fails.
+   */
+  getRoles: async (organizationId: string): Promise<Role[]> => {
+      try {
+          // Get roles DocPath
+          const rolesCollectionPath = `organizations/${organizationId}/roles`;
+          const rolesCollectionRef = collection(db, rolesCollectionPath);
+
+          // Fetch the document snapshot.
+          const querySnapshot = await getDocs(rolesCollectionRef);
+
+          // If none found just return empty array
+          // Shouldn't happen as there is always default admin
+          // role but just in case
+          if (querySnapshot.empty) {
+              console.log(`No roles found for organization "${organizationId}".`);
+              return [];
+          }
+
+          // Cast roleDocuments into Role objects
+          const roles = querySnapshot.docs.map(doc => doc.data() as Role);
+
+          return roles;
+
+      } catch (error) {
+          console.error(`Error fetching roles for organization "${organizationId}":`, error);
+          // Re-throw the error to be handled by the calling business logic layer.
+          throw new Error(`Failed to fetch roles: ${(error as Error).message}`);
       }
   },
 

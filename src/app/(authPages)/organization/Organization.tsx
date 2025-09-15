@@ -1,4 +1,4 @@
-import { getDataForResource, isValidUserToken, userService } from "@/api/firebase/firebaseVerify";
+import { getDataForResource, isValidUserToken, organizationService, userService } from "@/api/firebase/firebaseVerify";
 import { withServerAuth } from "@/app/lib/server-auth";
 //Change type to sidestep duplicate organization use
 import { Organization as OrganizationType, Employee } from "@/api/database/database";
@@ -67,6 +67,11 @@ export default async function Organization() {
 
   const OrganizationInfo = await withServerAuth(async (token) => {
     return await getOrganizationInfo(token);
+
+  });
+
+  const roles = await withServerAuth(async (token) => {
+    return await organizationService.getRoles(token, OrganizationInfo?.organizationId as string);
   });
 
   //Cast to string just for testing purposes
@@ -75,7 +80,7 @@ export default async function Organization() {
   return (
     <div>
       {/** JSON parse and stringify is for converting to plain objects for NextJS */}
-      <OrganizationDisplay info={JSON.parse(JSON.stringify(OrganizationInfo))} employees={JSON.parse(JSON.stringify(employees))}/> 
+      <OrganizationDisplay info={JSON.parse(JSON.stringify(OrganizationInfo))} employees={JSON.parse(JSON.stringify(employees))} roles={JSON.parse(JSON.stringify(roles))}/> 
     </div>
   );
 }
