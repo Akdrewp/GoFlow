@@ -4,6 +4,7 @@ import { adminAuth, adminDb } from "@/api/firebase/firebaseAdmin";
 import { firebaseAuthService } from "@/api/firebase/firebaseAuthService";
 import { clearFirestoreAuth, clearFirestoreDB } from "./cleanUpEmulators";
 import { organizationService, userService } from "@/api/firebase/firebaseVerify";
+import { ORGANIZATION_RESOURCES, Role } from "@/api/database/database";
 
 // Client auth instance needed to get an ID token
 const authClient = getAuth();
@@ -19,7 +20,7 @@ describe('Organization Signup API Route E2E Tests', () => {
   const invitedEmployee = {
     name: "Jane Doe",
     email: "jane.doe@testcorp.com",
-    roleId: "Driver",
+    roleId: "driver",
     employeeId: "EMP001",
     password: "password123"
   };
@@ -66,6 +67,23 @@ describe('Organization Signup API Route E2E Tests', () => {
         createdAt: new Date(),
       });
 
+      // Create a driver permissions object with full access
+      const driverPermissions = ORGANIZATION_RESOURCES.reduce((accumulator, resource) => {
+        accumulator[resource] = { read: true, write: true };
+        return accumulator;
+      }, {} as Role['permissions']); // Start with an empty object of the correct type
+
+      // Create a driver role with less permissions than admin
+      const driverRole: Role = {
+        name: "Driver",
+        roleId: "driver",
+        level: 50,
+        permissions: driverPermissions
+      };
+
+      // Add driver role to organization
+      await organizationService.addRole(validUserToken, testOrg.organizationId, driverRole);
+
       // Add invited employee to organization
       await organizationService.addEmployee(validUserToken, testOrg.organizationId, {
         ...invitedEmployee,
@@ -95,7 +113,7 @@ describe('Organization Signup API Route E2E Tests', () => {
   // Test Case 1: Successful Organization Signup
   test('should successfully sign up a new organization user and link them to the employee record', async () => {
     // 1. Call the organization sign-up service method
-    const apiResponse = await firebaseAuthService.signUp.signUpOrganization({
+    const apiResponse = await firebaseAuthService.signUp.signUpUser({
       name: invitedEmployee.name,
       email: invitedEmployee.email,
       password: invitedEmployee.password,
@@ -133,7 +151,7 @@ describe('Organization Signup API Route E2E Tests', () => {
     const nonExistentEmployeeId = "EMP-DOES-NOT-EXIST";
 
     // 1. Call the service with an employeeId that was never created
-    const apiResponse = await firebaseAuthService.signUp.signUpOrganization({
+    const apiResponse = await firebaseAuthService.signUp.signUpUser({
       name: "Ghost User",
       email: "ghost@testcorp.com",
       password: "password123",
@@ -155,7 +173,7 @@ describe('Organization Signup API Route E2E Tests', () => {
     const nonExistentOrgId = "ORG-DOES-NOT-EXIST";
 
     // 1. Call the service with an organizationId that was never created
-    const apiResponse = await firebaseAuthService.signUp.signUpOrganization({
+    const apiResponse = await firebaseAuthService.signUp.signUpUser({
       name: invitedEmployee.name,
       email: invitedEmployee.email,
       password: invitedEmployee.password,
@@ -189,7 +207,7 @@ describe('Organization Signup API Route E2E Tests', () => {
     });
 
     // 2. Now, a second user tries to sign up with the SAME employeeId
-    const apiResponse = await firebaseAuthService.signUp.signUpOrganization({
+    const apiResponse = await firebaseAuthService.signUp.signUpUser({
       name: invitedEmployee.name,
       email: invitedEmployee.email, // This email is trying to claim the same spot
       password: invitedEmployee.password,

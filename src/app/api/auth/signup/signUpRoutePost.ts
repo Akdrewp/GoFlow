@@ -120,8 +120,9 @@ export async function signUpRoute(request: NextRequest) {
       );
     }
 
-  } catch (e) { 
+  } catch (e) {
     console.error("SERVER LOG: === API Route Error caught in catch block ===", e);
+    // Adding user to database has failed, delete user from auth
     // If request.json() parsing fails (e.g., malformed JSON)
     if (e instanceof SyntaxError) {
       console.log("SERVER LOG: === Returning 400 - JSON Parsing Error ===");
@@ -131,16 +132,9 @@ export async function signUpRoute(request: NextRequest) {
       );
     }
 
-    if (e instanceof FirestoreDatabaseError ) {
+    if (e instanceof FirestoreDatabaseError || e instanceof FirebaseVerifyError) {
       return NextResponse.json(
-        { status: "fail", message: (e as Error).message },
-        { status: e.code }
-      );
-    }
-
-    if (e instanceof FirebaseVerifyError) {
-      return NextResponse.json(
-        { status: "fail", message: (e as Error).message },
+        { status: "fail", message: e.message },
         { status: e.code }
       );
     }

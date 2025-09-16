@@ -2,6 +2,7 @@ import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { adminAuth, adminDb } from "@/api/firebase/firebaseAdmin";
 import { clearFirestoreAuth, clearFirestoreDB } from "./cleanUpEmulators";
 import { organizationService, userService } from "@/api/firebase/firebaseVerify";
+import { ORGANIZATION_RESOURCES, Role } from "@/api/database/database";
 
 const NEXT_PUBLIC_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
@@ -57,6 +58,23 @@ describe('Add Employee API Route E2E Tests', () => {
         createdAt: new Date()
       });
 
+      // Create a driver permissions object with full access
+      const driverPermissions = ORGANIZATION_RESOURCES.reduce((accumulator, resource) => {
+        accumulator[resource] = { read: true, write: true };
+        return accumulator;
+      }, {} as Role['permissions']); // Start with an empty object of the correct type
+
+      // Create a driver role with less permissions than admin
+      const driverRole: Role = {
+        name: "Driver",
+        roleId: "driver",
+        level: 50,
+        permissions: driverPermissions
+      };
+
+      // Add driver role to organization
+      await organizationService.addRole(validUserToken, testOrg.organizationId, driverRole);
+
     } catch (e) {
       console.error("Critical Error during beforeEach setup:", e);
       throw e;
@@ -73,7 +91,7 @@ describe('Add Employee API Route E2E Tests', () => {
   test('should successfully add a new employee to an organization', async () => {
     const newEmployeeData = {
       name: "New Hire",
-      roleId: "Driver",
+      roleId: "driver",
       employeeId: "EMP456",
       status: "invited"
     };
@@ -160,7 +178,7 @@ describe('Add Employee API Route E2E Tests', () => {
   test('should fail with a 409 Conflict if the employeeId already exists', async () => {
     const employeeData = {
       name: "First Hire",
-      roleId: "Driver",
+      roleId: "driver",
       employeeId: "EMP999",
       status: "invited"
     };
@@ -183,7 +201,7 @@ describe('Add Employee API Route E2E Tests', () => {
     // 2. Attempt to add another employee with the SAME employeeId
     const duplicateData = {
       name: "Second Hire",
-      roleId: "Technician",
+      roleId: "driver",
       employeeId: "EMP999", // Same ID
       status: "invited"
     };

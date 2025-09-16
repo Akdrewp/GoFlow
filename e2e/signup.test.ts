@@ -86,7 +86,7 @@ describe('Signup API Route E2E Tests', () => {
     const testPassword = 'securePassword123';
 
     // Call your client-side service method, which internally calls Auth SDK and your API route
-    const apiResponse = await firebaseAuthService.signUp.signUpIndividual({
+    const apiResponse = await firebaseAuthService.signUp.signUpUser({
       name: testName,
       email: testEmail,
       password: testPassword

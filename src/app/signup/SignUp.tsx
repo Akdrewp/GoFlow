@@ -50,13 +50,13 @@ export default function SignUpPage() {
             });
 
             if (signupType == SignupType.INDIVIDUAL) {
-                await firebaseAuthService.signUp.signUpIndividual({
+                await firebaseAuthService.signUp.signUpUser({
                     name: name,
                     email: email,
                     password: password,
                 });
             } else if (signupType == SignupType.ORGANIZATION) {
-                await firebaseAuthService.signUp.signUpOrganization({
+                await firebaseAuthService.signUp.signUpUser({
                     name: name,
                     email: email,
                     password: password,
