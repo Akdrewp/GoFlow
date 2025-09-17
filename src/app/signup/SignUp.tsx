@@ -49,14 +49,16 @@ export default function SignUpPage() {
                 password,
             });
 
+            // Signup via signUpUser
+            let signUpResponse;
             if (signupType == SignupType.INDIVIDUAL) {
-                await firebaseAuthService.signUp.signUpUser({
+                signUpResponse = await firebaseAuthService.signUp.signUpUser({
                     name: name,
                     email: email,
                     password: password,
                 });
             } else if (signupType == SignupType.ORGANIZATION) {
-                await firebaseAuthService.signUp.signUpUser({
+                signUpResponse = await firebaseAuthService.signUp.signUpUser({
                     name: name,
                     email: email,
                     password: password,
@@ -65,6 +67,14 @@ export default function SignUpPage() {
                 });
             } else {
                 throw(new Error("Neither ORGANIZATION or INDIVIDUAL signup error"));
+            }
+
+            // Check if signUp was not successful 
+            if (signUpResponse.status != 201) {
+                // Set error and return
+                const responseMessage = (await signUpResponse.json()).message;
+                setPasswordError(responseMessage);
+                return;
             }
 
             //Signup is successful

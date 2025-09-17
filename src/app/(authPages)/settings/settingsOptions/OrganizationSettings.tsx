@@ -4,6 +4,9 @@ import React, { useState } from 'react';
 import { Plus } from 'lucide-react';
 import { DocumentData } from 'firebase/firestore';
 
+// Used for reloading after creating an organization
+import { useRouter } from 'next/navigation';
+
 import { ORGANIZATION_RESOURCES, Role } from '@/api/database/database';
 
 // Placeholder for a service that would handle API calls
@@ -163,6 +166,8 @@ function CreateOrganizationForm() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+  const router = useRouter();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -171,7 +176,7 @@ function CreateOrganizationForm() {
     try {
       console.log('Creating organization with:', { orgName, orgEmail, orgNumber });
 
-      // 3. Send the token to the API route to create a session cookie
+      // Send the token to the API route to create a session cookie
       const sessionResponse = await fetch(organizationsCreateEndpoint, {
         method: 'POST',
         headers: {
@@ -204,6 +209,7 @@ function CreateOrganizationForm() {
 
       showMessage('Organization successfully created (Check console for data)');
 
+      router.refresh();
 
     } catch (e) {
       console.error("Create organization error:", e);
