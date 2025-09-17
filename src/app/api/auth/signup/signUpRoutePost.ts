@@ -8,7 +8,8 @@ import { db } from "@/api/firebase/firebaseConfig";
 import { adminAuth } from "@/api/firebase/firebaseAdmin";
 import { userProfileSchema } from "@/api/database/database";
 import { FirestoreDatabaseError } from '@/api/firebase/firestoreDatabase';
-import { FirebaseVerifyError, userService } from "@/api/firebase/firebaseVerify";
+import { FirebaseVerifyError } from "@/api/firebase/firebaseVerify";
+import { addUser } from "@/api/firebase/firebaseService";
 
 import { collection, doc, getDoc, getDocs, query, where, } from "firebase/firestore";
 
@@ -101,7 +102,7 @@ export async function signUpRoute(request: NextRequest) {
       /**
        * @todo for now don't do anything special
        */
-      await userService.add(parsedReq);
+      await addUser(parsedReq);
 
       console.log("SERVER LOG: === All unique key checks passed, returning 201 Success === Adding organization user to database");
       return NextResponse.json(
@@ -111,7 +112,7 @@ export async function signUpRoute(request: NextRequest) {
 
     } else { // Signing up individually
       // Add user to database
-      await userService.add(parsedReq);
+      await addUser(parsedReq);
 
       console.log("SERVER LOG: === All unique key checks passed, returning 201 Success === Adding user to database");
       return NextResponse.json(

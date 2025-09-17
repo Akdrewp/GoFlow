@@ -3,7 +3,8 @@ import "server-only";
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from "next/headers";
 
-import { FirebaseVerifyError, isValidUserToken, organizationService } from "@/api/firebase/firebaseVerify";
+import { FirebaseVerifyError, isValidUserToken } from "@/api/firebase/firebaseVerify";
+import { createOrganization } from "@/api/firebase/firebaseService";
 import { organizationSchema } from "@/api/database/database";
 import { FirebaseAuthError } from "firebase-admin/auth";
 
@@ -42,7 +43,7 @@ export async function organizationsRoute(request: NextRequest) {
     const userDecodedIdToken = await isValidUserToken(token);
 
     // This checks for any duplicate organizations
-    await organizationService.create(token, {
+    await createOrganization(token, {
       name: name,
       email: email,
       organizationId: organizationId,

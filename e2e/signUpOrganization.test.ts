@@ -3,7 +3,7 @@ import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { adminAuth, adminDb } from "@/api/firebase/firebaseAdmin";
 import { firebaseAuthService } from "@/api/firebase/firebaseAuthService";
 import { clearFirestoreAuth, clearFirestoreDB } from "./cleanUpEmulators";
-import { organizationService, userService } from "@/api/firebase/firebaseVerify";
+import { createOrganization, addRoleToOrg, addEmployeeToOrg, addUser } from "@/api/firebase/firebaseService";
 import { ORGANIZATION_RESOURCES, Role } from "@/api/database/database";
 
 // Client auth instance needed to get an ID token
@@ -53,7 +53,7 @@ describe('Organization Signup API Route E2E Tests', () => {
       validUserToken = await userCredential.user.getIdToken();
 
       // Add owner user to database
-      await userService.add({
+      await addUser({
         name: ownerProfile.name,
         email: ownerProfile.email,
         uid: adminUid,
@@ -61,7 +61,7 @@ describe('Organization Signup API Route E2E Tests', () => {
       });
 
       // Create organization and set ownerUser as createdBy
-      await organizationService.create(validUserToken, {
+      await createOrganization(validUserToken, {
         ...testOrg,
         createdBy: adminUid,
         createdAt: new Date(),
@@ -82,10 +82,10 @@ describe('Organization Signup API Route E2E Tests', () => {
       };
 
       // Add driver role to organization
-      await organizationService.addRole(validUserToken, testOrg.organizationId, driverRole);
+      await addRoleToOrg(validUserToken, testOrg.organizationId, driverRole);
 
       // Add invited employee to organization
-      await organizationService.addEmployee(validUserToken, testOrg.organizationId, {
+      await addEmployeeToOrg(validUserToken, testOrg.organizationId, {
         ...invitedEmployee,
         status: "invited"
       });

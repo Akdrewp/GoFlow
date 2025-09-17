@@ -4,7 +4,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from "next/headers";
 
 import { roleSchema } from "@/api/database/database";
-import { FirebaseVerifyError, isValidUserToken, organizationService, userService } from "@/api/firebase/firebaseVerify";
+import { FirebaseVerifyError, isValidUserToken } from "@/api/firebase/firebaseVerify";
+import { addRoleToOrg, getUser } from "@/api/firebase/firebaseService";
 import { FirestoreDatabaseError } from "@/api/firebase/firestoreDatabase";
 
 //For adding a role to an organization
@@ -37,7 +38,7 @@ export async function rolesRoute(request: NextRequest) {
     }
 
     const decodedIdToken = await isValidUserToken(token);
-    const userProfile = await userService.get(token,  decodedIdToken.uid);
+    const userProfile = await getUser(token,  decodedIdToken.uid);
 
     if (!userProfile.employeeId || !userProfile.organizationId) {
       return NextResponse.json(
@@ -46,7 +47,7 @@ export async function rolesRoute(request: NextRequest) {
       );
     }
 
-    await organizationService.addRole(token, userProfile.organizationId, formRoleData);
+    await addRoleToOrg(token, userProfile.organizationId, formRoleData);
 
     // Role added
     return NextResponse.json(

@@ -3,7 +3,7 @@ import { getAuth } from "firebase/auth";
 
 import { adminAuth, adminDb } from "@/api/firebase/firebaseAdmin";
 import { clearFirestoreAuth, clearFirestoreDB } from "./cleanUpEmulators";
-import { userService } from "@/api/firebase/firebaseVerify";
+import { addUser } from "@/api/firebase/firebaseService";
 
 //Api endpoints used for testing
 const NEXT_PUBLIC_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
@@ -191,7 +191,7 @@ describe('Login API Route E2E Tests', () => {
     const conflictOrgIdUserToken = await conflictOrgUserCredential.user.getIdToken();
 
     // Add conflictOrgIdUser to database
-    await userService.add({
+    await addUser({
       name: conflictOrgIdUser.displayName,
       email: conflictOrgIdUser.email,
       uid: adminUid,

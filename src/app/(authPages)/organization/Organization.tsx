@@ -1,4 +1,5 @@
-import { getDataForResource, isValidUserToken, organizationService, userService } from "@/api/firebase/firebaseVerify";
+import { getDataForResource, isValidUserToken } from "@/api/firebase/firebaseVerify";
+import { getRolesForOrg, getUser } from "@/api/firebase/firebaseService"; 
 import { withServerAuth } from "@/app/lib/server-auth";
 //Change type to sidestep duplicate organization use
 import { Organization as OrganizationType, Employee } from "@/api/database/database";
@@ -40,7 +41,7 @@ const getOrganizationInfo = async (token: string): Promise<OrganizationType | nu
     // Get userInfo
     const userDecodedIdToken = await isValidUserToken(token);
     const userUid = userDecodedIdToken.uid;
-    const userInfo = await userService.get(token, userUid);
+    const userInfo = await getUser(token, userUid);
 
     // If user is part of organization get organization info
     if(userInfo?.organizationId && userInfo?.employeeId) {
@@ -71,7 +72,7 @@ export default async function Organization() {
   });
 
   const roles = await withServerAuth(async (token) => {
-    return await organizationService.getRoles(token, OrganizationInfo?.organizationId as string);
+    return await getRolesForOrg(token, OrganizationInfo?.organizationId as string);
   });
 
   //Cast to string just for testing purposes
