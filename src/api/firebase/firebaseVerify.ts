@@ -2,7 +2,7 @@
 
 import { z } from 'zod';
 
-import { doc, DocumentData, getDoc } from 'firebase/firestore';
+import { collection, doc, DocumentData, getDoc, getDocs } from 'firebase/firestore';
 
 import { DecodedIdToken } from 'firebase-admin/auth';
 import { adminAuth } from './firebaseAdmin'; // Assuming adminAuth is imported
@@ -236,7 +236,7 @@ export const canUserAccessData = async (
 export const getDataForResource = async (
   token: string,
   resourceId: string
-): Promise<DocumentData> => {
+): Promise<DocumentData | DocumentData[]> => {
   
   // Check if user can read the data
   // This will throw an error if not
@@ -245,22 +245,45 @@ export const getDataForResource = async (
   // 2. If access is granted, fetch and return the data.
   console.log(`Access granted. Fetching data for resource ${resourceId}...`);
 
-  // Using client db firebase rules apply and will throw an error
-  // if user is not allowed to access data creating a second layer
-  // of authentication
-  const docRef = doc(db, resourceId);
-  const docSnap = await getDoc(docRef);
+  const resourceSegments = resourceId.split("/").length;
 
-  // This should already be taken care of by canUserAccessData
-  // but checking whether it exists again is fine
-  if (!docSnap.exists()) {
-  throw new Error("data with passed resourceId does not exist");
+  // If trying to access one document
+  // resourceId = "someCollection/someDocument/otherCollection/documentName"
+  if (resourceSegments % 2 == 0) {
+
+    // Get document reference
+    const docRef = doc(db, resourceId);
+
+    // Get the document and make sure it exists
+    const docSnap = await getDoc(docRef);
+    if (!docSnap.exists()) {
+      throw new FirebaseVerifyError(
+        "data with passed resourceId does not exist",
+        400 // Bad request
+      );
+    }
+
+    return docSnap.data();
+  } else {
+    // If trying to access a collection
+    // resourceId = "someCollection/someDocument/collectionName"
+    
+    // Get collection
+    const collectionRef = collection(db, resourceId);
+    const querySnapshot = await getDocs(collectionRef);
+
+    // Check if collection has data
+    if (querySnapshot.empty) {
+      throw new FirebaseVerifyError(
+        "Collection with passed resourceId has no data",
+        400 // Bad request
+      );
+    }
+
+    const collectionData = querySnapshot.docs.map(doc => doc.data());
+
+    return collectionData;
   }
-
-  // Log the object directly to see its contents.
-  console.log(`Data for resource ${resourceId}:`, docSnap.data());
-
-  return docSnap.data();
 };
 
 /**

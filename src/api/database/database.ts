@@ -49,7 +49,34 @@ export interface Role {
     };
 }
 
-// The updated Employee interface
+// Tank type enum
+// Each truck can either be a split tank or single tank
+export enum TankType {
+  SINGLE = 'single',
+  SPLIT = 'split',
+}
+
+
+export interface Truck {
+  // Name for the truck shown on the UI
+  name: string;
+
+  // Unique id for the truck within the organization
+  truckId: string;
+
+  // The type of tank system the truck has
+  tankType: TankType;
+
+  // A link to the specific calibration chart this truck uses
+  chartId?: string;
+  
+  // Optional field for the user currently assigned to this truck
+  assignedUserId?: string;
+}
+
+// Employee interface
+// All employees have email and uid undefined until
+// a user signs up into the account
 export interface Employee {
     name: string;
     roleId: string; // Changed from 'role' to link to a Role document
@@ -93,12 +120,20 @@ export const roleSchema = z.object({
     permissions: z.record(z.string(), permissionSetSchema),
 });
 
-// The updated employeeSchema
+// employeeSchema
 export const employeeSchema = z.object({
     name: z.string().min(1, "Name is required"),
-    roleId: z.string().min(1, "Role ID is required"), // Changed from 'role'
+    roleId: z.string().min(1, "Role ID is required"),
     status: z.enum(["invited", "active"]),
     employeeId: z.string().min(1, "Employee ID is required"),
     email: z.string().email().optional(),
     uid: z.string().optional(),
+});
+
+export const truckSchema = z.object({
+  name: z.string().min(1, "Truck name is required"),
+  truckId: z.string().min(1, "Truck ID is required"),
+  tankType: z.nativeEnum(TankType),
+  chartId: z.string().min(1, "A chart ID must be assigned"),
+  assignedUserId: z.string().optional(),
 });

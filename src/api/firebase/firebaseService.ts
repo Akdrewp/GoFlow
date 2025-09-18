@@ -1,6 +1,7 @@
-import { Employee, Organization, ORGANIZATION_RESOURCES, Role, UserProfile } from "../database/database";
-import { AccessType, canUserAccessData, FirebaseVerifyError, isValidUserToken } from "./firebaseVerify";
-import { employeeDatabase, FirestoreDatabaseError, organizationDatabase, userDatabase } from "./firestoreDatabase";
+import { Employee, Organization, ORGANIZATION_RESOURCES, Role, Truck, UserProfile } from "../database/database";
+import { AccessType, canUserAccessData, FirebaseVerifyError,
+   isValidUserToken } from "./firebaseVerify";
+import { employeeDatabase, FirestoreDatabaseError, organizationDatabase, truckDatabase, userDatabase } from "./firestoreDatabase";
 
 // --- Organization Service Functions ---
 
@@ -10,7 +11,8 @@ import { employeeDatabase, FirestoreDatabaseError, organizationDatabase, userDat
  * @param token The creator's Firebase ID token.
  * @param organization The data for the new organization.
  * @returns A Promise that resolves when the operation is complete.
- * @throws {FirebaseVerifyError} If the user is already in an organization or the organization ID already exists.
+ * @throws {FirebaseVerifyError}
+ *  If the user is already in an organization or the organization ID already exists.
  */
 export async function createOrganization(token: string, organization: Organization): Promise<void> {
   try {
@@ -20,7 +22,10 @@ export async function createOrganization(token: string, organization: Organizati
 
     // Only a user not part of an organization can create one
     if (createdByUserProfile?.employeeId || createdByUserProfile?.organizationId) {
-      throw new FirebaseVerifyError("Cannot create an organization if user is already part of an organization", 403);
+      throw new FirebaseVerifyError(
+        "Cannot create an organization if user is already part of an organization",
+        403 // Forbidden
+      );
     }
     
     // Check if the organization already exists
@@ -106,12 +111,18 @@ export async function addEmployeeToOrg(token: string, organizationId: string, em
 
     // Business Logic: Check for duplicate employee ID
     if (await employeeDatabase.existsInOrg(organizationId, employeeData.employeeId)) {
-      throw new FirebaseVerifyError("Employee with passed employeeId already exists", 409);
+      throw new FirebaseVerifyError(
+        "Employee with passed employeeId already exists",
+        409 // Conflict
+      );
     }
     
     // Business Logic: Check if the assigned role exists
     if (!(await organizationDatabase.roleExists(organizationId, employeeData.roleId))) {
-      throw new FirebaseVerifyError(`Employee with passed roleId: ${employeeData.roleId} does not exist in organization`, 400);
+      throw new FirebaseVerifyError(
+        `Employee with passed roleId: ${employeeData.roleId} does not exist in organization`,
+        400 // Bad request
+      );
     }
 
     // Add the employee via the database repository
@@ -137,7 +148,10 @@ export async function addRoleToOrg(token: string, organizationId: string, roleDa
 
     // Business Logic: Check if the role ID already exists
     if (await organizationDatabase.roleExists(organizationId, roleData.roleId)) {
-      throw new FirebaseVerifyError(`Role with ID "${roleData.roleId}" already exists in this organization.`, 409);
+      throw new FirebaseVerifyError(
+        `Role with ID "${roleData.roleId}" already exists in this organization.`,
+        409 // Conflict
+      );
     }
 
     // Add the role via the database repository
@@ -168,6 +182,38 @@ export async function getRolesForOrg(token: string, organizationId: string): Pro
   }
 }
 
+/**
+ * Handles the business logic for adding a new truck to an organization.
+ * It verifies the user's permissions and ensures the truck does not already exist.
+ * @param token The user's Firebase ID token for authentication.
+ * @param organizationId The ID of the organization to add the truck to.
+ * @param truckData The data for the new truck.
+ * @returns A promise that resolves when the truck is successfully created.
+ * @throws {FirebaseVerifyError} If the user is not authorized or the truck ID already exists.
+ */
+export async function addTruckToOrg(token: string, organizationId: string, truckData: Truck): Promise<void> {
+  try {
+    // Make sure user can WRITE to trucks
+    const resourcePath = `organizations/${organizationId}/trucks`;
+    await canUserAccessData(token, resourcePath, AccessType.WRITE);
+
+    // Check if truck already exists
+    if (await truckDatabase.truckExists(organizationId, truckData.truckId)) {
+      throw new FirebaseVerifyError(
+        `Truck with ID "${truckData.truckId}" already exists in this organization.`,
+        409 // Conflict
+      );
+    }
+
+    // Add truck to database
+    await truckDatabase.addTruck(organizationId, truckData);
+
+  } catch (e) {
+    console.error("Error in addTruckToOrg service:", e);
+    // Re-throw the error to be handled by the API route's catch block.
+    throw e;
+  }
+}
 // --- User Service Functions ---
 
 /**
@@ -182,13 +228,22 @@ export async function addUser(userProfile: UserProfile): Promise<void> {
       const { organizationId, employeeId, uid } = userProfile;
 
       if (!(await organizationDatabase.exists(organizationId))) {
-        throw new FirebaseVerifyError("Organization with passed organizationId does not exist", 400);
+        throw new FirebaseVerifyError(
+          "Organization with passed organizationId does not exist", 
+          400 // Bad request
+        );
       }
       if (!(await employeeDatabase.existsInOrg(organizationId, employeeId))) {
-        throw new FirebaseVerifyError("Employee with passed employeeId does not exist in this organization", 400);
+        throw new FirebaseVerifyError(
+          "Employee with passed employeeId does not exist in this organization", 
+          400 // Bad request
+        );
       }
       if (await employeeDatabase.isAssociated(employeeId)) {
-        throw new FirebaseVerifyError("Employee with passed employeeId already associated with an account", 409);
+        throw new FirebaseVerifyError(
+          "Employee with passed employeeId already associated with an account", 
+          409 // Conflict
+        );
       }
 
       // If all checks pass, activate the employee record and create the user profile
@@ -199,7 +254,8 @@ export async function addUser(userProfile: UserProfile): Promise<void> {
     await userDatabase.add(userProfile);
   } catch (e) {
     console.error("Error adding user to database:", e);
-    if (e instanceof FirebaseVerifyError || e instanceof FirestoreDatabaseError) {
+    if (e instanceof FirebaseVerifyError 
+      || e instanceof FirestoreDatabaseError) {
       throw e;
     }
     throw new Error(`Failed to add user to database: ${(e as Error).message}`);

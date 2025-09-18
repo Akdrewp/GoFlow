@@ -1,8 +1,130 @@
 'use client'; // This page now contains interactive client components
 
 import { useState } from 'react';
-import { Organization as OrganizationType, Employee, Role } from "@/api/database/database";
+import { Organization as OrganizationType, Employee, Role, TankType, Truck } from "@/api/database/database";
 import { Plus } from 'lucide-react';
+
+// --- Component for Displaying and Managing the Truck List ---
+function TruckList({ 
+  initialTrucks, 
+  organizationId 
+}: { 
+  initialTrucks: Truck[] | null, 
+  organizationId: string 
+}) {
+  const [trucks, setTrucks] = useState(initialTrucks || []);
+  const [isAdding, setIsAdding] = useState(false);
+  
+  // State for the new truck form
+  const [newName, setNewName] = useState('');
+  const [newTruckId, setNewTruckId] = useState('');
+  const [newTankType, setNewTankType] = useState<TankType>(TankType.SINGLE);
+  const [newChartId, setNewChartId] = useState('');
+  
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleAddNew = () => setIsAdding(true);
+
+  const handleCancel = () => {
+    setIsAdding(false);
+    setError('');
+    // Clear input fields
+    setNewName('');
+    setNewTruckId('');
+    setNewTankType(TankType.SINGLE);
+    setNewChartId('');
+  };
+
+  const handleSave = async () => {
+    setIsLoading(true);
+    setError('');
+    const newTruckData = { 
+      name: newName, 
+      truckId: newTruckId, 
+      tankType: newTankType,
+      chartId: newChartId,
+    };
+
+    try {
+      const apiRoute = `/api/organizations/${organizationId}/trucks`;
+      const response = await fetch(apiRoute, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newTruckData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to add truck.');
+      }
+
+      const result = await response.json();
+      console.log('API Response for new truck:', result); 
+
+      // Optimistically update the UI with the new truck data
+      setTrucks([...trucks, result.data]);
+      handleCancel(); // Clear form on success
+    } catch (e) {
+      console.error("Error saving truck:", e);
+      setError((e as Error).message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="mt-8">
+      <h2 className="text-2xl font-semibold text-foreground mb-4">Trucks</h2>
+      <div className="rounded-lg border bg-card text-card-foreground">
+        <div className="divide-y divide-border">
+          {/* Table Header */}
+          <div className="grid grid-cols-4 gap-4 px-4 py-3 font-semibold">
+            <div>Name</div>
+            <div>Truck ID</div>
+            <div>Tank Type</div>
+            <div>Assigned Chart ID</div>
+          </div>
+          {/* Table Body */}
+          {trucks.map((truck) => (
+            <div key={truck.truckId} className="grid grid-cols-4 gap-4 px-4 py-3 text-muted-foreground items-center">
+              <div>{truck.name}</div>
+              <div>{truck.truckId}</div>
+              <div className="capitalize">{truck.tankType}</div>
+              <div>{truck.chartId}</div>
+            </div>
+          ))}
+          {/* Inline Form for Adding New Truck */}
+          {isAdding && (
+            <div className="grid grid-cols-4 gap-4 px-4 py-3 items-center bg-muted/50">
+              <div><input type="text" placeholder="Truck Name" value={newName} onChange={(e) => setNewName(e.target.value)} className="bg-input border border-border rounded-md w-full p-2 text-sm" /></div>
+              <div><input type="text" placeholder="Truck ID" value={newTruckId} onChange={(e) => setNewTruckId(e.target.value)} className="bg-input border border-border rounded-md w-full p-2 text-sm" /></div>
+              <div>
+                <select value={newTankType} onChange={(e) => setNewTankType(e.target.value as TankType)} className="bg-input border border-border rounded-md w-full p-2 text-sm capitalize">
+                  <option value={TankType.SINGLE}>Single</option>
+                  <option value={TankType.SPLIT}>Split</option>
+                </select>
+              </div>
+              <div className="flex items-center space-x-2">
+                <input type="text" placeholder="Chart ID" value={newChartId} onChange={(e) => setNewChartId(e.target.value)} className="bg-input border border-border rounded-md w-full p-2 text-sm" />
+                <button onClick={() => { void handleSave(); }} disabled={isLoading} className="bg-primary text-primary-foreground h-9 px-3 rounded-md text-sm whitespace-nowrap">{isLoading ? 'Saving...' : 'Save'}</button>
+                <button onClick={handleCancel} className="bg-muted text-muted-foreground h-9 px-3 rounded-md text-sm">Cancel</button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+      {error && <p className="text-sm text-destructive mt-2">{error}</p>}
+      {!isAdding && (
+        <div className="mt-4">
+          <button onClick={handleAddNew} className="inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-4 py-2 border border-input bg-transparent shadow-sm hover:bg-accent hover:text-accent-foreground">
+            <Plus className="mr-2 h-4 w-4" /> Add Truck
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 // --- Component for Displaying and Managing the Employee List ---
 function EmployeeList({ 
@@ -171,11 +293,21 @@ function EmployeeList({
   );
 }
 
-// --- Updated Component to Display Organization Info and the Employee List ---
-export function OrganizationDisplay({ info, employees, roles }: { info: OrganizationType | null, employees: Employee[] | null, roles: Role[] | null }) {
-  
-  // If there's no organization info, show a message
-  if (!info) {
+// OrganizationType is Organization renamed to avoid
+// confusion with organization component
+export interface organizationDisplayData {
+  info: OrganizationType | null, 
+  employees: Employee[] | null,
+  roles: Role[] | null,
+  trucks: Truck[] | null
+}
+
+// --- Component to Display Organization Info, Employees, and Trucks ---
+export function OrganizationDisplay({ data: organizationData }: { data: organizationDisplayData | null }) {
+  if (!organizationData) {
+    return "Error";
+  }
+  if (!organizationData.info) {
     return (
       <div className="p-6 rounded-lg border bg-card text-card-foreground">
         <h2 className="text-xl font-semibold">No Organization Found</h2>
@@ -188,20 +320,15 @@ export function OrganizationDisplay({ info, employees, roles }: { info: Organiza
     <div>
       {/* Organization Header */}
       <div>
-        <h1 className="text-5xl font-bold text-foreground">
-          {info.name}
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          {info.organizationId}
-        </p>
+        <h1 className="text-5xl font-bold text-foreground">{organizationData.info.name}</h1>
+        <p className="text-sm text-muted-foreground mt-1">{organizationData.info.organizationId}</p>
       </div>
 
       {/* Employee List */}
-      <EmployeeList 
-        employees={employees} 
-        roles={roles} 
-        organizationId={info.organizationId} 
-      />
+      <EmployeeList employees={organizationData.employees} organizationId={organizationData.info.organizationId} roles={organizationData.roles} />
+      
+      {/* Truck List */}
+      <TruckList initialTrucks={organizationData.trucks} organizationId={organizationData.info.organizationId} />
     </div>
   );
 }
