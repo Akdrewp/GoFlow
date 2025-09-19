@@ -18,7 +18,7 @@ export async function withServerAuth<T>(
 ): Promise<T> {
   console.log("RUNNING WITH SERVER AUTH");
 
-  // 1. Read the token from the secure cookie.
+  // Read cookie and get token
   const userCookies = await cookies();
   const token = userCookies.get('session-token')?.value;
 

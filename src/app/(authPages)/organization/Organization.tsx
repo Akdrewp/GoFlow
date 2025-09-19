@@ -11,8 +11,8 @@ import { OrganizationDisplay } from "@/app/(authPages)/organization/Organization
  */
 const getEmployeesForOrganization = async (token: string, organizationId: string): Promise<Employee[] | null> => {
     try {
-        const employeesResourceId = `organizations/${organizationId}/employees`;
-        const employees = await getDataForResource(token, employeesResourceId);
+        const employeesCollectionId = `organizations/${organizationId}/employees`;
+        const employees = await getDataForResource(token, employeesCollectionId);
 
         // const employees = querySnapshot.docs.map(doc => doc.data() as Employee);
         return employees as Employee[];
@@ -20,6 +20,18 @@ const getEmployeesForOrganization = async (token: string, organizationId: string
         console.error("Error fetching employees:", e);
         return null;
     }
+};
+
+const getTrucksForOrganization = async (token: string, organizationId: string): Promise<Truck[] | null> => {
+  try {
+    const trucksCollectionId = `organizations/${organizationId}/trucks`;
+    const trucks = await getDataForResource(token, trucksCollectionId);
+
+    return trucks as Truck[];
+  } catch (e) {
+    console.error("Error fetching trucks: ", e);
+    return null;
+  }
 };
 
 const getOrganizationInfo = async (token: string): Promise<OrganizationType | null> => {
@@ -68,7 +80,9 @@ export default async function Organization() {
   });
 
   // Change to getTrucksLater
-  const trucks = [] as Truck[];
+  const trucks = await withServerAuth(async (token) => {
+    return await getTrucksForOrganization(token, organizationInfo?.organizationId as string);
+  });
 
   const organizationData = {
     info: organizationInfo,

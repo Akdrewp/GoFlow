@@ -47,6 +47,8 @@ function TruckList({
     };
 
     try {
+
+      // Call to trucks POST route
       const apiRoute = `/api/organizations/${organizationId}/trucks`;
       const response = await fetch(apiRoute, {
         method: 'POST',
