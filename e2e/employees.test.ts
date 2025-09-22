@@ -1,8 +1,10 @@
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth"; 
 import { adminAuth, adminDb } from "@/api/firebase/firebaseAdmin";
 import { clearFirestoreAuth, clearFirestoreDB } from "./cleanUpEmulators";
-import { organizationService, userService } from "@/api/firebase/firebaseVerify";
+import { addUser } from "@/api/firebase/firebaseService";
 import { ORGANIZATION_RESOURCES, Role } from "@/api/database/database";
+
+import { createOrganization, addRoleToOrg } from "@/api/firebase/firebaseService";
 
 const NEXT_PUBLIC_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
@@ -44,7 +46,7 @@ describe('Add Employee API Route E2E Tests', () => {
       validUserToken = await userCredential.user.getIdToken();
 
       // Add user to database
-      await userService.add({
+      await addUser({
         name: testUser.name,
         email: testUser.email,
         uid: adminUid,
@@ -52,7 +54,7 @@ describe('Add Employee API Route E2E Tests', () => {
       });
 
       // Create organization
-      await organizationService.create(validUserToken, {
+      await createOrganization(validUserToken, {
         ...testOrg,
         createdBy: adminUid,
         createdAt: new Date()
@@ -73,7 +75,7 @@ describe('Add Employee API Route E2E Tests', () => {
       };
 
       // Add driver role to organization
-      await organizationService.addRole(validUserToken, testOrg.organizationId, driverRole);
+      await addRoleToOrg(validUserToken, testOrg.organizationId, driverRole);
 
     } catch (e) {
       console.error("Critical Error during beforeEach setup:", e);

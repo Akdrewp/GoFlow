@@ -1,7 +1,8 @@
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { adminAuth, adminDb } from "@/api/firebase/firebaseAdmin";
 import { clearFirestoreAuth, clearFirestoreDB } from "./cleanUpEmulators";
-import { AccessType, canUserAccessData, organizationService, userService } from "@/api/firebase/firebaseVerify";
+import { AccessType, canUserAccessData} from "@/api/firebase/firebaseVerify";
+import { createOrganization, addRoleToOrg, addEmployeeToOrg, addUser } from "@/api/firebase/firebaseService";
 import { ORGANIZATION_RESOURCES, Role } from "@/api/database/database";
 
 // Client auth instance needed to get an ID token
@@ -64,14 +65,14 @@ describe('Roles API Route E2E Tests', () => {
       driverUserAuthToken = await (await signInWithEmailAndPassword(authClient, testDriverUser.email, testDriverUser.password)).user.getIdToken();
 
       // Add driver and admin to users database
-      await userService.add({
+      await addUser({
         ...testAdminUser,
         uid: adminAuthUser.uid,
         createdAt: new Date(),
       });
 
       // Create organization with admin as creator
-      await organizationService.create(adminUserAuthToken, {
+      await createOrganization(adminUserAuthToken, {
         ...testOrg1,
         createdBy: adminAuthUser.uid,
         createdAt: new Date(),
@@ -96,17 +97,17 @@ describe('Roles API Route E2E Tests', () => {
         level: 50,
         permissions: driverPermissions
       };
-      await organizationService.addRole(adminUserAuthToken, testOrg1.organizationId, driverRole);
+      await addRoleToOrg(adminUserAuthToken, testOrg1.organizationId, driverRole);
 
       // Add driver user as an employee
-      await organizationService.addEmployee(
+      await addEmployeeToOrg(
         adminUserAuthToken, 
         testOrg1.organizationId,
         driverUserEmployee
       );
 
       // Activate user in organization
-      await userService.add({
+      await addUser({
         ...testDriverUser,
         uid: driverAuthUser.uid,
         createdAt: new Date(),
@@ -123,14 +124,14 @@ describe('Roles API Route E2E Tests', () => {
       testOrg2AdminToken = await (await signInWithEmailAndPassword(authClient, testOrg2AdminUser.email, testOrg2AdminUser.password)).user.getIdToken();
 
       // Add testOrg2Admin to database
-      await userService.add({
+      await addUser({
         ...testOrg2AdminUser,
         uid: testOrg2AdminAuthUser.uid,
         createdAt: new Date(),
       });
 
       // Create organization with testOrg2Admin as creator
-      await organizationService.create(testOrg2AdminToken, {
+      await createOrganization(testOrg2AdminToken, {
         ...testOrg2,
         createdBy: testOrg2AdminAuthUser.uid,
         createdAt: new Date(),
@@ -235,7 +236,7 @@ describe('Roles API Route E2E Tests', () => {
     };
 
     // The service function call is expected to throw a specific error.
-    const addEmployeeCheck = organizationService.addEmployee(
+    const addEmployeeCheck = addEmployeeToOrg(
       adminUserAuthToken,
       testOrg1.organizationId,
       employeeWithInvalidRole
@@ -243,7 +244,7 @@ describe('Roles API Route E2E Tests', () => {
 
     // Assert that the promise rejects with our custom error.
     await expect(addEmployeeCheck).rejects.toThrow(
-      "Employee with passed roleId: non_existent_role does not exists in organization"
+      "Employee with passed roleId: non_existent_role does not exist in organization"
     );
   });
 });

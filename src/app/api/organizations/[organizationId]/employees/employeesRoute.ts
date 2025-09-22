@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
 import { employeeSchema } from '@/api/database/database';
-import { FirebaseVerifyError, organizationService } from '@/api/firebase/firebaseVerify';
+import { FirebaseVerifyError } from '@/api/firebase/firebaseVerify';
+import { addEmployeeToOrg } from '@/api/firebase/firebaseService';
 import { FirestoreDatabaseError } from '@/api/firebase/firestoreDatabase';
 
 // The second argument to the POST function is a context object
@@ -43,7 +44,7 @@ export async function employeesRoute(
     }
 
     // Add employee via firebaseVerify
-    await organizationService.addEmployee(token, organizationId, {
+    await addEmployeeToOrg(token, organizationId, {
       name: name,
       roleId: roleId,
       status: status,

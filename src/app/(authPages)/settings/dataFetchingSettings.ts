@@ -1,4 +1,5 @@
-import { getDataForResource, isValidUserToken, organizationService, userService } from "@/api/firebase/firebaseVerify";
+import { getDataForResource, isValidUserToken } from "@/api/firebase/firebaseVerify";
+import { getOrganization, getRolesForOrg, getUser } from "@/api/firebase/firebaseService";
 
 import { Organization } from "@/api/database/database";
 import { OrgSettingsData } from "./settingsOptions/OrganizationSettings";
@@ -15,7 +16,7 @@ export const getGeneralSettingsData = async (token: string): Promise<Organizatio
     // Get userInfo
     const userDecodedIdToken = await isValidUserToken(token);
     const userUid = userDecodedIdToken.uid;
-    const userInfo = await userService.get(token, userUid);
+    const userInfo = await getUser(token, userUid);
 
     // If user is part of organization get organization info
     if(userInfo?.organizationId && userInfo?.employeeId) {
@@ -48,13 +49,13 @@ export const getOrganizationSettingsData = async (token: string): Promise<OrgSet
     // Get userInfo
     const userDecodedIdToken = await isValidUserToken(token);
     const userUid = userDecodedIdToken.uid;
-    const userInfo = await userService.get(token, userUid);
+    const userInfo = await getUser(token, userUid);
 
     // If user is part of organization get organization info
     if(userInfo?.organizationId && userInfo?.employeeId) {
       // Get organization and roles
-      const organizationData = await organizationService.get(token, userInfo.organizationId);
-      const rolesData = await organizationService.getRoles(token, userInfo.organizationId);
+      const organizationData = await getOrganization(token, userInfo.organizationId);
+      const rolesData = await getRolesForOrg(token, userInfo.organizationId);
       /**
        * @todo Complete with organizationService.getRoles
        */

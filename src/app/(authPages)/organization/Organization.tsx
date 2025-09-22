@@ -1,37 +1,37 @@
-import { getDataForResource, isValidUserToken, organizationService, userService } from "@/api/firebase/firebaseVerify";
+import { getDataForResource, isValidUserToken } from "@/api/firebase/firebaseVerify";
+import { getRolesForOrg, getUser } from "@/api/firebase/firebaseService"; 
 import { withServerAuth } from "@/app/lib/server-auth";
 //Change type to sidestep duplicate organization use
-import { Organization as OrganizationType, Employee } from "@/api/database/database";
+import { Organization as OrganizationType, Employee, Truck } from "@/api/database/database";
 import { OrganizationDisplay } from "@/app/(authPages)/organization/OrganizationDisplay";
-
-//Keep these imports together for now in case switching to seperate file
-import { collection, getDocs } from "firebase/firestore";
-import { db } from "@/api/firebase/firebaseConfig";
 
 /**
  * 
  * @todo Change this to use getDataForResource
  */
-const getEmployeesForOrganization = async (organizationId: string): Promise<Employee[] | null> => {
+const getEmployeesForOrganization = async (token: string, organizationId: string): Promise<Employee[] | null> => {
     try {
-        const employeesRef = collection(db, `organizations/${organizationId}/employees`);
-        const querySnapshot = await getDocs(employeesRef);
-        
-        if (querySnapshot.empty) {
-            return [];
-        }
+        const employeesCollectionId = `organizations/${organizationId}/employees`;
+        const employees = await getDataForResource(token, employeesCollectionId);
 
-        console.log("Organization.tsx getEmployeesForOrganization CONSOLE LOG:");
-        querySnapshot.docs.forEach((doc, index) => {
-            console.log(`  Employee ${index + 1}:`, doc.data());
-        });
-
-        const employees = querySnapshot.docs.map(doc => doc.data() as Employee);
-        return employees;
+        // const employees = querySnapshot.docs.map(doc => doc.data() as Employee);
+        return employees as Employee[];
     } catch (e) {
         console.error("Error fetching employees:", e);
         return null;
     }
+};
+
+const getTrucksForOrganization = async (token: string, organizationId: string): Promise<Truck[] | null> => {
+  try {
+    const trucksCollectionId = `organizations/${organizationId}/trucks`;
+    const trucks = await getDataForResource(token, trucksCollectionId);
+
+    return trucks as Truck[];
+  } catch (e) {
+    console.error("Error fetching trucks: ", e);
+    return null;
+  }
 };
 
 const getOrganizationInfo = async (token: string): Promise<OrganizationType | null> => {
@@ -40,7 +40,7 @@ const getOrganizationInfo = async (token: string): Promise<OrganizationType | nu
     // Get userInfo
     const userDecodedIdToken = await isValidUserToken(token);
     const userUid = userDecodedIdToken.uid;
-    const userInfo = await userService.get(token, userUid);
+    const userInfo = await getUser(token, userUid);
 
     // If user is part of organization get organization info
     if(userInfo?.organizationId && userInfo?.employeeId) {
@@ -65,22 +65,36 @@ const getOrganizationInfo = async (token: string): Promise<OrganizationType | nu
 
 export default async function Organization() {
 
-  const OrganizationInfo = await withServerAuth(async (token) => {
+  const organizationInfo = await withServerAuth(async (token) => {
     return await getOrganizationInfo(token);
 
   });
 
   const roles = await withServerAuth(async (token) => {
-    return await organizationService.getRoles(token, OrganizationInfo?.organizationId as string);
+    return await getRolesForOrg(token, organizationInfo?.organizationId as string);
   });
 
   //Cast to string just for testing purposes
-  const employees = await getEmployeesForOrganization(OrganizationInfo?.organizationId as string);
+  const employees = await withServerAuth(async (token) => {
+    return await getEmployeesForOrganization(token, organizationInfo?.organizationId as string);
+  });
+
+  // Change to getTrucksLater
+  const trucks = await withServerAuth(async (token) => {
+    return await getTrucksForOrganization(token, organizationInfo?.organizationId as string);
+  });
+
+  const organizationData = {
+    info: organizationInfo,
+    employees: employees,
+    roles: roles,
+    trucks: trucks,
+  };
 
   return (
     <div>
       {/** JSON parse and stringify is for converting to plain objects for NextJS */}
-      <OrganizationDisplay info={JSON.parse(JSON.stringify(OrganizationInfo))} employees={JSON.parse(JSON.stringify(employees))} roles={JSON.parse(JSON.stringify(roles))}/> 
+      <OrganizationDisplay data={JSON.parse(JSON.stringify(organizationData))}/> 
     </div>
   );
 }

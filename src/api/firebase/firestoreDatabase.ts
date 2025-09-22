@@ -2,10 +2,10 @@
 
 import { z } from "zod";
 
-import { collection, doc, setDoc, getDoc, updateDoc, getDocs, query, where, DocumentData} from "firebase/firestore";
+import { collection, doc, setDoc, getDoc, updateDoc, getDocs, query, where, DocumentData, deleteDoc} from "firebase/firestore";
 import { db } from "./firebaseConfig";
 
-import { UserProfile, Organization, Employee, Role } from "@/api/database/database";
+import { UserProfile, Organization, Employee, Role, Truck } from "@/api/database/database";
 import { AccessType } from "./firebaseVerify";
 
 export class FirestoreDatabaseError extends Error {
@@ -319,8 +319,11 @@ export const organizationDatabase = {
    */
   roleExists: async (organizationId: string, roleId: string): Promise<boolean> => {
     try {
+      // Get role document
       const roleDocRef = doc(db, `organizations/${organizationId}/roles`, roleId);
       const docSnap = await getDoc(roleDocRef);
+
+      // Return whether it exists
       return docSnap.exists();
     } catch (e) {
       console.error(`Error checking if role "${roleId}" exists:`, e);
@@ -329,6 +332,92 @@ export const organizationDatabase = {
   },
 
 
+};
+
+export const truckDatabase = {
+  /**
+   * Checks if a truck with the given truckId exists within an organization's 'trucks' sub-collection.
+   * @param organizationId The ID of the organization.
+   * @param truckId The ID of the truck to check.
+   * @returns A Promise that resolves to true if the truck exists, false otherwise.
+   * @throws An error if the database read operation fails.
+   */
+  truckExists: async (organizationId: string, truckId: string): Promise<boolean> => {
+    try {
+      // Get truck dococument
+      const truckDocRef = doc(db, `organizations/${organizationId}/trucks`, truckId);
+      const docSnap = await getDoc(truckDocRef);
+
+      // Return whether it exists
+      return docSnap.exists();
+    } catch (e) {
+      console.error(`Error checking if truck "${truckId}" exists:`, e);
+      throw new Error(`Failed to check for truck existence: ${(e as Error).message}`);
+    }
+  },
+
+  /**
+   * Adds a new truck document to an organization's 'trucks' sub-collection.
+   * @param organizationId The ID of the organization to add the truck to.
+   * @param truckData The data for the new truck.
+   * @returns A promise that resolves when the truck has been successfully added.
+   * @throws An error if the database write operation fails.
+   */
+  addTruck: async (organizationId: string, truckData: Truck): Promise<void> => {
+    try {
+      // Add truck to database under `organizations/${organizationId}/trucks/truckData.truckId`
+      const truckDocRef = doc(db, `organizations/${organizationId}/trucks`, truckData.truckId);
+      
+      await setDoc(truckDocRef, truckData);
+
+      console.log(`Truck "${truckData.truckId}" successfully added to organization "${organizationId}".`);
+    } catch (e) {
+      console.error("Error adding truck to database:", e);
+      throw new Error(`Failed to add truck: ${(e as Error).message}`);
+    }
+  },
+
+  /**
+   * Updates an existing truck document by replacing it with new data.
+   * @param organizationId The ID of the organization.
+   * @param truckId The ID of the truck to update.
+   * @param truckData The complete new data for the truck.
+   * @returns A promise that resolves when the truck has been successfully updated.
+   * @throws An error if the database write operation fails.
+   */
+  update: async (organizationId: string, truckId: string, truckData: Truck): Promise<void> => {
+    try {
+      const truckDocRef = doc(db, `organizations/${organizationId}/trucks`, truckId);
+
+      // setDoc updates an existing document
+      await setDoc(truckDocRef, truckData);
+
+      console.log(`Truck "${truckId}" successfully updated in organization "${organizationId}".`);
+    } catch (e) {
+      console.error("Error updating truck in database:", e);
+      throw new Error(`Failed to update truck: ${(e as Error).message}`);
+    }
+  },
+
+  /**
+   * Deletes a truck document from an organization's 'trucks' sub-collection.
+   * @param organizationId The ID of the organization.
+   * @param truckId The ID of the truck to delete.
+   * @returns A promise that resolves when the truck has been successfully deleted.
+   * @throws An error if the database delete operation fails.
+   */
+  remove: async (organizationId: string, truckId: string): Promise<void> => {
+    try {
+      const truckDocRef = doc(db, `organizations/${organizationId}/trucks`, truckId);
+
+      await deleteDoc(truckDocRef);
+
+      console.log(`Truck "${truckId}" successfully deleted from organization "${organizationId}".`);
+    } catch (e) {
+      console.error("Error deleting truck from database:", e);
+      throw new Error(`Failed to delete truck: ${(e as Error).message}`);
+    }
+  },
 };
 
 export const employeeDatabase = {
