@@ -1,7 +1,7 @@
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { adminAuth, adminDb } from "@/api/firebase/firebaseAdmin";
 import { clearFirestoreAuth, clearFirestoreDB } from "./cleanUpEmulators";
-import { createOrganization, addRoleToOrg, addEmployeeToOrg, addUser } from "@/api/firebase/firebaseService";
+import { createOrganization, addRoleToOrg, addEmployeeToOrg, addUser, addTruckToOrg } from "@/api/firebase/firebaseService";
 import { ORGANIZATION_RESOURCES, Role, TankType, Truck } from "@/api/database/database";
 
 const NEXT_PUBLIC_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
@@ -168,6 +168,8 @@ describe('Roles API Route E2E Tests', () => {
     }
   });
 
+  // POST route
+
   // Test Case 1: Successful Truck Creation
   test('should successfully add a new truck to an organization', async () => {
     const testTruck: Truck = {
@@ -236,11 +238,135 @@ describe('Roles API Route E2E Tests', () => {
       body: JSON.stringify(testTruck),
     });
 
-    // Make sure it's conflict
+    // assert 409 Conflict
     expect(conflictResponse.status).toBe(409);
     const responseBody = await conflictResponse.json();
     expect(responseBody.status).toBe('fail');
     expect(responseBody.message).toBe(`Truck with ID "${testTruck.truckId}" already exists in this organization.`);
+  });
+
+  // PUT route
+
+  // Test Case 3: Successful Truck Update
+  test('should successfully update an existing truck', async () => {
+    const initialTruckData: Truck = {
+      name: "Old Blue",
+      truckId: "TRUCK-02",
+      tankType: TankType.SINGLE,
+      chartId: "chart-single-1"
+    };
+    
+    // Add truck to database
+    await addTruckToOrg(adminUserAuthToken, testOrg1.organizationId, initialTruckData);
+
+    const updatedTruckData: Truck = {
+      ...initialTruckData,
+      name: "New Name Blue", // Change name
+    };
+    
+    const apiRoute = `${NEXT_PUBLIC_BASE_URL}/api/organizations/${testOrg1.organizationId}/trucks/${initialTruckData.truckId}`;
+
+    // Make the API call to update the truck.
+    const response = await fetch(apiRoute, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Cookie': `session-token=${adminUserAuthToken}`
+      },
+      body: JSON.stringify(updatedTruckData),
+    });
+
+    // Assert 200 success
+    expect(response.status).toBe(200);
+    const responseBody = await response.json();
+    expect(responseBody.status).toBe('success');
+    expect(responseBody.data.name).toBe(updatedTruckData.name);
+
+    // Check that firebaseDatabase has correct data
+    const truckDoc = await adminDb.doc(`organizations/${testOrg1.organizationId}/trucks/${initialTruckData.truckId}`).get();
+    expect(truckDoc.exists).toBe(true);
+    expect(truckDoc.data()?.name).toBe("New Name Blue");
+  });
+
+  // Test Case 4: Update a Non-Existent Truck
+  test('should fail with a 404 Not Found if updating a truck that does not exist', async () => {
+    const nonExistentTruckData: Truck = {
+      name: "Ghost Truck",
+      truckId: "TRUCK-99",
+      tankType: TankType.SINGLE,
+      chartId: "chart-single-1"
+    };
+    
+    const apiRoute = `${NEXT_PUBLIC_BASE_URL}/api/organizations/${testOrg1.organizationId}/trucks/${nonExistentTruckData.truckId}`;
+
+    // update nonExistentTruck
+    const response = await fetch(apiRoute, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Cookie': `session-token=${adminUserAuthToken}`
+      },
+      body: JSON.stringify(nonExistentTruckData),
+    });
+
+    // Assert 404 Not found
+    expect(response.status).toBe(404);
+    const responseBody = await response.json();
+    expect(responseBody.status).toBe('fail');
+    expect(responseBody.message).toContain(`Truck with ID "${nonExistentTruckData.truckId}" not found`);
+  });
+
+  // DELTETE route
+
+    // Test Case 5: Successful Truck Deletion
+  test('should successfully delete an existing truck', async () => {
+    const truckToDelete: Truck = {
+      name: "Delete Me",
+      truckId: "TRUCK-DEL",
+      tankType: TankType.SINGLE,
+      chartId: "chart-single-1"
+    };
+
+    // Add truck to database
+    await addTruckToOrg(adminUserAuthToken, testOrg1.organizationId, truckToDelete);
+
+    const apiRoute = `${NEXT_PUBLIC_BASE_URL}/api/organizations/${testOrg1.organizationId}/trucks/${truckToDelete.truckId}`;
+    // DLETE truck
+    const response = await fetch(apiRoute, {
+      method: 'DELETE',
+      headers: {
+        'Cookie': `session-token=${adminUserAuthToken}`
+      },
+    });
+
+    // Assert 200 success
+    expect(response.status).toBe(200);
+    const responseBody = await response.json();
+    expect(responseBody.status).toBe('success');
+
+    // Check truck was actually deleted from database
+    const truckDoc = await adminDb.doc(`organizations/${testOrg1.organizationId}/trucks/${truckToDelete.truckId}`).get();
+    expect(truckDoc.exists).toBe(false);
+  });
+
+  // Test Case 6: Delete a Non-Existent Truck
+  test('should fail with a 404 Not Found if deleting a truck that does not exist', async () => {
+    const nonExistentTruckId = "TRUCK-GHOST";
+    const apiRoute = `${NEXT_PUBLIC_BASE_URL}/api/organizations/${testOrg1.organizationId}/trucks/${nonExistentTruckId}`;
+
+    // DELETE on a non-existent truck
+    const response = await fetch(apiRoute, {
+      method: 'DELETE',
+      headers: {
+        'Cookie': `session-token=${adminUserAuthToken}`
+      },
+    });
+
+    // Assert 404 Not Found
+    expect(response.status).toBe(404);
+    const responseBody = await response.json();
+    expect(responseBody.status).toBe('fail');
+    expect(responseBody.message).toContain(`Truck with ID "${nonExistentTruckId}" not found`);
   });
 
 

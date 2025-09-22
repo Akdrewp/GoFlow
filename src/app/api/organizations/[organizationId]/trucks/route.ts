@@ -2,7 +2,7 @@ import "server-only";
 
 import { NextRequest } from 'next/server';
 
-import { truckRoutePOST } from "./trucksRoute";
+import { truckRoutePOST } from "./trucksRoutePost";
 
 export async function POST(
   request: NextRequest,
