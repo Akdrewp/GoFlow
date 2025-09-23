@@ -23,7 +23,7 @@ export async function calibrationChartsPUT(
     // Check if validation failed
     if (!validationResult.success) {
       return NextResponse.json(
-        { status: "fail", message: "Invalid data provided.", errors: validationResult.error.flatten() },
+        { status: "fail", message: validationResult.error.message },
         { status: 400 } // Bad Request
       );
     }
@@ -45,7 +45,7 @@ export async function calibrationChartsPUT(
     // Return a successful response.
     return NextResponse.json(
       { status: "success", message: "Truck successfully created.", data: calibrationChartData },
-      { status: 201 } // Created
+      { status: 200 } // Created
     );
 
   } catch (e) {

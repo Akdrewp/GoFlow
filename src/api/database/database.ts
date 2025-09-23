@@ -23,7 +23,7 @@ export interface Organization {
 }
 
 // All the resources used in the app
-export const ORGANIZATION_RESOURCES = ["organizations", "employees", "roles", "trucks"];
+export const ORGANIZATION_RESOURCES = ["organizations", "employees", "roles", "trucks", "calibrationCharts"];
 
 // A permission set for a resource
 // Just read and write for now

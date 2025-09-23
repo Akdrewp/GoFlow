@@ -437,10 +437,7 @@ export const chartDatabase = {
       console.log(`Chart "${chartData.chartId}" successfully added to organization "${organizationId}".`);
     } catch (e) {
       console.error("Error adding chart to database:", e);
-      throw new FirestoreDatabaseError(
-        `Failed to add chart: ${(e as Error).message}`, 
-        500 // Internal Server Error
-      );
+      throw(e);
     }
   },
 
@@ -461,10 +458,7 @@ export const chartDatabase = {
       console.log(`Chart "${chartId}" successfully updated in organization "${organizationId}".`);
     } catch (e) {
       console.error("Error updating chart in database:", e);
-      throw new FirestoreDatabaseError(
-      `Failed to update chart: ${(e as Error).message}`, 
-      500 // Internal Server Error
-    );
+      throw(e);
     }
   },
 
@@ -482,10 +476,7 @@ export const chartDatabase = {
       console.log(`Chart "${chartId}" successfully deleted from organization "${organizationId}".`);
     } catch (e) {
       console.error("Error deleting chart from database:", e);
-      throw new FirestoreDatabaseError(
-        `Failed to delete chart: ${(e as Error).message}`, 
-        500 // Internal Server Error
-      );
+      throw(e);
     }
   },
 
@@ -503,10 +494,7 @@ export const chartDatabase = {
       return docSnap.exists();
     } catch (e) {
       console.error(`Error checking if chart "${chartId}" exists:`, e);
-      throw new FirestoreDatabaseError(
-        `Failed to check for chart existence: ${(e as Error).message}`, 
-        500 // Internal Server Error
-      );
+      throw(e);
     }
   },
 };

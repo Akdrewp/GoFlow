@@ -2,7 +2,7 @@ import "server-only";
 
 import { NextRequest } from 'next/server';
 import { calibrationChartsPUT } from "../calibrationChartsPut";
-import { calibrationChartsDELETE } from "../calibtraionChartsDelete";
+import { calibrationChartsDELETE } from "../calibrationChartsDelete";
 
 
 export async function PUT(

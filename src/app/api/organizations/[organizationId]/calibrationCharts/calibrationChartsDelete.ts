@@ -1,7 +1,6 @@
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
-import { calibrationChartSchema } from "@/api/database/database";
 import { deleteChartFromOrg } from "@/api/firebase/firebaseService";
 import { FirebaseVerifyError } from "@/api/firebase/firebaseVerify";
 import { FirestoreDatabaseError } from "@/api/firebase/firestoreDatabase";
@@ -16,18 +15,8 @@ export async function calibrationChartsDELETE(
 ) {
   try {
 
-    // Validate the incoming request body against the truck schema.
-    const requestBody = await request.json();
-    const validationResult = calibrationChartSchema.safeParse(requestBody);
-
-    // Check if validation failed
-    if (!validationResult.success) {
-      return NextResponse.json(
-        { status: "fail", message: "Invalid data provided.", errors: validationResult.error.flatten() },
-        { status: 400 } // Bad Request
-      );
-    }
-    const calibrationChartData = validationResult.data;
+    console.log("calibrationChartsDelete CONSOLE LOG TEST TEST TEST");
+    // const calibrationChartData = validationResult.data;
 
     // Get user token
     const userCookies = await cookies();
@@ -44,8 +33,8 @@ export async function calibrationChartsDELETE(
 
     // Return a successful response.
     return NextResponse.json(
-      { status: "success", message: "Truck successfully created.", data: calibrationChartData },
-      { status: 201 } // Created
+      { status: "success", message: "Truck successfully created.", data: "calibrationChartData" },
+      { status: 200 } // Success
     );
 
   } catch (e) {
@@ -57,9 +46,9 @@ export async function calibrationChartsDELETE(
     }
 
     // Genereic error handler
-    console.error("Error in create truck route:", e);
+    console.error("Error in Delete truck route:", e);
     return NextResponse.json(
-      { status: "error", message: "An internal server error occurred." },
+      { status: "error", message: `An internal server error occurred. ${e}` },
       { status: 500 } // Internal Server Error
     );
   }

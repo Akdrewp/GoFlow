@@ -22,7 +22,7 @@ export async function truckRoutePUT(
 
     if (!validationResult.success) {
       return NextResponse.json(
-        { status: "fail", message: "Invalid data provided.", errors: validationResult.error.flatten() },
+        { status: "fail", message: validationResult.error.message },
         { status: 400 } // Bad Request
       );
     }
