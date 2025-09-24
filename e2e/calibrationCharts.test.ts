@@ -259,6 +259,31 @@ describe('Roles API Route E2E Tests', () => {
     expect(chartDoc.data()?.name).toBe("New Chart Name");
   });
 
+  // Test Case 4: Update a Non-Existent Chart
+  test('should fail with a 404 Not Found if updating a chart that does not exist', async () => {
+    const nonExistentChartData: CalibrationChart = {
+      chartId: "GHOST-CHART",
+      name: "I do not exist",
+      productTable: [],
+    };
+
+    const apiRoute = `${NEXT_PUBLIC_BASE_URL}/api/organizations/${testOrg1.organizationId}/calibrationCharts/${nonExistentChartData.chartId}`;
+    
+    // Update non-existent truck that hasn't been added
+    const response = await fetch(apiRoute, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Cookie': `session-token=${adminUserAuthToken}` },
+      body: JSON.stringify(nonExistentChartData),
+    });
+
+    // Verify response is not found
+    expect(response.status).toBe(404);
+    const responseBody = await response.json();
+    expect(responseBody.status).toBe('fail');
+  });
+
+  // DELETE route
+
   // Test Case 4: Successful Chart Deletion
   test('should successfully delete an existing chart', async () => {
     const chartToDelete: CalibrationChart = {
@@ -291,6 +316,23 @@ describe('Roles API Route E2E Tests', () => {
     // Check chart is not in database
     const docSnap = await chartDocRef.get();
     expect(docSnap.exists).toBe(false);
+  });
+
+  // Test Case 6: Delete a Non-Existent Chart
+  test('should fail with a 404 Not Found if deleting a chart that does not exist', async () => {
+    const nonExistentChartId = "CHART-GHOST";
+    const apiRoute = `${NEXT_PUBLIC_BASE_URL}/api/organizations/${testOrg1.organizationId}/calibrationCharts/${nonExistentChartId}`;
+
+    // Delete non-existent truck
+    const response = await fetch(apiRoute, {
+      method: 'DELETE',
+      headers: { 'Cookie': `session-token=${adminUserAuthToken}` },
+    });
+
+    // Verify response is not found
+    expect(response.status).toBe(404);
+    const responseBody = await response.json();
+    expect(responseBody.status).toBe('fail');
   });
 
 

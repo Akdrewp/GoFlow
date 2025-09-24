@@ -2,7 +2,7 @@ import { getDataForResource, isValidUserToken } from "@/api/firebase/firebaseVer
 import { getRolesForOrg, getUser } from "@/api/firebase/firebaseService"; 
 import { withServerAuth } from "@/app/lib/server-auth";
 //Change type to sidestep duplicate organization use
-import { Organization as OrganizationType, Employee, Truck } from "@/api/database/database";
+import { Organization as OrganizationType, Employee, Truck, CalibrationChart } from "@/api/database/database";
 import { OrganizationDisplay } from "@/app/(authPages)/organization/OrganizationDisplay";
 
 /**
@@ -33,6 +33,19 @@ const getTrucksForOrganization = async (token: string, organizationId: string): 
     return null;
   }
 };
+
+// Simple getter function for calibration charts
+const getCalibrationCharts = async (token: string, organizationId: string): Promise<CalibrationChart[]> => {
+  try {
+    const calibrationChartsCollectionId = `organizations/${organizationId}/calibrationCharts`;
+    const calibrationCharts = await getDataForResource(token, calibrationChartsCollectionId);
+
+    return calibrationCharts as CalibrationChart[];
+  } catch (e) {
+    console.error("Error fetching calibration charts: ", e);
+    throw(e);
+  }
+}; 
 
 const getOrganizationInfo = async (token: string): Promise<OrganizationType | null> => {
 
@@ -84,9 +97,14 @@ export default async function Organization() {
     return await getTrucksForOrganization(token, organizationInfo?.organizationId as string);
   });
 
+  const calibrationCharts = await withServerAuth(async (token) => {
+    return await getCalibrationCharts(token, organizationInfo?.organizationId as string);
+  });
+
   const organizationData = {
     info: organizationInfo,
     employees: employees,
+    calibrationCharts: calibrationCharts,
     roles: roles,
     trucks: trucks,
   };

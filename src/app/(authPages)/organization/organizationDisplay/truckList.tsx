@@ -1,13 +1,15 @@
-import { TankType, Truck } from "@/api/database/database";
+import { CalibrationChart, TankType, Truck } from "@/api/database/database";
 import { Edit, Plus, Save, Trash2, X } from "lucide-react";
 import { useState } from "react";
 
 // Component for Displaying and Managing the Truck List
 export function TruckList({ 
-  initialTrucks, 
+  initialTrucks,
+  calibrationCharts, 
   organizationId
 }: { 
-  initialTrucks: Truck[] | null, 
+  initialTrucks: Truck[] | null,
+  calibrationCharts: CalibrationChart[] | null
   organizationId: string 
 }) {
   const [trucks, setTrucks] = useState(initialTrucks || []);
@@ -202,7 +204,13 @@ export function TruckList({
                 <option value={TankType.SINGLE}>Single</option>
                 <option value={TankType.SPLIT}>Split</option>
               </select>
-              <input type="text" placeholder="Assigned Chart ID" value={newChartId} onChange={(e) => setNewChartId(e.target.value)} className="bg-input border border-border rounded-md p-2 text-sm" />
+              {/** Select calibration chart from list */}
+              <select value={newChartId} onChange={(e) => setNewChartId(e.target.value)} className="bg-input border border-border rounded-md p-2 text-sm">
+                <option value="" disabled>Select a Chart</option>
+                {calibrationCharts?.map(chart => (
+                  <option key={chart.chartId} value={chart.chartId}>{chart.name}</option>
+                ))}
+              </select>
               <div className="flex space-x-2">
                 {/** Save and Cancel icons */}
                 <button onClick={() => { void handleSaveNewTruck(); }} disabled={isLoading} className="p-2 text-green-500 hover:text-green-400"><Save className="h-5 w-5"/></button>
