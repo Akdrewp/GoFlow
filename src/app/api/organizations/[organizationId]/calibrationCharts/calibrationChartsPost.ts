@@ -1,16 +1,16 @@
-import "server-only";
-import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from "next/headers";
-import { truckSchema } from '@/api/database/database';
-import { addTruckToOrg } from '@/api/firebase/firebaseService';
-import { FirestoreDatabaseError } from '@/api/firebase/firestoreDatabase';
+import { NextRequest, NextResponse } from "next/server";
+
+import { calibrationChartSchema } from "@/api/database/database";
+import { addChartToOrg } from "@/api/firebase/firebaseService";
 import { FirebaseVerifyError } from "@/api/firebase/firebaseVerify";
+import { FirestoreDatabaseError } from "@/api/firebase/firestoreDatabase";
 
 /**
- * This route handles the creation of a new truck for a specific organization.
- * Path: POST /api/organizations/{organizationId}/trucks
+ * This route handles the creation of a new calibration chart
+ * Path: POST /api/organizations/{organizationId}/calibrationCharts
  */
-export async function truckRoutePOST(
+export async function calibrationChartsPOST(
   request: NextRequest,
   { organizationId }: { organizationId: string }
 ) {
@@ -18,7 +18,7 @@ export async function truckRoutePOST(
 
     // Validate the incoming request body against the truck schema.
     const requestBody = await request.json();
-    const validationResult = truckSchema.safeParse(requestBody);
+    const validationResult = calibrationChartSchema.safeParse(requestBody);
 
     // Check if validation failed
     if (!validationResult.success) {
@@ -27,7 +27,7 @@ export async function truckRoutePOST(
         { status: 400 } // Bad Request
       );
     }
-    const truckData = validationResult.data;
+    const calibrationChartData = validationResult.data;
 
     // Get user token
     const userCookies = await cookies();
@@ -39,12 +39,12 @@ export async function truckRoutePOST(
       );
     }
 
-    // Add truck to organization
-    await addTruckToOrg(token, organizationId, truckData);
+    // add calibrationChart to database
+    await addChartToOrg(token, organizationId, calibrationChartData);
 
-    // 4. Return a successful response.
+    // Return a successful response.
     return NextResponse.json(
-      { status: "success", message: "Truck successfully created.", data: truckData },
+      { status: "success", message: "Truck successfully created.", data: calibrationChartData },
       { status: 201 } // Created
     );
 
@@ -64,4 +64,3 @@ export async function truckRoutePOST(
     );
   }
 }
-

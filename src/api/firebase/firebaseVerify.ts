@@ -274,6 +274,8 @@ export const getDataForResource = async (
 
     // Check if collection has data
     if (querySnapshot.empty) {
+      // If no data return empty array
+      return [];
       throw new FirebaseVerifyError(
         "Collection with passed resourceId has no data",
         400 // Bad request

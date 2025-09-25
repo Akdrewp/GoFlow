@@ -148,6 +148,7 @@ export function EmployeeList({
                 <input type="text" placeholder="Employee ID" value={newEmployeeId} onChange={(e) => setNewEmployeeId(e.target.value)} className="bg-input border border-border rounded-md w-full p-2 text-sm" />
               </div>
               <div className="flex items-center space-x-2">
+                {/** Save and Cancel icons */}
                 <button onClick={() => { void handleSave(); }} className="p-2 text-green-500 hover:text-green-400"><Save className="h-5 w-5"/></button>
                 <button onClick={handleCancel} className="p-2 text-muted-foreground hover:text-foreground"><X className="h-5 w-5"/></button>
               </div>

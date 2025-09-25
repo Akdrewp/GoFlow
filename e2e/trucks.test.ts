@@ -49,7 +49,6 @@ describe('Roles API Route E2E Tests', () => {
   };
 
   let adminUserAuthToken: string;
-  let driverUserAuthToken: string;
   let testOrg2AdminToken: string;
 
 

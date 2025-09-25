@@ -2,6 +2,9 @@ import { z } from "zod";
 
 // --- INTERFACES ---
 
+// Each user is stored in auth and in the database.
+// Only has organiztionId and employeeId when part
+// of an organization
 export interface UserProfile {
     name: string;
     email: string;
@@ -20,7 +23,7 @@ export interface Organization {
 }
 
 // All the resources used in the app
-export const ORGANIZATION_RESOURCES = ["organizations", "employees", "roles", "trucks"];
+export const ORGANIZATION_RESOURCES = ["organizations", "employees", "roles", "trucks", "calibrationCharts"];
 
 // A permission set for a resource
 // Just read and write for now
@@ -86,9 +89,30 @@ export interface Employee {
     uid?: string;
 }
 
+/**
+ * Represents a single entry in a calibration chart.
+ * Maps a physical measurement (e.g., from a dipstick) to a volume.
+ */
+export interface ChartEntry {
+  measurement: number; // The dipstick reading (cm)
+  volume: number;      // The corresponding volume (L)
+}
+
+/**
+ * The main interface for a CalibrationChart document.
+ * Used to connect a trucks measurement to product used
+ */
+export interface CalibrationChart {
+  chartId: string; // The unique ID for this chart
+  name: string;    // Display name
+  
+  productTable: ChartEntry[]; // Product table for this chart
+}
+
 
 // --- ZOD SCHEMAS ---
 
+// UserProfile
 export const userProfileSchema = z.object({
     name: z.string(),
     email: z.string(),
@@ -98,6 +122,7 @@ export const userProfileSchema = z.object({
     employeeId: z.string().optional()
 });
 
+// Organization
 export const organizationSchema = z.object({
     name: z.string(),
     email: z.string(),
@@ -106,13 +131,13 @@ export const organizationSchema = z.object({
     createdBy: z.string()
 });
 
-// A schema for the PermissionSet
+// PermissionSet
 export const permissionSetSchema = z.object({
     read: z.boolean(),
     write: z.boolean(),
 });
 
-// A schema for the Role
+// Role
 export const roleSchema = z.object({
     name: z.string().min(1, "Role name is required"),
     roleId: z.string(),
@@ -120,7 +145,7 @@ export const roleSchema = z.object({
     permissions: z.record(z.string(), permissionSetSchema),
 });
 
-// employeeSchema
+// Employee
 export const employeeSchema = z.object({
     name: z.string().min(1, "Name is required"),
     roleId: z.string().min(1, "Role ID is required"),
@@ -130,6 +155,20 @@ export const employeeSchema = z.object({
     uid: z.string().optional(),
 });
 
+// ChartEntry
+export const chartEntrySchema = z.object({
+  measurement: z.number(),
+  volume: z.number(),
+});
+
+// CalibrationChart
+export const calibrationChartSchema = z.object({
+  chartId: z.string().min(1, "Chart ID is required"),
+  name: z.string().min(1, "Chart name is required"),
+  productTable: z.array(chartEntrySchema),
+});
+
+// Truck
 export const truckSchema = z.object({
   name: z.string().min(1, "Truck name is required"),
   truckId: z.string().min(1, "Truck ID is required"),

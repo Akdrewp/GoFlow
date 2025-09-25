@@ -1,6 +1,6 @@
 'use client'; // This page now contains interactive client components
 
-import { Organization as OrganizationType, Employee, Role, Truck } from "@/api/database/database";
+import { Organization as OrganizationType, Employee, Role, Truck, CalibrationChart } from "@/api/database/database";
 
 import { EmployeeList } from './organizationDisplay/EmployeeList';
 import { TruckList } from './organizationDisplay/truckList';
@@ -13,6 +13,7 @@ export interface organizationDisplayData {
   employees: Employee[] | null,
   roles: Role[] | null,
   trucks: Truck[] | null
+  calibrationCharts: CalibrationChart[] | null
 }
 
 // --- Component to Display Organization Info, Employees, and Trucks ---
@@ -41,7 +42,7 @@ export function OrganizationDisplay({ data: organizationData }: { data: organiza
       <EmployeeList employees={organizationData.employees} organizationId={organizationData.info.organizationId} roles={organizationData.roles} />
       
       {/* Truck List */}
-      <TruckList initialTrucks={organizationData.trucks} organizationId={organizationData.info.organizationId} />
+      <TruckList initialTrucks={organizationData.trucks} calibrationCharts={organizationData.calibrationCharts} organizationId={organizationData.info.organizationId} />
     </div>
   );
 }

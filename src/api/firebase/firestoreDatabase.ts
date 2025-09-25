@@ -5,7 +5,7 @@ import { z } from "zod";
 import { collection, doc, setDoc, getDoc, updateDoc, getDocs, query, where, DocumentData, deleteDoc} from "firebase/firestore";
 import { db } from "./firebaseConfig";
 
-import { UserProfile, Organization, Employee, Role, Truck } from "@/api/database/database";
+import { UserProfile, Organization, Employee, Role, Truck, CalibrationChart } from "@/api/database/database";
 import { AccessType } from "./firebaseVerify";
 
 export class FirestoreDatabaseError extends Error {
@@ -416,6 +416,85 @@ export const truckDatabase = {
     } catch (e) {
       console.error("Error deleting truck from database:", e);
       throw new Error(`Failed to delete truck: ${(e as Error).message}`);
+    }
+  },
+};
+
+export const chartDatabase = {
+  /**
+   * Adds a new calibration chart document to an organization's 'calibrationCharts' sub-collection.
+   * @param organizationId The ID of the organization to add the chart to.
+   * @param chartData The data for the new chart, including its chartId.
+   * @returns A promise that resolves when the chart has been successfully added.
+   * @throws An error if the database write operation fails.
+   */
+  add: async (organizationId: string, chartData: CalibrationChart): Promise<void> => {
+    try {
+
+      // Set new document under organizations/organizationId/calibrationCharts/chartData.chartId
+      const chartDocRef = doc(db, `organizations/${organizationId}/calibrationCharts`, chartData.chartId);
+      await setDoc(chartDocRef, chartData);
+      console.log(`Chart "${chartData.chartId}" successfully added to organization "${organizationId}".`);
+    } catch (e) {
+      console.error("Error adding chart to database:", e);
+      throw(e);
+    }
+  },
+
+  /**
+   * Updates an existing calibration chart document.
+   * @param organizationId The ID of the organization.
+   * @param chartId The ID of the chart to update.
+   * @param chartData The new data to replace the existing chart data.
+   * @returns A promise that resolves when the chart is successfully updated.
+   * @throws An error if the database update operation fails.
+   */
+  update: async (organizationId: string, chartId: string, chartData: Partial<CalibrationChart>): Promise<void> => {
+    try {
+
+      // update existing document
+      const chartDocRef = doc(db, `organizations/${organizationId}/calibrationCharts`, chartId);
+      await updateDoc(chartDocRef, chartData);
+      console.log(`Chart "${chartId}" successfully updated in organization "${organizationId}".`);
+    } catch (e) {
+      console.error("Error updating chart in database:", e);
+      throw(e);
+    }
+  },
+
+  /**
+   * Deletes a calibration chart document from an organization's sub-collection.
+   * @param organizationId The ID of the organization.
+   * @param chartId The ID of the chart to delete.
+   * @returns A promise that resolves when the chart has been successfully deleted.
+   * @throws An error if the database delete operation fails.
+   */
+  remove: async (organizationId: string, chartId: string): Promise<void> => {
+    try {
+      const chartDocRef = doc(db, `organizations/${organizationId}/calibrationCharts`, chartId);
+      await deleteDoc(chartDocRef);
+      console.log(`Chart "${chartId}" successfully deleted from organization "${organizationId}".`);
+    } catch (e) {
+      console.error("Error deleting chart from database:", e);
+      throw(e);
+    }
+  },
+
+  /**
+   * Checks if a calibration chart with the given chartId exists within an organization.
+   * @param organizationId The ID of the organization.
+   * @param chartId The ID of the chart to check.
+   * @returns A Promise that resolves to true if the chart exists, false otherwise.
+   * @throws An error if the database read operation fails.
+   */
+  exists: async (organizationId: string, chartId: string): Promise<boolean> => {
+    try {
+      const chartDocRef = doc(db, `organizations/${organizationId}/calibrationCharts`, chartId);
+      const docSnap = await getDoc(chartDocRef);
+      return docSnap.exists();
+    } catch (e) {
+      console.error(`Error checking if chart "${chartId}" exists:`, e);
+      throw(e);
     }
   },
 };

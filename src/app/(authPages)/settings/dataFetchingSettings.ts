@@ -1,7 +1,7 @@
 import { getDataForResource, isValidUserToken } from "@/api/firebase/firebaseVerify";
 import { getOrganization, getRolesForOrg, getUser } from "@/api/firebase/firebaseService";
 
-import { Organization } from "@/api/database/database";
+import { CalibrationChart, Organization } from "@/api/database/database";
 import { OrgSettingsData } from "./settingsOptions/OrganizationSettings";
 
 /**
@@ -37,6 +37,19 @@ export const getGeneralSettingsData = async (token: string): Promise<Organizatio
   }
 };
 
+// Simple getter function for calibration charts
+const getCalibrationCharts = async (token: string, organizationId: string): Promise<CalibrationChart[]> => {
+  try {
+    const calibrationChartsCollectionId = `organizations/${organizationId}/calibrationCharts`;
+    const calibrationCharts = await getDataForResource(token, calibrationChartsCollectionId);
+
+    return calibrationCharts as CalibrationChart[];
+  } catch (e) {
+    console.error("Error fetching calibration charts: ", e);
+    throw(e);
+  }
+}; 
+
 /**
  * 
  * @todo Refactor returning null and nesting
@@ -53,15 +66,15 @@ export const getOrganizationSettingsData = async (token: string): Promise<OrgSet
 
     // If user is part of organization get organization info
     if(userInfo?.organizationId && userInfo?.employeeId) {
-      // Get organization and roles
+      // Get organization, roles, and calibrationCharts
       const organizationData = await getOrganization(token, userInfo.organizationId);
       const rolesData = await getRolesForOrg(token, userInfo.organizationId);
-      /**
-       * @todo Complete with organizationService.getRoles
-       */
+      const calibrationCharts = await getCalibrationCharts(token, userInfo.organizationId);
+
       return {
         organization: organizationData,
         roles: rolesData,
+        charts: calibrationCharts,
         userEmployeeId: userInfo.employeeId
       };
 
