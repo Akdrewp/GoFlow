@@ -109,6 +109,30 @@ export interface CalibrationChart {
   productTable: ChartEntry[]; // Product table for this chart
 }
 
+/**
+ * Represents a single truck assignment event.
+ * Documents the period a specific employee was assigned to a specific truck.
+ */
+export interface Assignment {
+  // The unique ID for this assignment record
+  assignmentId: string;
+
+  // The ID of the truck that was assigned
+  truckId: string;
+  
+  // The UID of the user assigned to the truck
+  userId: string;
+
+  // The employeeId of the user
+  employeeId: string;
+
+  // The timestamp when the assignment began
+  assignedAt: Date;
+
+  // The timestamp when the assignment ended.
+  // If this is null, the assignment is currently active.
+  unassignedAt: Date | null;
+}
 
 // --- ZOD SCHEMAS ---
 
@@ -175,4 +199,14 @@ export const truckSchema = z.object({
   tankType: z.nativeEnum(TankType),
   chartId: z.string().min(1, "A chart ID must be assigned"),
   assignedUserId: z.string().optional(),
+});
+
+// Assignment
+export const assignmentSchema = z.object({
+  assignmentId: z.string().min(1),
+  truckId: z.string().min(1),
+  userId: z.string().min(1),
+  employeeId: z.string().min(1),
+  assignedAt: z.coerce.date(),
+  unassignedAt: z.coerce.date().nullable(),
 });

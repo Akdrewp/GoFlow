@@ -2,10 +2,10 @@
 
 import { z } from "zod";
 
-import { collection, doc, setDoc, getDoc, updateDoc, getDocs, query, where, DocumentData, deleteDoc} from "firebase/firestore";
+import { collection, doc, setDoc, getDoc, updateDoc, getDocs, query, where, DocumentData, deleteDoc } from "firebase/firestore";
 import { db } from "./firebaseConfig";
 
-import { UserProfile, Organization, Employee, Role, Truck, CalibrationChart } from "@/api/database/database";
+import { UserProfile, Organization, Employee, Role, Truck, CalibrationChart, Assignment } from "@/api/database/database";
 import { AccessType } from "./firebaseVerify";
 
 export class FirestoreDatabaseError extends Error {
@@ -499,6 +499,159 @@ export const chartDatabase = {
   },
 };
 
+export const assignmentDatabase = {
+  /**
+   * Adds a new assignment document to an organization's 'assignments' sub-collection.
+   * @param organizationId The ID of the organization.
+   * @param initialAssignmentData The data for the new assignment, including its assignmentId.
+   * @returns A promise that resolves when the assignment is successfully added.
+   * @throws An error if the database write operation fails.
+   */
+  add: async (organizationId: string, initialAssignmentData: Omit<Assignment, "assignmentId">): Promise<Assignment> => {
+    try {
+
+      // Generate document and assignment id
+      // Putting the specified collection without a documentId
+      // creates an generated documentId which is assignmentId
+      const assignmentDocRef = doc(collection(db, `organizations/${organizationId}/assignments`));
+
+      // Finish the Assignment document with the assignmentId
+      const assignmentData = {
+        ...initialAssignmentData,
+        assignmentId: assignmentDocRef.id
+      };
+
+      // Add doc to database and return assignment
+      await setDoc(assignmentDocRef, assignmentData);
+      return assignmentData;
+      console.log(`Assignment "${assignmentData.assignmentId}" added to organization "${organizationId}".`);
+    } catch (e) {
+      console.error("Error adding assignment to database:", e);
+      throw new Error(`Failed to add assignment: ${(e as Error).message}`);
+    }
+  },
+
+  /**
+   * Updates an existing assignment document.
+   * @param organizationId The ID of the organization.
+   * @param assignmentId The ID of the assignment to update.
+   * @param assignmentData An object containing the fields to update.
+   * @returns A promise that resolves when the assignment is successfully updated.
+   * @throws An error if the database update operation fails.
+   */
+  update: async (organizationId: string, assignmentId: string, assignmentData: Partial<Assignment>): Promise<void> => {
+    try {
+      const assignmentDocRef = doc(db, `organizations/${organizationId}/assignments`, assignmentId);
+      await updateDoc(assignmentDocRef, assignmentData);
+      console.log(`Assignment "${assignmentId}" successfully updated in organization "${organizationId}".`);
+    } catch (e) {
+      console.error("Error updating assignment in database:", e);
+      throw(e);
+    }
+  },
+
+  /**
+   * Deletes an assignment document from an organization's sub-collection.
+   * @param organizationId The ID of the organization.
+   * @param assignmentId The ID of the assignment to delete.
+   * @returns A promise that resolves when the assignment is successfully deleted.
+   * @throws An error if the database delete operation fails.
+   */
+  remove: async (organizationId: string, assignmentId: string): Promise<void> => {
+    try {
+      const assignmentDocRef = doc(db, `organizations/${organizationId}/assignments`, assignmentId);
+      await deleteDoc(assignmentDocRef);
+      console.log(`Assignment "${assignmentId}" successfully deleted from organization "${organizationId}".`);
+    } catch (e) {
+      console.error("Error deleting assignment from database:", e);
+      throw(e);
+    }
+  },
+
+  /**
+   * Checks if an assignment with the given ID exists within an organization.
+   * @param organizationId The ID of the organization.
+   * @param assignmentId The ID of the assignment to check.
+   * @returns A Promise that resolves to true if the assignment exists, false otherwise.
+   * @throws An error if the database read operation fails.
+   */
+  exists: async (organizationId: string, assignmentId: string): Promise<boolean> => {
+    try {
+      const assignmentDocRef = doc(db, `organizations/${organizationId}/assignments`, assignmentId);
+      const docSnap = await getDoc(assignmentDocRef);
+      return docSnap.exists();
+    } catch (e) {
+      console.error(`Error checking if assignment "${assignmentId}" exists:`, e);
+      throw(e);
+    }
+  },
+
+  /**
+   * Checks if an assignment is currently active by verifying its 'unassignedAt' field does not exist
+   * @param organizationId The ID of the organization.
+   * @param assignmentId The ID of the assignment to check.
+   * @returns A Promise that resolves to true if the assignment is active, false otherwise.
+   * @throws An error if the database read operation fails.
+   */
+  isActive: async (organizationId: string, assignmentId: string): Promise<boolean> => {
+    try {
+      const assignmentDocRef = doc(db, `organizations/${organizationId}/assignments`, assignmentId);
+      const docSnap = await getDoc(assignmentDocRef);
+
+      // Check if assigment exists before checking if it's active
+      if (!docSnap.exists()) {
+        throw new FirestoreDatabaseError(
+          "Assignment does not exist in database",
+          400 // Bad Request
+        );
+      }
+      
+      // Check if assignment has an 'unassignedAt' field.
+      // This is undefined if it does not have an 'unassignedAt' field
+      const documentUnassignedAt = docSnap.get("unassignedAt");
+
+      // if undefined then this assignment is active
+      return documentUnassignedAt === undefined;
+
+    } catch (e) {
+      console.error(`Error checking if assignment "${assignmentId}" is active:`, e);
+      throw(e);
+    }
+  },
+
+  /**
+   * Checks if a specific truck has any active assignments.
+   * This is used to prevent a truck from being assigned to multiple users simultaneously.
+   * @param organizationId The ID of the organization.
+   * @param truckId The ID of the truck to check.
+   * @returns A Promise that resolves to true if the truck has an active assignment, false otherwise.
+   */
+  isTruckCurrentlyAssigned: async (organizationId: string, truckId: string): Promise<boolean> => {
+    try {
+      const assignmentsRef = collection(db, `organizations/${organizationId}/assignments`);
+      
+      // Query for assignments for this truck that are currently active (unassignedAt is null).
+      const q = query(
+        assignmentsRef, 
+        where("truckId", "==", truckId), 
+        where("unassignedAt", "==", null)
+      );
+      
+      const querySnapshot = await getDocs(q);
+
+      console.log("isTruckCurrentlyAssigned CONSOLE LOG querySnapshot: ", querySnapshot);
+      
+      // If the snapshot is not empty, it means there is at least one active assignment.
+      return !querySnapshot.empty;
+
+    } catch (e) {
+      console.error(`Error checking if truck "${truckId}" is assigned:`, e);
+      throw(e);
+    }
+  },
+
+};
+
 export const employeeDatabase = {
   /**
    * Checks if an employeeId is valid for a given organization.
@@ -520,7 +673,7 @@ export const employeeDatabase = {
       return !querySnapshot.empty;
     } catch (e) {
       console.error("Error checking employee ID validity within organization:", e);
-      throw new Error(`Failed to check employee ID validity: ${(e as Error).message || 'Unknown error'}`);
+      throw(e);
     }
   },
 
@@ -538,7 +691,7 @@ export const employeeDatabase = {
       return !querySnapshot.empty;
     } catch (e) {
       console.error("Error checking if employee ID is already associated with a user:", e);
-      throw new Error(`Failed to check employee ID association: ${(e as Error).message || 'Unknown error'}`);
+      throw(e);
     }
   },
 
@@ -563,7 +716,7 @@ export const employeeDatabase = {
       console.log(`Employee ${employeeId} in org ${organizationId} activated for user ${uid}.`);
     } catch (e) {
       console.error("Error activating employee:", e);
-      throw new Error(`Failed to activate employee: ${(e as Error).message}`);
+      throw(e);
     }
   },
 };
