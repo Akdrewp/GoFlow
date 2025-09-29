@@ -48,16 +48,21 @@ export const isValidUserToken = async (token: string): Promise<DecodedIdToken> =
   }
 };
 
+/**
+ * Helper function for canUserAccessData
+ * Deals with special cases in which an employee user should
+ * be able to do certain actions even if their permissions
+ * don't specifically allow for it.
+ * 
+ * Example: An employee should be able to assign their own
+ * truck by creating an assignment but shouldn't have explicit
+ * WRITE permissions to avoid writing other people's assignments
+ */
 const userOwnsOrganizationData = (
   userEmployeeProfile: Employee,
   resourceId: string,
   accessType: AccessType,
 ): boolean => {
-
-  const resourceSegments = resourceId.split("/");
-
-  const documentId = resourceSegments.at(-1);
-
   /**
    * Check if a user is trying to access
    * a document they made or is assigned to
@@ -66,12 +71,30 @@ const userOwnsOrganizationData = (
    * @todo Finish off with calibration records and trucks
    * For now just assume of the form 'organizations/orgId/employees/employeeId'
    */
-  // Check if user is trying to access own employee document
-  if (accessType == AccessType.READ && documentId == userEmployeeProfile.employeeId) {
-    return true;
-  } else {
-    return false;
+
+
+  // Organization resources are of the form "organizations/orgId/someResource/someResourceId"
+  // where someResource/someResourceId is optional
+  const evenNumberedPathSegmentRegex = /^organizations\/([^/]+)(?:\/([^/]+)\/([^/]+))?$/;
+  const documentResource = resourceId.match(evenNumberedPathSegmentRegex);
+
+  const resourceSegments = resourceId.split("/");
+
+  if (documentResource) {
+    // resrouceId is of the form "organizations/orgId/someResource/someResourceId"
+    const documentId = resourceSegments.at(-1);
+
+    // Check if user is trying to access own employee document
+    if (accessType == AccessType.READ && documentId == userEmployeeProfile.employeeId) {
+      return true;
+    } else {
+      return false;
+    }
   }
+
+  // Catch any unexpected conditions
+  return false;
+
 };
 
 /**

@@ -6,4 +6,4 @@ export { addChartToOrg, updateChartInOrg, deleteChartFromOrg } from "./firebaseS
 
 export { addUser, getUser, updateUser } from "./firebaseService/userService";
 
-
+export { addAssignmentToOrg, updateAssignmentInOrg, deleteAssignmentFromOrg, endAssignmentInOrg } from "./firebaseService/assignmentService";

@@ -30,15 +30,27 @@ export const userDatabase = {
   add: async (userProfile: UserProfile): Promise<void> => {
     try {
 
-      // Add user to database
-      await setDoc(doc(db, "users", userProfile.uid), {
-          name: userProfile.name,
-          email: userProfile.email,
-          uid: userProfile.uid,
-          ...(userProfile.organizationId && { organizationId: userProfile.organizationId }),
-          ...(userProfile.employeeId && { employeeId: userProfile.employeeId }),
-          createdAt: userProfile.createdAt || new Date(),
-      });
+      // Organization account signup
+      if ( "organizationId" in userProfile ) {
+        // Add user to database with organization data
+        await setDoc(doc(db, "users", userProfile.uid), {
+            name: userProfile.name,
+            email: userProfile.email,
+            uid: userProfile.uid,
+            ...(userProfile.organizationId && { organizationId: userProfile.organizationId }),
+            ...(userProfile.employeeId && { employeeId: userProfile.employeeId }),
+            createdAt: userProfile.createdAt || new Date(),
+        });
+      } else { // Individual account signUp
+        // Add user to database
+        await setDoc(doc(db, "users", userProfile.uid), {
+            name: userProfile.name,
+            email: userProfile.email,
+            uid: userProfile.uid,
+            createdAt: userProfile.createdAt || new Date(),
+        });
+      }
+
       console.log("User document added/updated with UID:", userProfile.uid);
     } catch (e) {
       console.error("Error adding user to database:", e);
@@ -532,6 +544,30 @@ export const assignmentDatabase = {
   },
 
   /**
+   * Gets a specific assignment document from database
+   * @param organizationId The ID of the organization.
+   * @param assignmentId The ID of the assignment to fetch.
+   * @returns A Promise that resolves to the Assignment object if found, otherwise null.
+   * @throws An error if the database read operation fails.
+   */
+  get: async (organizationId: string, assignmentId: string): Promise<Assignment | null> => {
+    try {
+      const assignmentDocRef = doc(db, `organizations/${organizationId}/assignments`, assignmentId);
+      const docSnap = await getDoc(assignmentDocRef);
+
+      if (!docSnap.exists()) {
+        console.log(`Assignment with ID "${assignmentId}" not found in organization "${organizationId}".`);
+        return null;
+      }
+
+      return docSnap.data() as Assignment;
+    } catch (e) {
+      console.error("Error getting assignment from database:", e);
+      throw new Error(`Failed to get assignment: ${(e as Error).message}`);
+    }
+  },
+
+  /**
    * Updates an existing assignment document.
    * @param organizationId The ID of the organization.
    * @param assignmentId The ID of the assignment to update.
@@ -587,31 +623,29 @@ export const assignmentDatabase = {
   },
 
   /**
-   * Checks if an assignment is currently active by verifying its 'unassignedAt' field does not exist
+   * Checks if an assignment is currently active by verifying its 'unassignedAt' field is null.
    * @param organizationId The ID of the organization.
    * @param assignmentId The ID of the assignment to check.
    * @returns A Promise that resolves to true if the assignment is active, false otherwise.
-   * @throws An error if the database read operation fails.
+   * @throws An error if the database read operation fails or the document doesn't exist.
    */
   isActive: async (organizationId: string, assignmentId: string): Promise<boolean> => {
     try {
       const assignmentDocRef = doc(db, `organizations/${organizationId}/assignments`, assignmentId);
       const docSnap = await getDoc(assignmentDocRef);
 
-      // Check if assigment exists before checking if it's active
       if (!docSnap.exists()) {
         throw new FirestoreDatabaseError(
-          "Assignment does not exist in database",
-          400 // Bad Request
+          "Assignment does not exist in the database",
+          404 // Not Found is more appropriate here
         );
       }
       
-      // Check if assignment has an 'unassignedAt' field.
-      // This is undefined if it does not have an 'unassignedAt' field
-      const documentUnassignedAt = docSnap.get("unassignedAt");
+      // Get the data from the document
+      const assignmentData = docSnap.data();
 
-      // if undefined then this assignment is active
-      return documentUnassignedAt === undefined;
+      // An assignment is active if its 'unassignedAt' field is explicitly null.
+      return assignmentData.unassignedAt === null;
 
     } catch (e) {
       console.error(`Error checking if assignment "${assignmentId}" is active:`, e);

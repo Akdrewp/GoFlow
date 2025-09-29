@@ -44,7 +44,7 @@ export async function calibrationChartsPOST(
 
     // Return a successful response.
     return NextResponse.json(
-      { status: "success", message: "Truck successfully created.", data: calibrationChartData },
+      { status: "success", message: "calibrationChart successfully created.", data: calibrationChartData },
       { status: 201 } // Created
     );
 
@@ -57,7 +57,7 @@ export async function calibrationChartsPOST(
     }
 
     // Genereic error handler
-    console.error("Error in create truck route:", e);
+    console.error("Error in create chart route:", e);
     return NextResponse.json(
       { status: "error", message: "An internal server error occurred." },
       { status: 500 } // Internal Server Error

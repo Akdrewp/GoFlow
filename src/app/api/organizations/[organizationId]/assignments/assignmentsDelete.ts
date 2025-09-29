@@ -1,33 +1,19 @@
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
-import { assignmentSchema } from "@/api/database/database";
+import { deleteAssignmentFromOrg } from "@/api/firebase/firebaseService";
 import { FirebaseVerifyError } from "@/api/firebase/firebaseVerify";
 import { FirestoreDatabaseError } from "@/api/firebase/firestoreDatabase";
-import { updateAssignmentInOrg } from "@/api/firebase/firebaseService";
 
 /**
- * This route handles the updating of an existing chart
+ * This route handles the deletion of an assignment
  * Path: PUT /api/organizations/{organizationId}/assignments/{assignmentId}
  */
-export async function assignmentsPUT(
+export async function assignmentsDELETE(
   request: NextRequest,
   { organizationId, assignmentId }: { organizationId: string, assignmentId: string }
 ) {
   try {
-
-    // Validate the incoming request body against the truck schema.
-    const requestBody = await request.json();
-    const validationResult = assignmentSchema.safeParse(requestBody);
-
-    // Check if validation failed
-    if (!validationResult.success) {
-      return NextResponse.json(
-        { status: "fail", message: validationResult.error.message },
-        { status: 400 } // Bad Request
-      );
-    }
-    const assignmentData = validationResult.data;
 
     // Get user token
     const userCookies = await cookies();
@@ -39,13 +25,13 @@ export async function assignmentsPUT(
       );
     }
 
-    // update assignmentData to database
-    await updateAssignmentInOrg(token, organizationId, assignmentId, assignmentData);
+    // Delete assignment from database
+    await deleteAssignmentFromOrg(token, organizationId, assignmentId);
 
     // Return a successful response.
     return NextResponse.json(
-      { status: "success", message: "Truck successfully created.", data: assignmentData },
-      { status: 200 } // Created
+      { status: "success", message: "Assignment successfully deleted" },
+      { status: 200 } // Success
     );
 
   } catch (e) {
@@ -57,9 +43,9 @@ export async function assignmentsPUT(
     }
 
     // Genereic error handler
-    console.error("Error in assignmentsPUT route:", e);
+    console.error("Error in assignmentDELETE route", e);
     return NextResponse.json(
-      { status: "error", message: "An internal server error occurred." },
+      { status: "error", message: `An internal server error occurred. ${e}` },
       { status: 500 } // Internal Server Error
     );
   }

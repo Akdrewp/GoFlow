@@ -2,54 +2,63 @@ import { z } from "zod";
 
 // --- INTERFACES ---
 
-// Each user is stored in auth and in the database.
-// Only has organiztionId and employeeId when part
-// of an organization
-export interface UserProfile {
-    name: string;
-    email: string;
-    uid: string;
-    createdAt: Date;
-    organizationId?: string;
-    employeeId?: string;
+// User profile is just individual account or organization account
+export type UserProfile = IndividualUserProfile | OrganizationUserProfile;
+
+// Individual account not associated with organization
+export interface IndividualUserProfile {
+  name: string;
+  email: string;
+  uid: string;
+  createdAt: Date;
+}
+
+// Account associated with organization
+export interface  OrganizationUserProfile {
+  name: string;
+  email: string;
+  uid: string;
+  createdAt: Date;
+  organizationId: string;
+  employeeId: string;
 }
 
 export interface Organization {
-    name: string;
-    email: string;
-    createdAt: Date;
-    organizationId: string;
-    createdBy: string;
+  name: string;
+  email: string;
+  createdAt: Date;
+  organizationId: string;
+  createdBy: string;
 }
 
 // All the resources used in the app
-export const ORGANIZATION_RESOURCES = ["organizations", "employees", "roles", "trucks", "calibrationCharts"];
+export const ORGANIZATION_RESOURCES = ["organizations", "employees", "roles", "trucks", "calibrationCharts", "assignments"];
 
 // A permission set for a resource
 // Just read and write for now
 export interface PermissionSet {
-    read: boolean;
-    write: boolean;
+  read: boolean;
+  write: boolean;
 }
 
 // The main interface for a Role document
 export interface Role {
-    // Unique idnetifier for a role
-    roleId: string;
+  // Unique idnetifier for a role
+  roleId: string;
 
-    // Name that will show on UI
-    name: string;
+  // Name that will show on UI
+  name: string;
 
-    // The authorization level of the role
-    // Heiarchy based access where only users with higher roles
-    // can write to documents of lower roles or their own
-    level: number;
+  // The authorization level of the role
+  // Heiarchy based access where only users with higher roles
+  // can write to documents of lower roles or their own
+  level: number;
 
-    // A map where the key is the resource name (e.g., "trucks")
-    // and the value is the set of permissions for that resource.
-    permissions: {
-        [resource: string]: PermissionSet;
-    };
+  // A map where the key is the resource name (e.g., "trucks")
+  // and the value is the set of permissions for that resource.
+  permissions: {
+    [resource: string]: PermissionSet;
+  };
 }
 
 // Tank type enum
@@ -81,12 +90,12 @@ export interface Truck {
 // All employees have email and uid undefined until
 // a user signs up into the account
 export interface Employee {
-    name: string;
-    roleId: string; // Changed from 'role' to link to a Role document
-    status: string;
-    employeeId: string;
-    email?: string;
-    uid?: string;
+  name: string;
+  roleId: string; // Changed from 'role' to link to a Role document
+  status: string;
+  employeeId: string;
+  email?: string;
+  uid?: string;
 }
 
 /**
@@ -95,7 +104,7 @@ export interface Employee {
  */
 export interface ChartEntry {
   measurement: number; // The dipstick reading (cm)
-  volume: number;      // The corresponding volume (L)
+  volume: number;    // The corresponding volume (L)
 }
 
 /**
@@ -104,7 +113,7 @@ export interface ChartEntry {
  */
 export interface CalibrationChart {
   chartId: string; // The unique ID for this chart
-  name: string;    // Display name
+  name: string;  // Display name
   
   productTable: ChartEntry[]; // Product table for this chart
 }
@@ -138,45 +147,45 @@ export interface Assignment {
 
 // UserProfile
 export const userProfileSchema = z.object({
-    name: z.string(),
-    email: z.string(),
-    uid: z.string(),
-    createdAt: z.coerce.date(),
-    organizationId: z.string().optional(),
-    employeeId: z.string().optional()
+  name: z.string(),
+  email: z.string(),
+  uid: z.string(),
+  createdAt: z.coerce.date(),
+  organizationId: z.string().optional(),
+  employeeId: z.string().optional()
 });
 
 // Organization
 export const organizationSchema = z.object({
-    name: z.string(),
-    email: z.string(),
-    createdAt: z.coerce.date(),
-    organizationId: z.string(),
-    createdBy: z.string()
+  name: z.string(),
+  email: z.string(),
+  createdAt: z.coerce.date(),
+  organizationId: z.string(),
+  createdBy: z.string()
 });
 
 // PermissionSet
 export const permissionSetSchema = z.object({
-    read: z.boolean(),
-    write: z.boolean(),
+  read: z.boolean(),
+  write: z.boolean(),
 });
 
 // Role
 export const roleSchema = z.object({
-    name: z.string().min(1, "Role name is required"),
-    roleId: z.string(),
-    level: z.number(),
-    permissions: z.record(z.string(), permissionSetSchema),
+  name: z.string().min(1, "Role name is required"),
+  roleId: z.string(),
+  level: z.number(),
+  permissions: z.record(z.string(), permissionSetSchema),
 });
 
 // Employee
 export const employeeSchema = z.object({
-    name: z.string().min(1, "Name is required"),
-    roleId: z.string().min(1, "Role ID is required"),
-    status: z.enum(["invited", "active"]),
-    employeeId: z.string().min(1, "Employee ID is required"),
-    email: z.string().email().optional(),
-    uid: z.string().optional(),
+  name: z.string().min(1, "Name is required"),
+  roleId: z.string().min(1, "Role ID is required"),
+  status: z.enum(["invited", "active"]),
+  employeeId: z.string().min(1, "Employee ID is required"),
+  email: z.string().email().optional(),
+  uid: z.string().optional(),
 });
 
 // ChartEntry

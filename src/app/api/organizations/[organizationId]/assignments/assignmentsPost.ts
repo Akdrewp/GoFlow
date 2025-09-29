@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { FirebaseVerifyError } from "@/api/firebase/firebaseVerify";
 import { FirestoreDatabaseError } from "@/api/firebase/firestoreDatabase";
 import { assignmentSchema } from "@/api/database/database";
-import { addAssignmentToOrg } from "@/api/firebase/firebaseService/assignmentService";
+import { addAssignmentToOrg, getUser } from "@/api/firebase/firebaseService";
 
 /**
  * This route handles the creation of a assignment of a truck
@@ -18,12 +18,13 @@ export async function assignmentsPOST(
 
     // Validate the incoming request body against the assignment schema.
     const requestBody = await request.json();
-    // Only need the truckId since rest of data comes from token
-    const assignmentTruckIdSchema = assignmentSchema.omit({ assignmentId: true, assignedAt: true });
+    // Only need the truckId, userId since rest of data comes from token
+    const assignmentTruckIdSchema = assignmentSchema.pick({ truckId: true, userId: true });
     const validationResult = assignmentTruckIdSchema.safeParse(requestBody);
 
     // Check if validation failed
     if (!validationResult.success) {
+      console.log("validation failure: ", validationResult.error.message);
       return NextResponse.json(
         { status: "fail", message: validationResult.error.message },
         { status: 400 } // Bad Request
@@ -41,10 +42,22 @@ export async function assignmentsPOST(
       );
     }
 
-    // Create assignmentData with 
+    // Get user profile of employee being assigned
+    const userProfile = await getUser(token, initialAssignmentData.userId);
+
+    // Check whether user has employeeId and organizationId
+    // Will be checked by assAssignmentToOrg via canUserAccessData
+    // but typescript needs this check
+    if (!userProfile.employeeId || !userProfile.organizationId) {
+      throw new Error("User is not part of organization");
+    }
+
+
+
+    // Create assignmentData with userId and employeeId
     const assignmentData = {
       ...initialAssignmentData,
-      assignedAt: new Date(),
+      employeeId: userProfile.employeeId
     };
 
     // add assignment to database
@@ -65,7 +78,7 @@ export async function assignmentsPOST(
     }
 
     // Genereic error handler
-    console.error("Error in create assignment route:", e);
+    console.error("Error in assignmentsPOST route:", e);
     return NextResponse.json(
       { status: "error", message: "An internal server error occurred." },
       { status: 500 } // Internal Server Error

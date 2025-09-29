@@ -80,7 +80,6 @@ export default async function Organization() {
 
   const organizationInfo = await withServerAuth(async (token) => {
     return await getOrganizationInfo(token);
-
   });
 
   const roles = await withServerAuth(async (token) => {

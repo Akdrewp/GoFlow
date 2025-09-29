@@ -1,7 +1,7 @@
 // --- Assignment Service Functions ---
 
 import { Assignment } from "@/api/database/database";
-import { AccessType, canUserAccessData, FirebaseVerifyError } from "../firebaseVerify";
+import { AccessType, canUserAccessData, FirebaseVerifyError, isValidUserToken } from "../firebaseVerify";
 import { assignmentDatabase } from "../firestoreDatabase";
 
 /**
@@ -15,13 +15,30 @@ import { assignmentDatabase } from "../firestoreDatabase";
  * @throws {FirebaseVerifyError} If the user is not authorized or, the chartId already exists, or the
  * truck attempted to assign to already has an existing active assignment
  */
-export async function addAssignmentToOrg(token: string, organizationId: string, assignmentData: Omit<Assignment, "assignmentId">): Promise<Assignment> {
-  // assignmentId is omitted, firestore database will automatically generate a documentId
-  // used as the assignmentId.
+export async function addAssignmentToOrg(token: string, organizationId: string, assignmentData: Omit<Assignment, "assignmentId" | "assignedAt" | "unassignedAt" >): 
+                      Promise<Assignment> {
+  /**
+   * assignmentId is omitted because
+   * firestore database will automatically generate a documentId used as the assignmentId.
+   * 
+   * assignedAt is omitted since it is defined here with new date
+   * 
+   * unassignedAt is omitted because it is defined here as null
+   */
   try {
-    // Verify user has permission to WRITE to the assignments collection.
-    const resourcePath = `organizations/${organizationId}/assignments`;
-    await canUserAccessData(token, resourcePath, AccessType.WRITE);
+
+    // User can create if they have permissions to assignment
+    // OR
+    // User is assigning a truck to themselves
+
+    // Check if user is trying to assign another user
+    const decodedUserToken = await isValidUserToken(token);
+    const selfAssign = decodedUserToken.uid == assignmentData.userId;
+    if (!selfAssign) {
+      // Verify user has permission to WRITE to the assignments collection.
+      const resourcePath = `organizations/${organizationId}/assignments`;
+      await canUserAccessData(token, resourcePath, AccessType.WRITE);
+    }
 
     // Check if the truck attempting to assign is already assigned
     const truckHasActiveAssignment = await assignmentDatabase.isTruckCurrentlyAssigned(organizationId, assignmentData.truckId);
@@ -32,8 +49,16 @@ export async function addAssignmentToOrg(token: string, organizationId: string, 
       );
     }
 
+    // Create completed assigned at with "assignedAt" field
+    // equal to the current date
+    const completeAssignmentData = {
+      ...assignmentData,
+      assignedAt: new Date(),
+      unassignedAt: null,
+    };
+
     // Add to database and return assignment
-    return await assignmentDatabase.add(organizationId, assignmentData);
+    return await assignmentDatabase.add(organizationId, completeAssignmentData);
 
   } catch (e) {
     console.error("Error in addAssignment service:", e);
@@ -54,8 +79,17 @@ export async function addAssignmentToOrg(token: string, organizationId: string, 
  */
 export async function updateAssignmentInOrg(token: string, organizationId: string, assignmentId: string, assignmentData: Partial<Assignment>): Promise<void> {
   try {
-    const resourcePath = `organizations/${organizationId}/assignments/${assignmentId}`;
-    await canUserAccessData(token, resourcePath, AccessType.WRITE);
+    // User can create if they have permissions to assignment
+    // OR
+    // User is assigning a truck to themselves
+
+    // Check if user is trying to access their own assignment
+    const selfAssign = await userCanAccessAssignment(token, organizationId, assignmentId);
+    if (!selfAssign) {
+      // Verify user has permission to WRITE to the assignments collection.
+      const resourcePath = `organizations/${organizationId}/assignments`;
+      await canUserAccessData(token, resourcePath, AccessType.WRITE);
+    }
 
     // Check if the assignment already exists
     if (!(await assignmentDatabase.exists(organizationId, assignmentId))) {
@@ -72,7 +106,7 @@ export async function updateAssignmentInOrg(token: string, organizationId: strin
 
 /**
  * Handles the business logic for ending a user's currently active assignment (unassigning).
- * A subset of updateAssignmentInOrg but used enough to be
+ * A subset of updateAssignmentInOrg but used enough to be defined
  * @param token The user's Firebase ID token.
  * @param organizationId The ID of the organization.
  * @param assignmentId The ID of the assignment to end.
@@ -104,14 +138,59 @@ export async function endAssignmentInOrg(token: string, organizationId: string, 
  */
 export async function deleteAssignmentFromOrg(token: string, organizationId: string, assignmentId: string): Promise<void> {
   try {
-    // Make sure user can WRITE to assignment document
-    const resourcePath = `organizations/${organizationId}/assignments/${assignmentId}`;
-    await canUserAccessData(token, resourcePath, AccessType.WRITE);
+    // User can create if they have permissions to assignments
+    // OR
+    // User is assigning a truck to themselves
+
+    // Check if user is trying to access their own assignment
+    const selfAssign = await userCanAccessAssignment(token, organizationId, assignmentId);
+    if (!selfAssign) {
+      // Verify user has permission to WRITE to the assignments collection.
+      const resourcePath = `organizations/${organizationId}/assignments`;
+      await canUserAccessData(token, resourcePath, AccessType.WRITE);
+    }
 
     // Remove assignment from database
     await assignmentDatabase.remove(organizationId, assignmentId);
   } catch (e) {
     console.error("Error in deleteAssignmentFromOrg service:", e);
+    throw e;
+  }
+}
+
+/**
+ * Checks if a user is trying to assign a truck to themselves.
+ * Neccessary for circumventing canUserAccessData for employeess
+ * which is ran if this is false
+ * @param token The user's Firebase ID token for authentication.
+ * @param organizationId The ID of the organization.
+ * @param assignmentId The ID of the assignment to check.
+ * @returns A promise that resolves to true if the user is the owner, false otherwise.
+ * @throws An error if the token is invalid or the assignment does not exist.
+ */
+async function userCanAccessAssignment(token: string, organizationId: string, assignmentId: string): Promise<boolean> {
+  try {
+    // Authenticate the user making the request.
+    const decodedToken = await isValidUserToken(token);
+    const requestorUid = decodedToken.uid;
+
+    // Fetch the assignment document from the database.
+    const assignment = await assignmentDatabase.get(organizationId, assignmentId);
+
+    // If the assignment doesn't exist, access is denied.
+    if (!assignment) {
+      throw new FirebaseVerifyError(
+        "Passed assignment does not exist",
+        400 // Bad request
+      );
+    }
+
+    // return if the requestorUid is equal to the assignment uid
+    return requestorUid === assignment.userId;
+
+  } catch (e) {
+    console.error("Error in userCanAccessAssignment:", e);
+
     throw e;
   }
 }

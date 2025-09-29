@@ -33,7 +33,7 @@ export async function calibrationChartsDELETE(
 
     // Return a successful response.
     return NextResponse.json(
-      { status: "success", message: "Truck successfully created.", data: "calibrationChartData" },
+      { status: "success", message: "Calibration chart successfully deleted" },
       { status: 200 } // Success
     );
 
@@ -46,7 +46,7 @@ export async function calibrationChartsDELETE(
     }
 
     // Genereic error handler
-    console.error("Error in Delete truck route:", e);
+    console.error("Error in Delete chart route:", e);
     return NextResponse.json(
       { status: "error", message: `An internal server error occurred. ${e}` },
       { status: 500 } // Internal Server Error
