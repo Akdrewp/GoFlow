@@ -2,7 +2,7 @@
 
 import { employeeDatabase, FirestoreDatabaseError, organizationDatabase, userDatabase } from "../firestoreDatabase";
 import { AccessType, canUserAccessData, FirebaseVerifyError } from "../firebaseVerify";
-import { OrganizationUserProfile, UserProfile } from "@/api/database/database";
+import { UserProfile } from "@/api/database/database";
 
 /**
  * Handles the business logic for adding a user to the database, including organization sign-up validation.
@@ -12,7 +12,7 @@ import { OrganizationUserProfile, UserProfile } from "@/api/database/database";
 export async function addUser(userProfile: UserProfile): Promise<void> {
   try {
     // Handle the specific logic for an organization sign-up
-    if (userProfile.employeeId && userProfile.organizationId) {
+    if (userProfile.type == "organization") {
       const { organizationId, employeeId, uid } = userProfile;
 
       if (!(await organizationDatabase.exists(organizationId))) {
@@ -57,24 +57,6 @@ export async function addUser(userProfile: UserProfile): Promise<void> {
  * @returns A promise resolving to the user's profile data.
  */
 export async function getUser(token: string, uid: string): Promise<UserProfile> {
-  try {
-    // Verify the user can read the target user's profile (usually limited to self-access)
-    await canUserAccessData(token, `users/${uid}`, AccessType.READ);
-    return await userDatabase.get(uid);
-  } catch (e) {
-    console.error(`Error getting user profile for UID ${uid}:`, e);
-    throw e;
-  }
-}
-
-/**
- * Fetches a user's profile after verifying the requester has read access.
- * Returns a 
- * @param token The requester's Firebase ID token.
- * @param uid The UID of the user profile to fetch.
- * @returns A promise resolving to the user's profile data.
- */
-export async function getEmployeeUser(token: string, uid: string): Promise<OrganizationUserProfile> {
   try {
     // Verify the user can read the target user's profile (usually limited to self-access)
     await canUserAccessData(token, `users/${uid}`, AccessType.READ);

@@ -2,26 +2,28 @@ import { z } from "zod";
 
 // --- INTERFACES ---
 
-// User profile is just individual account or organization account
-export type UserProfile = IndividualUserProfile | OrganizationUserProfile;
-
-// Individual account not associated with organization
-export interface IndividualUserProfile {
+// A base interface for properties shared by all user profiles
+interface BaseUserProfile {
   name: string;
   email: string;
   uid: string;
   createdAt: Date;
 }
 
-// Account associated with organization
-export interface  OrganizationUserProfile {
-  name: string;
-  email: string;
-  uid: string;
-  createdAt: Date;
+// Interface for an individual user not associated with an organization
+export interface IndividualUserProfile extends BaseUserProfile {
+  type: 'individual';
+}
+
+// Interface for a user who is part of an organization
+export interface OrganizationUserProfile extends BaseUserProfile {
+  type: 'organization';
   organizationId: string;
   employeeId: string;
 }
+
+// The UserProfile is a discriminated union of the two specific types
+export type UserProfile = IndividualUserProfile | OrganizationUserProfile;
 
 export interface Organization {
   name: string;
@@ -145,15 +147,34 @@ export interface Assignment {
 
 // --- ZOD SCHEMAS ---
 
-// UserProfile
-export const userProfileSchema = z.object({
+// IndividualUserProfile
+const individualUserProfileSchema = z.object({
+  type: z.literal('individual'),
   name: z.string(),
-  email: z.string(),
+  email: z.string().email(),
   uid: z.string(),
   createdAt: z.coerce.date(),
-  organizationId: z.string().optional(),
-  employeeId: z.string().optional()
 });
+
+// OrganizationUserProfile
+const organizationUserProfileSchema = z.object({
+  type: z.literal('organization'),
+  name: z.string(),
+  email: z.string().email(),
+  uid: z.string(),
+  createdAt: z.coerce.date(),
+  organizationId: z.string(),
+  employeeId: z.string(),
+});
+
+// UserProfile discriminated union of
+// organizationUserProfileSchema
+// AND
+// individualUserProfileSchema
+export const userProfileSchema = z.discriminatedUnion("type", [
+  individualUserProfileSchema,
+  organizationUserProfileSchema,
+]);
 
 // Organization
 export const organizationSchema = z.object({

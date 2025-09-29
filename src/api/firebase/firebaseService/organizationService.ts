@@ -20,7 +20,7 @@ export async function createOrganization(token: string, organization: Organizati
     const createdByUserProfile = await userDatabase.get(decodedIdToken.uid);
 
     // Only a user not part of an organization can create one
-    if (createdByUserProfile?.employeeId || createdByUserProfile?.organizationId) {
+    if (createdByUserProfile.type == "organization") {
       throw new FirebaseVerifyError(
         "Cannot create an organization if user is already part of an organization",
         403 // Forbidden

@@ -29,27 +29,9 @@ export const userDatabase = {
    */
   add: async (userProfile: UserProfile): Promise<void> => {
     try {
-
-      // Organization account signup
-      if ( "organizationId" in userProfile ) {
-        // Add user to database with organization data
-        await setDoc(doc(db, "users", userProfile.uid), {
-            name: userProfile.name,
-            email: userProfile.email,
-            uid: userProfile.uid,
-            ...(userProfile.organizationId && { organizationId: userProfile.organizationId }),
-            ...(userProfile.employeeId && { employeeId: userProfile.employeeId }),
-            createdAt: userProfile.createdAt || new Date(),
-        });
-      } else { // Individual account signUp
-        // Add user to database
-        await setDoc(doc(db, "users", userProfile.uid), {
-            name: userProfile.name,
-            email: userProfile.email,
-            uid: userProfile.uid,
-            createdAt: userProfile.createdAt || new Date(),
-        });
-      }
+      
+      // Add user to database with data
+      await setDoc(doc(db, "users", userProfile.uid), userProfile);
 
       console.log("User document added/updated with UID:", userProfile.uid);
     } catch (e) {

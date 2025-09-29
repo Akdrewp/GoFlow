@@ -113,7 +113,7 @@ const canUserAccessOrganizationData = async (
   console.log("canUserAccessData CONSOLE LOG resource is organization", resourceId);
 
   // If user is not part of an organization throw error
-  if (!userProfile.employeeId || !userProfile.organizationId) {
+  if (userProfile.type == "individual") {
     throw new FirebaseVerifyError(
       "User is not part of an organization, missing organizationId or employeeId",
       403 // Forbidden

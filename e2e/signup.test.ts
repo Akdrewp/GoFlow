@@ -29,11 +29,11 @@ describe('Signup API Route E2E Tests', () => {
 
   beforeEach( async () => {
     try {
-      //Clear existing data
+      // Clear existing data
       await clearFirestoreAuth();
       await clearFirestoreDB();
 
-      //Create valid user
+      // Create valid user
       const newAuthUser = await adminAuth.createUser(validUser);
       validUserUid = newAuthUser.uid; // Store the UID for use in tests
       const currentTimeIso = new Date().toISOString();
@@ -51,6 +51,7 @@ describe('Signup API Route E2E Tests', () => {
         method: 'POST',
         headers: commonHeaders,
         body: JSON.stringify({
+          type: "individual",
           email: validUser.email,
           name: validUser.displayName,
           uid: validUserUid, // Use the stored UID
@@ -247,6 +248,7 @@ describe('Signup API Route E2E Tests', () => {
 
     // --- Scenario 1: UID in payload does NOT match the existing Auth user's UID ---
     const invalidUidUserData = {
+      type: "individual",
       email: testUserAuth.email,
       name: testUserAuth.displayName,
       uid: "a_non_existent_uid_123",
@@ -272,6 +274,7 @@ describe('Signup API Route E2E Tests', () => {
 
     // --- Scenario 2: Email in payload does NOT match the existing Auth user's email (but UID does match) ---
     const fakeEmailProvidedData = {
+      type: "individual",
       email: "this.is.a.fake.email@test.com",
       name: testUserAuth.displayName,
       uid: newAuthUser.uid,
@@ -296,6 +299,7 @@ describe('Signup API Route E2E Tests', () => {
 
     // --- Scenario 3: Email and UID match user but Token does NOT ---
     const invalidTokenProvidedData = {
+      type: "individual",
       email: newAuthUser.email,
       name: newAuthUser.displayName,
       uid: newAuthUser.uid,
