@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "FIRESTORE_EMULATOR_HOST=\"localhost:8080\" FIREBASE_AUTH_EMULATOR_HOST=\"localhost:9099\" jest --config jest.config.e2e.js --runInBand --detectOpenHandles e2e/login.test.ts",
+    "test": "FIRESTORE_EMULATOR_HOST=\"localhost:8080\" FIREBASE_AUTH_EMULATOR_HOST=\"localhost:9099\" jest --config jest.config.e2e.js --runInBand --detectOpenHandles e2e/organizations.test.ts",
     "test:watch": "jest --watch",
     "test:e2e": "FIRESTORE_EMULATOR_HOST=\"localhost:8080\" FIREBASE_AUTH_EMULATOR_HOST=\"localhost:9099\" jest --config jest.config.e2e.js --runInBand --detectOpenHandles",
     "test:e2e:ci": "npm run start & npm run test:e2e"

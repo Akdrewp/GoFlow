@@ -54,14 +54,16 @@ describe('Assignments API Route E2E Tests', () => {
     name: "Big Blue",
     truckId: "TRUCK-02",
     tankType: TankType.SINGLE,
-    chartId: "chart-single-2"
+    chartId: "chart-single-2",
+    assignedUserId: null
   };
 
-    const testTruck2: Truck = {
+  const testTruck2: Truck = {
     name: "Big Blue",
     truckId: "TRUCK-01",
     tankType: TankType.SINGLE,
-    chartId: "chart-single-2"
+    chartId: "chart-single-2",
+    assignedUserId: null
   };
 
   const testOrg2 = {
@@ -119,6 +121,7 @@ describe('Assignments API Route E2E Tests', () => {
       // Add admin to users database
       await addUser({
         ...testAdminUser,
+        type: "individual",
         uid: adminAuthUser.uid,
         createdAt: new Date(),
       });
@@ -168,6 +171,7 @@ describe('Assignments API Route E2E Tests', () => {
       // Activate driverUser in organization
       await addUser({
         ...testDriverUser,
+        type: "organization",
         uid: driverAuthUser.uid,
         createdAt: new Date(),
         organizationId: testOrg1.organizationId,
@@ -177,6 +181,7 @@ describe('Assignments API Route E2E Tests', () => {
       // Activate driverUser2 in organization
       await addUser({
         ...testDriverUser2,
+        type: "organization",
         uid: driverAuthUser2.uid,
         createdAt: new Date(),
         organizationId: testOrg1.organizationId,
@@ -198,6 +203,7 @@ describe('Assignments API Route E2E Tests', () => {
       // Add testOrg2Admin to database
       await addUser({
         ...testOrg2AdminUser,
+        type: "individual",
         uid: testOrg2AdminAuthUser.uid,
         createdAt: new Date(),
       });
@@ -260,6 +266,10 @@ describe('Assignments API Route E2E Tests', () => {
     const assignmentDoc = await adminDb.doc(`organizations/${testOrg1.organizationId}/assignments/${assignmentId}`).get();
     expect(assignmentDoc.exists).toBe(true);
     expect(assignmentDoc.data()?.unassignedAt).toBeNull();
+
+    // Verify the truck document was updated with the assigned user's ID
+    const truckDoc = await adminDb.doc(`organizations/${testOrg1.organizationId}/trucks/${testTruck1.truckId}`).get();
+    expect(truckDoc.data()?.assignedUserId).toBe(driverAuthUser.uid);
   });
 
   // Test Case 2: Creating assignments to others without permission
@@ -318,6 +328,13 @@ describe('Assignments API Route E2E Tests', () => {
       },
       body: JSON.stringify(endedAssignment),
     });
+
+    // Verify response is success
+    expect(response.status).toBe(200);
+
+    // Verify the truck document's assignedUserId was cleared
+    const truckDoc = await adminDb.doc(`organizations/${testOrg1.organizationId}/trucks/${testTruck1.truckId}`).get();
+    expect(truckDoc.data()?.assignedUserId).toBeNull();
   });
 
   // Test Case 4: Updating assignments of others without permission
@@ -355,6 +372,8 @@ describe('Assignments API Route E2E Tests', () => {
     expect(response.status).toBe(403); // Forbidden
   });
 
+  // DELETE route
+
   // Test Case 5: Successful deletion of assignment by employee assigned
   test('should allow a user to delete an assignment they created', async () => {
     // Create an active assignment for the driver
@@ -380,6 +399,10 @@ describe('Assignments API Route E2E Tests', () => {
     const assignmentDocRef = adminDb.doc(`organizations/${testOrg1.organizationId}/assignments/${newAssignment.assignmentId}`);
     const docSnap = await assignmentDocRef.get();
     expect(docSnap.exists).toBe(false);
+
+    // Verify the truck was made available again
+    const truckDoc = await adminDb.doc(`organizations/${testOrg1.organizationId}/trucks/${testTruck1.truckId}`).get();
+    expect(truckDoc.data()?.assignedUserId).toBeNull();
   });
 
 

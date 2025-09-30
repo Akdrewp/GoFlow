@@ -54,6 +54,7 @@ describe('Organization Signup API Route E2E Tests', () => {
 
       // Add owner user to database
       await addUser({
+        type: "individual",
         name: ownerProfile.name,
         email: ownerProfile.email,
         uid: adminUid,
@@ -112,7 +113,8 @@ describe('Organization Signup API Route E2E Tests', () => {
 
   // Test Case 1: Successful Organization Signup
   test('should successfully sign up a new organization user and link them to the employee record', async () => {
-    // 1. Call the organization sign-up service method
+
+    // Create user via POST api
     const apiResponse = await firebaseAuthService.signUp.signUpUser({
       name: invitedEmployee.name,
       email: invitedEmployee.email,
@@ -121,7 +123,7 @@ describe('Organization Signup API Route E2E Tests', () => {
       employeeId: invitedEmployee.employeeId,
     });
 
-    // 2. Verify the API response was successful
+    // Verify the API response was successful
     expect(apiResponse.status).toBe(201);
     const apiResponseData = await apiResponse.json();
     expect(apiResponseData.status).toBe('success');
@@ -129,17 +131,18 @@ describe('Organization Signup API Route E2E Tests', () => {
     const createdUid = apiResponseData.data.uid;
     expect(createdUid).toBeDefined();
 
-    // 3. Verify the user was created in Firebase Auth
+    // Verify the user was created in Firebase Auth
     const authUserRecord = await adminAuth.getUser(createdUid);
     expect(authUserRecord.email).toBe(invitedEmployee.email);
 
-    // 4. Verify the main user document was created correctly
+    // Verify the user document was created correctly
     const userDoc = await adminDb.collection('users').doc(createdUid).get();
     expect(userDoc.exists).toBe(true);
     expect(userDoc.data()?.organizationId).toBe(testOrg.organizationId);
     expect(userDoc.data()?.employeeId).toBe(invitedEmployee.employeeId);
+    expect(userDoc.data()?.type).toBe("organization");
 
-    // 5. Verify the employee sub-collection document was updated (activated)
+    // Verify the employee sub-collection document was updated (activated)
     const employeeDoc = await adminDb.collection(`organizations/${testOrg.organizationId}/employees`).doc(invitedEmployee.employeeId).get();
     expect(employeeDoc.exists).toBe(true);
     expect(employeeDoc.data()?.status).toBe('active');
@@ -150,7 +153,7 @@ describe('Organization Signup API Route E2E Tests', () => {
   test('should fail if the employeeId does not exist in the organization', async () => {
     const nonExistentEmployeeId = "EMP-DOES-NOT-EXIST";
 
-    // 1. Call the service with an employeeId that was never created
+    // Call the service with an employeeId that was never created
     const apiResponse = await firebaseAuthService.signUp.signUpUser({
       name: "Ghost User",
       email: "ghost@testcorp.com",
@@ -159,11 +162,11 @@ describe('Organization Signup API Route E2E Tests', () => {
       employeeId: nonExistentEmployeeId,
     });
 
-    // 2. Verify the API returned a failure response
+    // Verify the API returned a failure response
     expect(apiResponse.ok).toBe(false);
     expect(apiResponse.status).toBe(400);
 
-    // 3. Verify the error message in the response body
+    // Verify the error message in the response body
     const responseBody = await apiResponse.json();
     expect(responseBody.message).toContain("Employee with passed employeeId does not exist in this organization");
   });
@@ -172,7 +175,7 @@ describe('Organization Signup API Route E2E Tests', () => {
   test('should fail if the organizationId does not exist', async () => {
     const nonExistentOrgId = "ORG-DOES-NOT-EXIST";
 
-    // 1. Call the service with an organizationId that was never created
+    // Call the service with an organizationId that was never created
     const apiResponse = await firebaseAuthService.signUp.signUpUser({
       name: invitedEmployee.name,
       email: invitedEmployee.email,
@@ -181,18 +184,18 @@ describe('Organization Signup API Route E2E Tests', () => {
       employeeId: invitedEmployee.employeeId,
     });
 
-    // 2. Verify the API returned a failure response
+    // Verify the API returned a failure response
     expect(apiResponse.ok).toBe(false);
     expect(apiResponse.status).toBe(400); // Assuming a 400 Bad Request for this validation error
 
-    // 3. Verify the error message in the response body
+    // Verify the error message in the response body
     const responseBody = await apiResponse.json();
     expect(responseBody.message).toContain("Organization with passed organizationId does not exist");
   });
 
   // Test Case 4: Employee ID is already associated with an account
   test('should fail if the employeeId is already associated with another user', async () => {
-    // 1. First, simulate that another user has already claimed this employee ID
+    // Add user with invitedEmployee's employeeId
     const firstUser = await adminAuth.createUser({ email: 'first.user@test.com', password: 'password123' });
     await adminDb.collection('users').doc(firstUser.uid).set({
       name: 'First User',

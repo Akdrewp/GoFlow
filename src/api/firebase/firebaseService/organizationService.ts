@@ -67,6 +67,7 @@ export async function createOrganization(token: string, organization: Organizati
 
     // Update the creator's user document to link them to the new organization
     await userDatabase.update(organization.createdBy, {
+      type: "organization",
       employeeId: creatorEmployeeId,
       organizationId: organizationId,
     });

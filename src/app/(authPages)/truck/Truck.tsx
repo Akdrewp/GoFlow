@@ -57,14 +57,14 @@ export async function Truck() {
     return await getUser(token, userId);
   });
 
-  if (!userProfile.organizationId || !userProfile.employeeId) {
-    throw new Error
+  if (userProfile.type != "organization") {
+    throw new Error("User is not part of an organization");
   }
 
   const organizationId = userProfile.organizationId;
 
   const trucks = await withServerAuth(async (token) => {
-    return await getTrucksForOrganization(token, organizationInfo?.organizationId as string);
+    return await getTrucksForOrganization(token, organizationId);
   });
 
   return (

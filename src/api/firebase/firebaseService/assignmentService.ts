@@ -2,11 +2,12 @@
 
 import { Assignment } from "@/api/database/database";
 import { AccessType, canUserAccessData, FirebaseVerifyError, isValidUserToken } from "../firebaseVerify";
-import { assignmentDatabase } from "../firestoreDatabase";
+import { assignmentDatabase, truckDatabase } from "../firestoreDatabase";
 
 /**
  * Adds a truck assignment document to the provided organization with
  * specified chartData.
+ * Changes specified truck's assignedUserId to passed uid
  * @param token The user's Firebase ID token for authentication.
  * @param organizationId The ID of the organization to add the chart to.
  * @param assignmentData The data for the new assignment
@@ -57,8 +58,14 @@ export async function addAssignmentToOrg(token: string, organizationId: string, 
       unassignedAt: null,
     };
 
-    // Add to database and return assignment
-    return await assignmentDatabase.add(organizationId, completeAssignmentData);
+    // Add assignment to database
+    const truckAssignment = await assignmentDatabase.add(organizationId, completeAssignmentData);
+
+    // Update truck's assignedUserId
+    await truckDatabase.update(organizationId, completeAssignmentData.truckId, { assignedUserId: assignmentData.userId });
+
+    // Return assignment
+    return await truckAssignment;
 
   } catch (e) {
     console.error("Error in addAssignment service:", e);
@@ -91,9 +98,27 @@ export async function updateAssignmentInOrg(token: string, organizationId: strin
       await canUserAccessData(token, resourcePath, AccessType.WRITE);
     }
 
-    // Check if the assignment already exists
+    // Check if the assignment doesn't exist
     if (!(await assignmentDatabase.exists(organizationId, assignmentId))) {
       throw new FirebaseVerifyError(`Assignment with ID "${assignmentId}" not found.`, 404);
+    }
+
+    // Check if Assignment is ended
+    if (assignmentData.unassignedAt) {
+      // Get current assignment
+      const currentAssigment = await assignmentDatabase.get(organizationId, assignmentId);
+
+      // Check if it exists
+      if (!currentAssigment) {
+        throw new FirebaseVerifyError(
+          `Assignment with ID "${assignmentId}" not found.`, 
+          404 // Not Found
+        );
+      }
+
+      // Remove assignedUserId from truck in datebase
+      await truckDatabase.update(organizationId, currentAssigment.truckId, { assignedUserId: null });
+
     }
 
     await assignmentDatabase.update(organizationId, assignmentId, assignmentData);
@@ -119,6 +144,21 @@ export async function endAssignmentInOrg(token: string, organizationId: string, 
       unassignedAt: new Date(),
     };
 
+    // Get current assignment
+    const currentAssigment = await assignmentDatabase.get(organizationId, assignmentId);
+
+    // Check if it exists
+    if (!currentAssigment) {
+      throw new FirebaseVerifyError(
+        `Assignment with ID "${assignmentId}" not found.`, 
+        404 // Not Found
+      );
+    } 
+
+    // Remove assignedUserId from truck in datebase
+    await truckDatabase.update(organizationId, currentAssigment.truckId, { assignedUserId: null });
+
+    // Update Assignment in database
     await updateAssignmentInOrg(token, organizationId, assignmentId, endedAssignment);
   } catch (e) {
     console.error("Error in endAssignmentInOrg service:", e);
@@ -149,6 +189,20 @@ export async function deleteAssignmentFromOrg(token: string, organizationId: str
       const resourcePath = `organizations/${organizationId}/assignments`;
       await canUserAccessData(token, resourcePath, AccessType.WRITE);
     }
+
+    // Get current assignment
+    const currentAssigment = await assignmentDatabase.get(organizationId, assignmentId);
+
+    // Check if it exists
+    if (!currentAssigment) {
+      throw new FirebaseVerifyError(
+        `Assignment with ID "${assignmentId}" not found.`, 
+        404 // Not Found
+      );
+    } 
+
+    // Remove assignedUserId from truck in datebase
+    await truckDatabase.update(organizationId, currentAssigment.truckId, { assignedUserId: null });
 
     // Remove assignment from database
     await assignmentDatabase.remove(organizationId, assignmentId);

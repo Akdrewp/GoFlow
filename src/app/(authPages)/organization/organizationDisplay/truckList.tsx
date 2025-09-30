@@ -51,7 +51,8 @@ export function TruckList({
         name: newTruckName,
         truckId: newTruckId,
         tankType: newTankType,
-        chartId: newChartId
+        chartId: newChartId,
+        assignedUserId: null,
       };
       
       const apiRoute = `/api/organizations/${organizationId}/trucks`;

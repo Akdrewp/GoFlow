@@ -47,6 +47,7 @@ describe('Add Employee API Route E2E Tests', () => {
 
       // Add user to database
       await addUser({
+        type: "individual",
         name: testUser.name,
         email: testUser.email,
         uid: adminUid,

@@ -372,19 +372,21 @@ export const truckDatabase = {
   },
 
   /**
-   * Updates an existing truck document by replacing it with new data.
+   * Partially updates an existing truck document with new data.
    * @param organizationId The ID of the organization.
    * @param truckId The ID of the truck to update.
-   * @param truckData The complete new data for the truck.
+   * @param truckData An object containing the fields to update.
    * @returns A promise that resolves when the truck has been successfully updated.
-   * @throws An error if the database write operation fails.
+   * @throws An error if the database write operation fails or the document doesn't exist.
    */
-  update: async (organizationId: string, truckId: string, truckData: Truck): Promise<void> => {
+  update: async (organizationId: string, truckId: string, truckData: Partial<Truck>): Promise<void> => {
     try {
       const truckDocRef = doc(db, `organizations/${organizationId}/trucks`, truckId);
 
-      // setDoc updates an existing document
-      await setDoc(truckDocRef, truckData);
+      // Use updateDoc for partial updates. It will only modify the fields
+      // provided in the truckData object and will throw an error if the
+      // document does not already exist.
+      await updateDoc(truckDocRef, truckData);
 
       console.log(`Truck "${truckId}" successfully updated in organization "${organizationId}".`);
     } catch (e) {

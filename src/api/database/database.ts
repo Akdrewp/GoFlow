@@ -85,7 +85,7 @@ export interface Truck {
   chartId?: string;
   
   // Optional field for the user currently assigned to this truck
-  assignedUserId?: string;
+  assignedUserId: string | null;
 }
 
 // Employee interface
@@ -228,7 +228,7 @@ export const truckSchema = z.object({
   truckId: z.string().min(1, "Truck ID is required"),
   tankType: z.nativeEnum(TankType),
   chartId: z.string().min(1, "A chart ID must be assigned"),
-  assignedUserId: z.string().optional(),
+  assignedUserId: z.string().nullable().optional(),
 });
 
 // Assignment

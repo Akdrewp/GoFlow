@@ -81,7 +81,7 @@ export function TruckAssignmentClient({
       setCurrentUserAssignment(null);
 
       // Update the trucks list to show the truck is now available.
-      setTrucks(prev => prev.map(t => t.truckId === truckId ? { ...t, assignedUserId: undefined } : t));
+      setTrucks(prev => prev.map(t => t.truckId === truckId ? { ...t, assignedUserId: null } : t));
     
     } catch (e) {
       setError((e as Error).message);
