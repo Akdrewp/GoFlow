@@ -1,9 +1,10 @@
-import { Assignment, Organization, Truck as TruckType } from "@/api/database/database"; // Conflicts with Truck tsx element
+import { Assignment, Truck as TruckType } from "@/api/database/database"; // Conflicts with Truck tsx element
 import { getUser } from "@/api/firebase/firebaseService";
 import { getDataForResource, isValidUserToken } from "@/api/firebase/firebaseVerify";
 import { withServerAuth } from "@/app/lib/server-auth";
+import { TruckAssignmentClient } from "./TruckAssignment";
 
-const getTrucksForOrganization = async (token: string, organizationId: string): Promise<TruckType[] | null> => {
+const getTrucksForOrganization = async (token: string, organizationId: string): Promise<TruckType[]> => {
   try {
     const trucksCollectionId = `organizations/${organizationId}/trucks`;
     const trucks = await getDataForResource(token, trucksCollectionId);
@@ -11,7 +12,7 @@ const getTrucksForOrganization = async (token: string, organizationId: string): 
     return trucks as TruckType[];
   } catch (e) {
     console.error("Error fetching trucks: ", e);
-    return null;
+    throw(e);
   }
 };
 
@@ -27,11 +28,13 @@ const getAssignmentForUser = async (token: string, organizationId: string): Prom
 
 
     // Find assignment where assigned userId is equal to users uid
+    // AND
+    // assignment is active
     const userAssignment = assignmentsData.find((doc: Assignment) => {
-      return doc.userId === userId;
+      return (doc.userId === userId) && (!doc.unassignedAt);
     });
 
-    // Check if assignment was found
+    // Return assignment
     if (userAssignment) {
       return userAssignment as Assignment;
     } else {
@@ -67,9 +70,20 @@ export async function Truck() {
     return await getTrucksForOrganization(token, organizationId);
   });
 
+  const userAssignment = await withServerAuth(async (token) => {
+    return await getAssignmentForUser(token, organizationId);
+  });
+
+  const truckAssignmentData = {
+    initialTrucks: trucks,
+    initialCurrentUserAssignment: userAssignment,
+    currentUser: userProfile,
+    organizationId: organizationId,
+  };
+
   return (
   <div>
-    Trucks
+    <TruckAssignmentClient truckAssignmentData={JSON.parse(JSON.stringify(truckAssignmentData))} />
   </div>
   );
 }

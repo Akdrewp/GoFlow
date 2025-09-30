@@ -15,13 +15,18 @@ export async function assignmentsPUT(
   { organizationId, assignmentId }: { organizationId: string, assignmentId: string }
 ) {
   try {
-
-    // Validate the incoming request body against the truck schema.
+    
     const requestBody = await request.json();
-    const validationResult = assignmentSchema.safeParse(requestBody);
+
+    // Only need partial schema since updating complete schema
+    const assignmentPartialSchema = assignmentSchema.partial();
+
+    // Validate the incoming request body against the partial assignment schema.
+    const validationResult = assignmentPartialSchema.safeParse(requestBody);
 
     // Check if validation failed
     if (!validationResult.success) {
+      console.log("ZOD error in assignments PUT route: ", validationResult.error.message);
       return NextResponse.json(
         { status: "fail", message: validationResult.error.message },
         { status: 400 } // Bad Request

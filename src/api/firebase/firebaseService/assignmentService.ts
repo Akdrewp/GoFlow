@@ -103,6 +103,8 @@ export async function updateAssignmentInOrg(token: string, organizationId: strin
       throw new FirebaseVerifyError(`Assignment with ID "${assignmentId}" not found.`, 404);
     }
 
+    console.log("updateAssignInOrg CONSOLE LOG assignmentData: ", assignmentData);
+
     // Check if Assignment is ended
     if (assignmentData.unassignedAt) {
       // Get current assignment

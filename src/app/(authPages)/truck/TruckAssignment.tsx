@@ -4,21 +4,23 @@ import { useState } from 'react';
 import { Truck, Assignment, UserProfile  } from '@/api/database/database';
 import { Zap } from 'lucide-react';
 
-// A new type for our augmented truck data, which includes the assignmentId for easier management.
-type DisplayTruck = Truck & { assignmentId?: string };
-
-// This is the interactive client component that displays the UI.
-export function TruckAssignmentClient({ 
-  initialTrucks, 
-  initialCurrentUserAssignment, 
-  currentUser,
-  organizationId,
-}: { 
-  initialTrucks: DisplayTruck[];
+// Interface for component for typing
+interface TruckAssignmentData {
+  initialTrucks: Truck[];
   initialCurrentUserAssignment: Assignment | null;
-  currentUser: UserProfile; // Simplified type for current user profile
+  currentUser: UserProfile;
   organizationId: string;
-}) {
+}
+
+export function TruckAssignmentClient({ truckAssignmentData }: { truckAssignmentData: TruckAssignmentData }) {
+  // Destructure the props for easier use within the component
+  const { 
+    initialTrucks, 
+    initialCurrentUserAssignment, 
+    currentUser, 
+    organizationId 
+  } = truckAssignmentData;
+
   const [trucks, setTrucks] = useState(initialTrucks);
   const [currentUserAssignment, setCurrentUserAssignment] = useState(initialCurrentUserAssignment);
   const [error, setError] = useState('');
@@ -56,21 +58,17 @@ export function TruckAssignmentClient({
   };
 
   const handleUnassign = async () => {
-    // We get all necessary info from the currentUserAssignment state.
     if (!currentUserAssignment) return;
 
     const { assignmentId, truckId } = currentUserAssignment;
     setIsLoading(truckId);
     setError('');
     try {
-      // Update via PUT route
       const apiRoute = `/api/organizations/${organizationId}/assignments/${assignmentId}`;
       const response = await fetch(apiRoute, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(currentUserAssignment),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ unassignedAt: new Date() }), // Send the update in the body
       });
 
       if (!response.ok) {
@@ -79,8 +77,6 @@ export function TruckAssignmentClient({
       }
 
       setCurrentUserAssignment(null);
-
-      // Update the trucks list to show the truck is now available.
       setTrucks(prev => prev.map(t => t.truckId === truckId ? { ...t, assignedUserId: null } : t));
     
     } catch (e) {

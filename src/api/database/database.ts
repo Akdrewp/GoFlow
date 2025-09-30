@@ -228,7 +228,7 @@ export const truckSchema = z.object({
   truckId: z.string().min(1, "Truck ID is required"),
   tankType: z.nativeEnum(TankType),
   chartId: z.string().min(1, "A chart ID must be assigned"),
-  assignedUserId: z.string().nullable().optional(),
+  assignedUserId: z.string().nullable(),
 });
 
 // Assignment
