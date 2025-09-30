@@ -51,6 +51,7 @@ describe('Login API Route E2E Tests', () => {
         method: 'POST',
         headers: commonHeaders,
         body: JSON.stringify({
+          type: "individual",
           email: validUser.email,
           name: validUser.displayName,
           uid: validUserUid, // Use the stored UID
@@ -192,6 +193,7 @@ describe('Login API Route E2E Tests', () => {
 
     // Add conflictOrgIdUser to database
     await addUser({
+      type: "individual",
       name: conflictOrgIdUser.displayName,
       email: conflictOrgIdUser.email,
       uid: adminUid,

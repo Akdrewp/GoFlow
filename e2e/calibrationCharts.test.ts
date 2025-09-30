@@ -9,7 +9,7 @@ const NEXT_PUBLIC_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localho
 // Client auth instance needed to get an ID token
 const authClient = getAuth();
 
-describe('Roles API Route E2E Tests', () => {
+describe('Assignments API Route E2E Tests', () => {
 
   const testAdminUser = {
     email: "admin-user@test.com",

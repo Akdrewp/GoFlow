@@ -11,6 +11,7 @@ import {
   deleteUser,
   UserCredential,
 } from 'firebase/auth';
+import { UserProfile } from "../database/database";
 
 const NEXT_PUBLIC_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 const databaseSignUpApiEndpoint = `${NEXT_PUBLIC_BASE_URL}/api/auth/signup`;
@@ -27,14 +28,14 @@ export const firebaseAuthService: AuthService = {
      */
     loginWithEmail: async (formData: UserLogin): Promise<Response> => {
       try {
-        // 1. Sign in the user with Firebase Client SDK
+        // Sign in the user with Firebase Client SDK
         const userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password);
         
         if (userCredential.user) {
-          // 2. Get the ID token from the signed-in user
+          // Get the ID token from the signed-in user
           const idToken = await userCredential.user.getIdToken();
 
-          // 3. Send the token to the API route to create a session cookie
+          // Send the token to the API route to create a session cookie
           const sessionResponse = await fetch(sessionLoginApiEndpoint, {
             method: 'POST',
             headers: {
@@ -71,8 +72,8 @@ export const firebaseAuthService: AuthService = {
             throw new Error(`An unexpected error occurred during login: ${(e as Error).message}`);
         }
       }
-    }, // <-- Corrected function syntax and added comma
-  }, // <-- Added comma
+    },
+  },
   signUp: {
     /**
      * Handles the sign-up process for organization users.
@@ -100,12 +101,12 @@ export const firebaseAuthService: AuthService = {
         // Get idToken to call /auth/signUp
         const idToken = await currentUser?.getIdToken();
 
-        let userProfile;
+        let userProfile: UserProfile;
 
         // Check if organization signup
-        const isOrganizationSignUp = (formData?.employeeId && formData?.organizationId);
-        if (isOrganizationSignUp) {
+        if (formData?.employeeId && formData?.organizationId) {
           userProfile = {
+            type: "organization",
             uid: userResponse.user.uid,
             name: formData.name,
             email: formData.email,
@@ -115,6 +116,7 @@ export const firebaseAuthService: AuthService = {
           };
         } else { // Individual account signup
           userProfile = {
+            type: "individual",
             uid: userResponse.user.uid,
             name: formData.name,
             email: formData.email,

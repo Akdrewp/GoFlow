@@ -39,12 +39,12 @@ export async function signUpRoute(request: NextRequest) {
     if (!isValidUserFormData.success) {
       console.log("SERVER LOG: === Returning 400 - Zod Validation Failed ===");
       return NextResponse.json(
-        { status: "fail", message: isValidUserFormData.error }, 
+        { status: "fail", message: isValidUserFormData.error.message }, 
         { status: 400 }); //Bad Request User Error
     }
 
     // organizationId and employeeId may be undefined here if signing up individually
-    const { uid, name, email, organizationId, employeeId } = isValidUserFormData.data;
+    const { uid, name, email, type } = isValidUserFormData.data;
 
     // --- Duplicate Key Checks ---
 
@@ -98,7 +98,7 @@ export async function signUpRoute(request: NextRequest) {
     // Proceed with adding account to database
 
     // If signing up with organization
-    if (organizationId && employeeId) {
+    if (type == "organization") {
       /**
        * @todo for now don't do anything special
        */

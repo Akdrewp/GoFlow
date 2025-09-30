@@ -29,11 +29,11 @@ describe('Signup API Route E2E Tests', () => {
 
   beforeEach( async () => {
     try {
-      //Clear existing data
+      // Clear existing data
       await clearFirestoreAuth();
       await clearFirestoreDB();
 
-      //Create valid user
+      // Create valid user
       const newAuthUser = await adminAuth.createUser(validUser);
       validUserUid = newAuthUser.uid; // Store the UID for use in tests
       const currentTimeIso = new Date().toISOString();
@@ -51,6 +51,7 @@ describe('Signup API Route E2E Tests', () => {
         method: 'POST',
         headers: commonHeaders,
         body: JSON.stringify({
+          type: "individual",
           email: validUser.email,
           name: validUser.displayName,
           uid: validUserUid, // Use the stored UID
@@ -85,7 +86,7 @@ describe('Signup API Route E2E Tests', () => {
     const testEmail = 'e2e.test.individual@example.com';
     const testPassword = 'securePassword123';
 
-    // Call your client-side service method, which internally calls Auth SDK and your API route
+    // Create user via POST api
     const apiResponse = await firebaseAuthService.signUp.signUpUser({
       name: testName,
       email: testEmail,
@@ -95,18 +96,19 @@ describe('Signup API Route E2E Tests', () => {
     // Parse the JSON response from your API route
     const apiResponseData = await apiResponse.json();
 
-    // 1. Verify the API Route's HTTP Response Status
-    expect(apiResponse.status).toBe(201); // Expect a 201 Created status
-    // 2. Verify the API Route's JSON Response Body
+    // Verify response is success
+    expect(apiResponse.status).toBe(201);
     expect(apiResponseData.status).toBe('success');
     expect(apiResponseData.message).toBe('User account succesfully added to database');
+
+    // Verify response data matches sent data
     expect(apiResponseData.data).toHaveProperty('uid'); // API should return the UID from Auth
     expect(apiResponseData.data.name).toBe(testName);
     expect(apiResponseData.data.email).toBe(testEmail);
 
     const createdUid = apiResponseData.data.uid; // Get UID from the API response
 
-    // 3. Verify User existence and details in Firebase Authentication Emulator (using Admin SDK)
+    // Verify User existence and details in Firebase Authentication Emulator (using Admin SDK)
     let authUserRecord;
     try {
       authUserRecord = await adminAuth.getUser(createdUid);
@@ -119,7 +121,7 @@ describe('Signup API Route E2E Tests', () => {
     // expect(authUserRecord.displayName).toBe(testName);
     expect(authUserRecord.uid).toBe(createdUid);
 
-    // 4. Verify User Profile existence and data in Firestore Emulator (using Admin SDK)
+    // Verify User Profile existence and data in Firestore Emulator (using Admin SDK)
     const userDocRef = adminDb.collection('users').doc(createdUid);
     const userDocSnap = await userDocRef.get();
 
@@ -131,10 +133,12 @@ describe('Signup API Route E2E Tests', () => {
     expect(firestoreData?.name).toBe(testName);
     expect(firestoreData?.email).toBe(testEmail);
     expect(firestoreData?.uid).toBe(createdUid);
+    expect(firestoreData?.type).toBe("individual");
 
     //Check whether createdAt is a date
     const createdAtDate = new Date(firestoreData?.createdAt).getDate();
     expect(!isNaN(createdAtDate));
+    
     //Check whether date is in the past
     expect(createdAtDate).toBeLessThanOrEqual(new Date().getTime());
 
@@ -247,6 +251,7 @@ describe('Signup API Route E2E Tests', () => {
 
     // --- Scenario 1: UID in payload does NOT match the existing Auth user's UID ---
     const invalidUidUserData = {
+      type: "individual",
       email: testUserAuth.email,
       name: testUserAuth.displayName,
       uid: "a_non_existent_uid_123",
@@ -272,6 +277,7 @@ describe('Signup API Route E2E Tests', () => {
 
     // --- Scenario 2: Email in payload does NOT match the existing Auth user's email (but UID does match) ---
     const fakeEmailProvidedData = {
+      type: "individual",
       email: "this.is.a.fake.email@test.com",
       name: testUserAuth.displayName,
       uid: newAuthUser.uid,
@@ -296,6 +302,7 @@ describe('Signup API Route E2E Tests', () => {
 
     // --- Scenario 3: Email and UID match user but Token does NOT ---
     const invalidTokenProvidedData = {
+      type: "individual",
       email: newAuthUser.email,
       name: newAuthUser.displayName,
       uid: newAuthUser.uid,

@@ -1,33 +1,38 @@
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
-import { calibrationChartSchema } from "@/api/database/database";
-import { addChartToOrg } from "@/api/firebase/firebaseService";
+import { assignmentSchema } from "@/api/database/database";
 import { FirebaseVerifyError } from "@/api/firebase/firebaseVerify";
 import { FirestoreDatabaseError } from "@/api/firebase/firestoreDatabase";
+import { updateAssignmentInOrg } from "@/api/firebase/firebaseService";
 
 /**
- * This route handles the creation of a new calibration chart
- * Path: POST /api/organizations/{organizationId}/calibrationCharts
+ * This route handles the updating of an existing chart
+ * Path: PUT /api/organizations/{organizationId}/assignments/{assignmentId}
  */
-export async function calibrationChartsPOST(
+export async function assignmentsPUT(
   request: NextRequest,
-  { organizationId }: { organizationId: string }
+  { organizationId, assignmentId }: { organizationId: string, assignmentId: string }
 ) {
   try {
-
-    // Validate the incoming request body against the truck schema.
+    
     const requestBody = await request.json();
-    const validationResult = calibrationChartSchema.safeParse(requestBody);
+
+    // Only need partial schema since updating complete schema
+    const assignmentPartialSchema = assignmentSchema.partial();
+
+    // Validate the incoming request body against the partial assignment schema.
+    const validationResult = assignmentPartialSchema.safeParse(requestBody);
 
     // Check if validation failed
     if (!validationResult.success) {
+      console.log("ZOD error in assignments PUT route: ", validationResult.error.message);
       return NextResponse.json(
         { status: "fail", message: validationResult.error.message },
         { status: 400 } // Bad Request
       );
     }
-    const calibrationChartData = validationResult.data;
+    const assignmentData = validationResult.data;
 
     // Get user token
     const userCookies = await cookies();
@@ -39,13 +44,13 @@ export async function calibrationChartsPOST(
       );
     }
 
-    // add calibrationChart to database
-    await addChartToOrg(token, organizationId, calibrationChartData);
+    // update assignmentData to database
+    await updateAssignmentInOrg(token, organizationId, assignmentId, assignmentData);
 
     // Return a successful response.
     return NextResponse.json(
-      { status: "success", message: "calibrationChart successfully created.", data: calibrationChartData },
-      { status: 201 } // Created
+      { status: "success", message: "Truck successfully created.", data: assignmentData },
+      { status: 200 } // Created
     );
 
   } catch (e) {
@@ -57,7 +62,7 @@ export async function calibrationChartsPOST(
     }
 
     // Genereic error handler
-    console.error("Error in create chart route:", e);
+    console.error("Error in assignmentsPUT route:", e);
     return NextResponse.json(
       { status: "error", message: "An internal server error occurred." },
       { status: 500 } // Internal Server Error

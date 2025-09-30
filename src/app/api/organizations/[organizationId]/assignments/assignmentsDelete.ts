@@ -1,22 +1,19 @@
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
-import { deleteChartFromOrg } from "@/api/firebase/firebaseService";
+import { deleteAssignmentFromOrg } from "@/api/firebase/firebaseService";
 import { FirebaseVerifyError } from "@/api/firebase/firebaseVerify";
 import { FirestoreDatabaseError } from "@/api/firebase/firestoreDatabase";
 
 /**
- * This route handles the deletion of a chart
- * Path: PUT /api/organizations/{organizationId}/calibrationCharts/{chartId}
+ * This route handles the deletion of an assignment
+ * Path: PUT /api/organizations/{organizationId}/assignments/{assignmentId}
  */
-export async function calibrationChartsDELETE(
+export async function assignmentsDELETE(
   request: NextRequest,
-  { organizationId, chartId }: { organizationId: string, chartId: string }
+  { organizationId, assignmentId }: { organizationId: string, assignmentId: string }
 ) {
   try {
-
-    console.log("calibrationChartsDelete CONSOLE LOG TEST TEST TEST");
-    // const calibrationChartData = validationResult.data;
 
     // Get user token
     const userCookies = await cookies();
@@ -28,12 +25,12 @@ export async function calibrationChartsDELETE(
       );
     }
 
-    // Delete chart from database
-    await deleteChartFromOrg(token, organizationId, chartId);
+    // Delete assignment from database
+    await deleteAssignmentFromOrg(token, organizationId, assignmentId);
 
     // Return a successful response.
     return NextResponse.json(
-      { status: "success", message: "Calibration chart successfully deleted" },
+      { status: "success", message: "Assignment successfully deleted" },
       { status: 200 } // Success
     );
 
@@ -46,7 +43,7 @@ export async function calibrationChartsDELETE(
     }
 
     // Genereic error handler
-    console.error("Error in Delete chart route:", e);
+    console.error("Error in assignmentDELETE route", e);
     return NextResponse.json(
       { status: "error", message: `An internal server error occurred. ${e}` },
       { status: 500 } // Internal Server Error

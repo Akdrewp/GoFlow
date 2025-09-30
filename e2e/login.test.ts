@@ -53,6 +53,7 @@ describe('Login API Route E2E Tests', () => {
         method: 'POST',
         headers: commonHeaders,
         body: JSON.stringify({
+          type: "individual",
           email: validUser.email,
           name: validUser.displayName,
           uid: validUserUid, // Use the stored UID

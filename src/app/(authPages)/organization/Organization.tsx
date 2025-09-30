@@ -5,10 +5,6 @@ import { withServerAuth } from "@/app/lib/server-auth";
 import { Organization as OrganizationType, Employee, Truck, CalibrationChart } from "@/api/database/database";
 import { OrganizationDisplay } from "@/app/(authPages)/organization/OrganizationDisplay";
 
-/**
- * 
- * @todo Change this to use getDataForResource
- */
 const getEmployeesForOrganization = async (token: string, organizationId: string): Promise<Employee[] | null> => {
     try {
         const employeesCollectionId = `organizations/${organizationId}/employees`;
@@ -56,7 +52,7 @@ const getOrganizationInfo = async (token: string): Promise<OrganizationType | nu
     const userInfo = await getUser(token, userUid);
 
     // If user is part of organization get organization info
-    if(userInfo?.organizationId && userInfo?.employeeId) {
+    if(userInfo.type == "organization") {
       const organizationResourceId = `organizations/${userInfo.organizationId}`;
 
       // If user does not have access then this will throw an error
@@ -80,7 +76,6 @@ export default async function Organization() {
 
   const organizationInfo = await withServerAuth(async (token) => {
     return await getOrganizationInfo(token);
-
   });
 
   const roles = await withServerAuth(async (token) => {
