@@ -49,6 +49,7 @@ describe('Roles API Route E2E Tests', () => {
   };
 
   let adminUserAuthToken: string;
+  let driverUserAuthToken: string;
   let testOrg2AdminToken: string;
 
 
@@ -81,6 +82,7 @@ describe('Roles API Route E2E Tests', () => {
       // Add driver and admin to users database
       await addUser({
         ...testAdminUser,
+        type: "individual",
         uid: adminAuthUser.uid,
         createdAt: new Date(),
       });
@@ -123,6 +125,7 @@ describe('Roles API Route E2E Tests', () => {
       // Activate user in organization
       await addUser({
         ...testDriverUser,
+        type: "organization",
         uid: driverAuthUser.uid,
         createdAt: new Date(),
         organizationId: testOrg1.organizationId,
@@ -140,6 +143,7 @@ describe('Roles API Route E2E Tests', () => {
       // Add testOrg2Admin to database
       await addUser({
         ...testOrg2AdminUser,
+        type: "individual",
         uid: testOrg2AdminAuthUser.uid,
         createdAt: new Date(),
       });
@@ -175,7 +179,8 @@ describe('Roles API Route E2E Tests', () => {
       name: "Big Bertha",
       truckId: "TRUCK-01",
       tankType: TankType.SINGLE,
-      chartId: "chart-standard-single-tank"
+      chartId: "chart-standard-single-tank",
+      assignedUserId: null,
     };
 
     const apiRoute = `${NEXT_PUBLIC_BASE_URL}/api/organizations/${testOrg1.organizationId}/trucks`;
@@ -211,7 +216,8 @@ describe('Roles API Route E2E Tests', () => {
       name: "Duplicate Truck",
       truckId: "TRUCK-DUPE",
       tankType: TankType.SPLIT,
-      chartId: "chart-standard-split-tank"
+      chartId: "chart-standard-split-tank",
+      assignedUserId: null,
     };
 
     const apiRoute = `${NEXT_PUBLIC_BASE_URL}/api/organizations/${testOrg1.organizationId}/trucks`;
@@ -252,7 +258,8 @@ describe('Roles API Route E2E Tests', () => {
       name: "Old Blue",
       truckId: "TRUCK-02",
       tankType: TankType.SINGLE,
-      chartId: "chart-single-1"
+      chartId: "chart-single-1",
+      assignedUserId: null,
     };
     
     // Add truck to database
@@ -293,7 +300,8 @@ describe('Roles API Route E2E Tests', () => {
       name: "Ghost Truck",
       truckId: "TRUCK-99",
       tankType: TankType.SINGLE,
-      chartId: "chart-single-1"
+      chartId: "chart-single-1",
+      assignedUserId: null,
     };
     
     const apiRoute = `${NEXT_PUBLIC_BASE_URL}/api/organizations/${testOrg1.organizationId}/trucks/${nonExistentTruckData.truckId}`;
@@ -323,7 +331,8 @@ describe('Roles API Route E2E Tests', () => {
       name: "Delete Me",
       truckId: "TRUCK-DEL",
       tankType: TankType.SINGLE,
-      chartId: "chart-single-1"
+      chartId: "chart-single-1",
+      assignedUserId: null,
     };
 
     // Add truck to database

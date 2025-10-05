@@ -49,6 +49,7 @@ describe('Assignments API Route E2E Tests', () => {
   };
 
   let adminUserAuthToken: string;
+  let driverUserAuthToken: string;
   let testOrg2AdminToken: string;
 
 
@@ -81,6 +82,7 @@ describe('Assignments API Route E2E Tests', () => {
       // Add driver and admin to users database
       await addUser({
         ...testAdminUser,
+        type: "individual",
         uid: adminAuthUser.uid,
         createdAt: new Date(),
       });
@@ -123,6 +125,7 @@ describe('Assignments API Route E2E Tests', () => {
       // Activate user in organization
       await addUser({
         ...testDriverUser,
+        type: "organization",
         uid: driverAuthUser.uid,
         createdAt: new Date(),
         organizationId: testOrg1.organizationId,
@@ -140,6 +143,7 @@ describe('Assignments API Route E2E Tests', () => {
       // Add testOrg2Admin to database
       await addUser({
         ...testOrg2AdminUser,
+        type: "individual",
         uid: testOrg2AdminAuthUser.uid,
         createdAt: new Date(),
       });
