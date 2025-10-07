@@ -5,7 +5,7 @@ import { z } from "zod";
 import { collection, doc, setDoc, getDoc, updateDoc, getDocs, query, where, DocumentData, deleteDoc } from "firebase/firestore";
 import { db } from "./firebaseConfig";
 
-import { UserProfile, Organization, Employee, Role, Truck, CalibrationChart, Assignment, CalibrationReport } from "@/api/database/database";
+import { UserProfile, Organization, Employee, Role, Truck, CalibrationChart, Assignment, CalibrationReport, Product } from "@/api/database/database";
 import { AccessType } from "./firebaseVerify";
 
 export class FirestoreDatabaseError extends Error {
@@ -550,6 +550,107 @@ export const chartDatabase = {
     } catch (e) {
       console.error(`Error checking if chart "${chartId}" exists:`, e);
       throw(e);
+    }
+  },
+};
+
+export const productDatabase = {
+  /**
+   * Adds a new product document to an organization's 'products' sub-collection.
+   * @param organizationId The ID of the organization to add the product to.
+   * @param productData The data for the new product, including its productId.
+   * @returns A promise that resolves when the product has been successfully added.
+   * @throws An error if the database write operation fails.
+   */
+  add: async (organizationId: string, productData: Product): Promise<void> => {
+    try {
+      const productDocRef = doc(db, `organizations/${organizationId}/products`, productData.productId);
+      await setDoc(productDocRef, productData);
+      console.log(`Product "${productData.productId}" successfully added to organization "${organizationId}".`);
+    } catch (e) {
+      console.error("Error adding product to database:", e);
+      throw new Error(`Failed to add product: ${(e as Error).message}`);
+    }
+  },
+
+  /**
+   * Fetches a specific product document from an organization's sub-collection.
+   * @param organizationId The ID of the organization.
+   * @param productId The ID of the product to fetch.
+   * @returns A Promise that resolves to the Product object
+   * @throws An error if the database read operation fails or it doesn't exist.
+   */
+  get: async (organizationId: string, productId: string): Promise<Product> => {
+    try {
+      const productDocRef = doc(db, `organizations/${organizationId}/products`, productId);
+      const docSnap = await getDoc(productDocRef);
+
+      if (!docSnap.exists()) {
+        console.log(`Product with ID "${productId}" not found in organization "${organizationId}".`);
+        throw new FirestoreDatabaseError(
+          `Product with ID "${productId}" not found in organization "${organizationId}".`, 
+          400 // Bad request
+        );
+      }
+      return docSnap.data() as Product;
+    } catch (e) {
+      console.error("Error getting product from database:", e);
+      throw new Error(`Failed to get product: ${(e as Error).message}`);
+    }
+  },
+
+  /**
+   * Partially updates an existing product document.
+   * @param organizationId The ID of the organization.
+   * @param productId The ID of the product to update.
+   * @param productData An object containing the fields to update.
+   * @returns A promise that resolves when the product has been successfully updated.
+   * @throws An error if the database update operation fails.
+   */
+  update: async (organizationId: string, productId: string, productData: Partial<Product>): Promise<void> => {
+    try {
+      const productDocRef = doc(db, `organizations/${organizationId}/products`, productId);
+      await updateDoc(productDocRef, productData);
+      console.log(`Product "${productId}" successfully updated in organization "${organizationId}".`);
+    } catch (e) {
+      console.error("Error updating product in database:", e);
+      throw new Error(`Failed to update product: ${(e as Error).message}`);
+    }
+  },
+
+  /**
+   * Deletes a product document from an organization's sub-collection.
+   * @param organizationId The ID of the organization.
+   * @param productId The ID of the product to delete.
+   * @returns A promise that resolves when the product has been successfully deleted.
+   * @throws An error if the database delete operation fails.
+   */
+  remove: async (organizationId: string, productId: string): Promise<void> => {
+    try {
+      const productDocRef = doc(db, `organizations/${organizationId}/products`, productId);
+      await deleteDoc(productDocRef);
+      console.log(`Product "${productId}" successfully deleted from organization "${organizationId}".`);
+    } catch (e) {
+      console.error("Error deleting product from database:", e);
+      throw new Error(`Failed to delete product: ${(e as Error).message}`);
+    }
+  },
+
+  /**
+   * Checks if a product with the given productId exists within an organization.
+   * @param organizationId The ID of the organization.
+   * @param productId The ID of the product to check.
+   * @returns A Promise that resolves to true if the product exists, false otherwise.
+   * @throws An error if the database read operation fails.
+   */
+  exists: async (organizationId: string, productId: string): Promise<boolean> => {
+    try {
+      const productDocRef = doc(db, `organizations/${organizationId}/products`, productId);
+      const docSnap = await getDoc(productDocRef);
+      return docSnap.exists();
+    } catch (e) {
+      console.error(`Error checking if product "${productId}" exists:`, e);
+      throw new Error(`Failed to check for product existence: ${(e as Error).message}`);
     }
   },
 };

@@ -72,7 +72,7 @@ export const userProfileSchema = z.discriminatedUnion("type", [
 ]);
 
 // All the resources used in the app
-export const ORGANIZATION_RESOURCES = ["organizations", "employees", "roles", "trucks", "calibrationCharts", "assignments", "calibrationReports"];
+export const ORGANIZATION_RESOURCES = ["organizations", "employees", "roles", "trucks", "calibrationCharts", "assignments", "calibrationReports", "products"];
 
 // A permission set for a resource
 // Just read and write for now
