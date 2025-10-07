@@ -1,3 +1,12 @@
+import dotenv from 'dotenv';
+import path from 'path';
+
+// Load environment variables from .env.local
+// This ensures they are available to your tests, especially for Admin SDK initialization.
+// The path.resolve ensures the correct absolute path to your .env.local file.
+// process.cwd() gets the current working directory, which should be your project root.
+dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
+
 // Using relative imports since ts-node doesn't accept alias @
 // tsconfig-paths doesn't seem to work either
 import { Organization, Truck, TankType } from "../../../src/api/database/database";

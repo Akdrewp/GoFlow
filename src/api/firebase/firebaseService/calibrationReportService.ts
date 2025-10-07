@@ -66,7 +66,12 @@ export async function addCalibrationReportToOrg(
     const calculatedProductVolume = productEntry.volume;
 
     console.log("calculatedProductVolume ", calculatedProductVolume);
-    
+
+    /**
+     * @todo calculate calibration from product
+     * Get product
+     */
+    const calibration = 0;
 
     const initialReportData: Omit<CalibrationReport, "reportId"> = {
       ...reportData,
@@ -74,6 +79,8 @@ export async function addCalibrationReportToOrg(
       createdBy: userProfile.uid,
       createdAt: new Date(),
       calculatedProductUsed: calculatedProductVolume,
+      productId: reportData.productId,
+      actualCalibrationRate: calibration,
     };
 
     return await calibrationReportDatabase.add(organizationId, initialReportData);

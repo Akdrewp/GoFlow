@@ -292,14 +292,19 @@ export const calibrationReportSchema = z.object({
   assignmentId: z.string().min(1),
   createdBy: z.string().min(1),
   createdAt: z.coerce.date(),
+  productId: z.string().min(1),
   productMeasurement: z.number().min(0),
+  areaCompleted: z.number().min(0),
   calculatedProductVolume: z.number().min(0),
+  actualCalibrationRate: z.number().min(0),
 });
 
 // Schema picked from full schema for creating a calibration report
 export const createCalibrationReportSchema = calibrationReportSchema.pick({
   truckId: true,
   assignmentId: true,
+  productId: true,
+  areaCompleted: true,
   productMeasurement: true,
 });
 
