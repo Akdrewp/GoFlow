@@ -39,7 +39,7 @@ export default function RootLayout({
                   </Link>
                   <Link href="/truck" className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary">
                     <Truck className="h-8 w-8" />
-                    <p>Trucks</p>
+                    <p>Truck</p>
                   </Link>
                   <Link href="/assign" className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary">
                     <Clipboard className="h-8 w-8" />

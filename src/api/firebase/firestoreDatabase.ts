@@ -5,7 +5,7 @@ import { z } from "zod";
 import { collection, doc, setDoc, getDoc, updateDoc, getDocs, query, where, DocumentData, deleteDoc } from "firebase/firestore";
 import { db } from "./firebaseConfig";
 
-import { UserProfile, Organization, Employee, Role, Truck, CalibrationChart, Assignment } from "@/api/database/database";
+import { UserProfile, Organization, Employee, Role, Truck, CalibrationChart, Assignment, CalibrationReport, Product } from "@/api/database/database";
 import { AccessType } from "./firebaseVerify";
 
 export class FirestoreDatabaseError extends Error {
@@ -258,7 +258,10 @@ export const organizationDatabase = {
 
           if (!docSnap.exists()) {
               console.log(`Role with ID "${roleId}" not found in organization "${organizationId}".`);
-              throw new FirestoreDatabaseError(`Role with ID "${roleId}" not found in organization `, 400);
+              throw new FirestoreDatabaseError(
+                `Role with ID "${roleId}" not found in organization `, 
+                400
+              );
           }
 
           return docSnap.data() as Role;
@@ -346,7 +349,7 @@ export const truckDatabase = {
       return docSnap.exists();
     } catch (e) {
       console.error(`Error checking if truck "${truckId}" exists:`, e);
-      throw new Error(`Failed to check for truck existence: ${(e as Error).message}`);
+      throw e;
     }
   },
 
@@ -367,7 +370,36 @@ export const truckDatabase = {
       console.log(`Truck "${truckData.truckId}" successfully added to organization "${organizationId}".`);
     } catch (e) {
       console.error("Error adding truck to database:", e);
-      throw new Error(`Failed to add truck: ${(e as Error).message}`);
+      throw e;
+    }
+  },
+
+  /**
+   * Gets the truck wiht truckId in organzation
+   * @param organizationId The ID of the organization.
+   * @param truckId The ID of the truck to get.
+   * @returns A Promise that resolves to the truck with id truckId
+   * @throws An error if the database read operation fails or the truck doesn't exist.
+   */
+  get: async (organizationId: string, truckId: string): Promise<Truck> => {
+    try {
+
+      // Get truck dococument
+      const truckDocRef = doc(db, `organizations/${organizationId}/trucks`, truckId);
+      const docSnap = await getDoc(truckDocRef);
+
+      if (!docSnap.exists()) {
+        throw new FirestoreDatabaseError(
+          `Truck with ID "${truckId}" not found in organization `, 
+          400
+        );
+      }
+
+      // Return data casted to truck
+      return docSnap.data() as Truck;
+    } catch (e) {
+      console.error(`Error checking if truck "${truckId}" exists:`, e);
+      throw e;
     }
   },
 
@@ -391,7 +423,7 @@ export const truckDatabase = {
       console.log(`Truck "${truckId}" successfully updated in organization "${organizationId}".`);
     } catch (e) {
       console.error("Error updating truck in database:", e);
-      throw new Error(`Failed to update truck: ${(e as Error).message}`);
+      throw e;
     }
   },
 
@@ -411,7 +443,7 @@ export const truckDatabase = {
       console.log(`Truck "${truckId}" successfully deleted from organization "${organizationId}".`);
     } catch (e) {
       console.error("Error deleting truck from database:", e);
-      throw new Error(`Failed to delete truck: ${(e as Error).message}`);
+      throw e;
     }
   },
 };
@@ -434,6 +466,33 @@ export const chartDatabase = {
     } catch (e) {
       console.error("Error adding chart to database:", e);
       throw(e);
+    }
+  },
+
+  /**
+   * Fetches a specific calibration chart document from the database.
+   * @param organizationId The ID of the organization where the chart is located.
+   * @param chartId The ID of the chart to fetch.
+   * @returns A Promise resolving to the CalibrationChart
+   * @throws An error if the database read operation fails or the calibration chart does not exist.
+   */
+  get: async (organizationId: string, chartId: string): Promise<CalibrationChart> => {
+    try {
+      const chartDocRef = doc(db, `organizations/${organizationId}/calibrationCharts`, chartId);
+      const docSnap = await getDoc(chartDocRef);
+
+      if (!docSnap.exists()) {
+        console.log(`Chart with ID "${chartId}" not found in organization `);
+        throw new FirestoreDatabaseError(
+          `Calibration chart with ID "${chartId}" not found in organization `, 
+          400
+        );
+      }
+
+      return docSnap.data() as CalibrationChart;
+    } catch (e) {
+      console.error(`Error getting chart "${chartId}" from database:`, e);
+      throw new Error(`Failed to get chart: ${(e as Error).message}`);
     }
   },
 
@@ -491,6 +550,107 @@ export const chartDatabase = {
     } catch (e) {
       console.error(`Error checking if chart "${chartId}" exists:`, e);
       throw(e);
+    }
+  },
+};
+
+export const productDatabase = {
+  /**
+   * Adds a new product document to an organization's 'products' sub-collection.
+   * @param organizationId The ID of the organization to add the product to.
+   * @param productData The data for the new product, including its productId.
+   * @returns A promise that resolves when the product has been successfully added.
+   * @throws An error if the database write operation fails.
+   */
+  add: async (organizationId: string, productData: Product): Promise<void> => {
+    try {
+      const productDocRef = doc(db, `organizations/${organizationId}/products`, productData.productId);
+      await setDoc(productDocRef, productData);
+      console.log(`Product "${productData.productId}" successfully added to organization "${organizationId}".`);
+    } catch (e) {
+      console.error("Error adding product to database:", e);
+      throw new Error(`Failed to add product: ${(e as Error).message}`);
+    }
+  },
+
+  /**
+   * Fetches a specific product document from an organization's sub-collection.
+   * @param organizationId The ID of the organization.
+   * @param productId The ID of the product to fetch.
+   * @returns A Promise that resolves to the Product object
+   * @throws An error if the database read operation fails or it doesn't exist.
+   */
+  get: async (organizationId: string, productId: string): Promise<Product> => {
+    try {
+      const productDocRef = doc(db, `organizations/${organizationId}/products`, productId);
+      const docSnap = await getDoc(productDocRef);
+
+      if (!docSnap.exists()) {
+        console.log(`Product with ID "${productId}" not found in organization "${organizationId}".`);
+        throw new FirestoreDatabaseError(
+          `Product with ID "${productId}" not found in organization "${organizationId}".`, 
+          400 // Bad request
+        );
+      }
+      return docSnap.data() as Product;
+    } catch (e) {
+      console.error("Error getting product from database:", e);
+      throw new Error(`Failed to get product: ${(e as Error).message}`);
+    }
+  },
+
+  /**
+   * Partially updates an existing product document.
+   * @param organizationId The ID of the organization.
+   * @param productId The ID of the product to update.
+   * @param productData An object containing the fields to update.
+   * @returns A promise that resolves when the product has been successfully updated.
+   * @throws An error if the database update operation fails.
+   */
+  update: async (organizationId: string, productId: string, productData: Partial<Product>): Promise<void> => {
+    try {
+      const productDocRef = doc(db, `organizations/${organizationId}/products`, productId);
+      await updateDoc(productDocRef, productData);
+      console.log(`Product "${productId}" successfully updated in organization "${organizationId}".`);
+    } catch (e) {
+      console.error("Error updating product in database:", e);
+      throw new Error(`Failed to update product: ${(e as Error).message}`);
+    }
+  },
+
+  /**
+   * Deletes a product document from an organization's sub-collection.
+   * @param organizationId The ID of the organization.
+   * @param productId The ID of the product to delete.
+   * @returns A promise that resolves when the product has been successfully deleted.
+   * @throws An error if the database delete operation fails.
+   */
+  remove: async (organizationId: string, productId: string): Promise<void> => {
+    try {
+      const productDocRef = doc(db, `organizations/${organizationId}/products`, productId);
+      await deleteDoc(productDocRef);
+      console.log(`Product "${productId}" successfully deleted from organization "${organizationId}".`);
+    } catch (e) {
+      console.error("Error deleting product from database:", e);
+      throw new Error(`Failed to delete product: ${(e as Error).message}`);
+    }
+  },
+
+  /**
+   * Checks if a product with the given productId exists within an organization.
+   * @param organizationId The ID of the organization.
+   * @param productId The ID of the product to check.
+   * @returns A Promise that resolves to true if the product exists, false otherwise.
+   * @throws An error if the database read operation fails.
+   */
+  exists: async (organizationId: string, productId: string): Promise<boolean> => {
+    try {
+      const productDocRef = doc(db, `organizations/${organizationId}/products`, productId);
+      const docSnap = await getDoc(productDocRef);
+      return docSnap.exists();
+    } catch (e) {
+      console.error(`Error checking if product "${productId}" exists:`, e);
+      throw new Error(`Failed to check for product existence: ${(e as Error).message}`);
     }
   },
 };
@@ -668,6 +828,122 @@ export const assignmentDatabase = {
     }
   },
 
+};
+
+export const calibrationReportDatabase = {
+  /**
+   * Adds a new calibration report document to an organization's sub-collection.
+   * A unique reportId is generated automatically.
+   * @param organizationId The ID of the organization.
+   * @param initialReportData The data for the new report, excluding the reportId.
+   * @returns A promise that resolves with the newly created CalibrationReport object.
+   * @throws An error if the database write operation fails.
+   */
+  add: async (organizationId: string, initialReportData: Omit<CalibrationReport, "reportId">): Promise<CalibrationReport> => {
+    try {
+      // Create a reference to a new document in the sub-collection to generate a unique ID.
+      const reportDocRef = doc(collection(db, `organizations/${organizationId}/calibrationReports`));
+      
+      // Combine the generated ID with the initial data to form the complete document.
+      const fullReportData: CalibrationReport = {
+        ...initialReportData,
+        reportId: reportDocRef.id,
+      };
+
+      // Save the complete document to Firestore.
+      await setDoc(reportDocRef, fullReportData);
+      
+      console.log(`Calibration report "${fullReportData.reportId}" added to organization "${organizationId}".`);
+      
+      // Return the full object, including the generated ID.
+      return fullReportData;
+    } catch (e) {
+      console.error("Error adding calibration report to database:", e);
+      throw e;
+    }
+  },
+
+  /**
+   * Fetches a specific calibration report document from the database.
+   * @param organizationId The ID of the organization.
+   * @param reportId The ID of the report to fetch.
+   * @returns A Promise resolving to the CalibrationReport object
+   * @throws An error if the CalibrationReport does not exist
+   */
+  get: async (organizationId: string, reportId: string): Promise<CalibrationReport> => {
+    try {
+      const reportDocRef = doc(db, `organizations/${organizationId}/calibrationReports`, reportId);
+      const docSnap = await getDoc(reportDocRef);
+
+      if (!docSnap.exists()) {
+        console.log(`Calibration report with ID "${reportId}" not found.`);
+        throw new FirestoreDatabaseError(
+          `Calibration report with ID "${reportId}" not found.`,
+          404 // Not Found
+        );
+      }
+
+      return docSnap.data() as CalibrationReport;
+    } catch (e) {
+      console.error("Error getting calibration report from database:", e);
+      throw e;
+    }
+  },
+
+  /**
+   * Partially updates an existing calibration report document.
+   * @param organizationId The ID of the organization.
+   * @param reportId The ID of the report to update.
+   * @param reportData An object containing the fields to update.
+   * @returns A promise that resolves when the report is successfully updated.
+   * @throws An error if the database update operation fails.
+   */
+  update: async (organizationId: string, reportId: string, reportData: Partial<CalibrationReport>): Promise<void> => {
+    try {
+      const reportDocRef = doc(db, `organizations/${organizationId}/calibrationReports`, reportId);
+      await updateDoc(reportDocRef, reportData);
+      console.log(`Calibration report "${reportId}" successfully updated in organization "${organizationId}".`);
+    } catch (e) {
+      console.error("Error updating calibration report in database:", e);
+      throw e;
+    }
+  },
+
+  /**
+   * Deletes a calibration report document from an organization's sub-collection.
+   * @param organizationId The ID of the organization.
+   * @param reportId The ID of the report to delete.
+   * @returns A promise that resolves when the report is successfully deleted.
+   * @throws An error if the database delete operation fails.
+   */
+  remove: async (organizationId: string, reportId: string): Promise<void> => {
+    try {
+      const reportDocRef = doc(db, `organizations/${organizationId}/calibrationReports`, reportId);
+      await deleteDoc(reportDocRef);
+      console.log(`Calibration report "${reportId}" successfully deleted from organization "${organizationId}".`);
+    } catch (e) {
+      console.error("Error deleting calibration report from database:", e);
+      throw e;
+    }
+  },
+
+  /**
+   * Checks if a calibration report with the given ID exists within an organization.
+   * @param organizationId The ID of the organization.
+   * @param reportId The ID of the report to check.
+   * @returns A Promise that resolves to true if the report exists, false otherwise.
+   * @throws An error if the database read operation fails.
+   */
+  exists: async (organizationId: string, reportId: string): Promise<boolean> => {
+    try {
+      const reportDocRef = doc(db, `organizations/${organizationId}/calibrationReports`, reportId);
+      const docSnap = await getDoc(reportDocRef);
+      return docSnap.exists();
+    } catch (e) {
+      console.error(`Error checking if calibration report "${reportId}" exists:`, e);
+      throw e;
+    }
+  },
 };
 
 export const employeeDatabase = {

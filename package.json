@@ -7,10 +7,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "FIRESTORE_EMULATOR_HOST=\"localhost:8080\" FIREBASE_AUTH_EMULATOR_HOST=\"localhost:9099\" jest --config jest.config.e2e.js --runInBand --detectOpenHandles e2e/organizations.test.ts",
+    "test": "FIRESTORE_EMULATOR_HOST=\"localhost:8080\" FIREBASE_AUTH_EMULATOR_HOST=\"localhost:9099\" jest --config jest.config.e2e.js --runInBand --detectOpenHandles e2e/products.test.ts",
     "test:watch": "jest --watch",
     "test:e2e": "FIRESTORE_EMULATOR_HOST=\"localhost:8080\" FIREBASE_AUTH_EMULATOR_HOST=\"localhost:9099\" jest --config jest.config.e2e.js --runInBand --detectOpenHandles",
-    "test:e2e:ci": "npm run start & npm run test:e2e"
+    "test:e2e:ci": "npm run start & npm run test:e2e",
+    "db:organizationTruck": "FIRESTORE_EMULATOR_HOST=\"localhost:8080\" FIREBASE_AUTH_EMULATOR_HOST=\"localhost:9099\" ts-node -r tsconfig-paths/register --project tsconfig.json src/app/lib/quickStartScript.ts"
   },
   "dependencies": {
     "dotenv": "^17.0.0",
@@ -37,6 +38,7 @@
     "jest": "^30.0.0",
     "tailwindcss": "^4.1.8",
     "ts-jest": "^29.4.0",
+    "tsconfig-paths": "^4.2.0",
     "typescript": "^5"
   }
 }

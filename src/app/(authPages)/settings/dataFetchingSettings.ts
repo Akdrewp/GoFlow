@@ -1,7 +1,7 @@
 import { getDataForResource, isValidUserToken } from "@/api/firebase/firebaseVerify";
 import { getOrganization, getRolesForOrg, getUser } from "@/api/firebase/firebaseService";
 
-import { CalibrationChart, Organization } from "@/api/database/database";
+import { CalibrationChart, Organization, Product } from "@/api/database/database";
 import { OrgSettingsData } from "./settingsOptions/OrganizationSettings";
 
 /**
@@ -19,7 +19,7 @@ export const getGeneralSettingsData = async (token: string): Promise<Organizatio
     const userInfo = await getUser(token, userUid);
 
     // If user is part of organization get organization info
-    if(userInfo?.organizationId && userInfo?.employeeId) {
+    if(userInfo.type == "organization") {
       const organizationResourceId = `organizations/${userInfo.organizationId}`;
       const organizationDocumentData = await getDataForResource(token, organizationResourceId);
 
@@ -50,6 +50,19 @@ const getCalibrationCharts = async (token: string, organizationId: string): Prom
   }
 }; 
 
+// Simple getter function for products
+const getProducts = async (token: string, organizationId: string): Promise<Product[]> => {
+  try {
+    const productsCollectionId = `organizations/${organizationId}/products`;
+    const products = await getDataForResource(token, productsCollectionId);
+
+    return products as Product[];
+  } catch (e) {
+    console.error("Error fetching calibration charts: ", e);
+    throw(e);
+  }
+}; 
+
 /**
  * 
  * @todo Refactor returning null and nesting
@@ -65,17 +78,19 @@ export const getOrganizationSettingsData = async (token: string): Promise<OrgSet
     const userInfo = await getUser(token, userUid);
 
     // If user is part of organization get organization info
-    if(userInfo?.organizationId && userInfo?.employeeId) {
+    if(userInfo.type=="organization") {
       // Get organization, roles, and calibrationCharts
       const organizationData = await getOrganization(token, userInfo.organizationId);
       const rolesData = await getRolesForOrg(token, userInfo.organizationId);
       const calibrationCharts = await getCalibrationCharts(token, userInfo.organizationId);
+      const products = await getProducts(token, userInfo.organizationId);
 
       return {
         organization: organizationData,
         roles: rolesData,
         charts: calibrationCharts,
-        userEmployeeId: userInfo.employeeId
+        userEmployeeId: userInfo.employeeId,
+        products: products
       };
 
     } else { // If user is not part of an organization
