@@ -1,6 +1,6 @@
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { adminAuth, adminDb } from "@/api/firebase/firebaseAdmin";
-import { clearFirestoreAuth, clearFirestoreDB } from "./cleanUpEmulators";
+import { clearFireStore, clearFirestoreAuth, clearFirestoreDB } from "./cleanUpEmulators";
 import { addChartToOrg, addEmployeeToOrg, addRoleToOrg, addTruckToOrg, addUser, createOrganization, } from "@/api/firebase/firebaseService";
 import { CalibrationChart, MeasurementType, ORGANIZATION_RESOURCES, Product, Role, TankType, Truck, } from "@/api/database/database";
 import { UserRecord } from 'firebase-admin/auth';
@@ -185,13 +185,7 @@ describe('Calibration Reports API Route E2E Tests', () => {
   });
 
   afterAll(async () => {
-    try {
-      await clearFirestoreAuth();
-      await clearFirestoreDB();
-      await adminDb.terminate();
-    } catch (e) {
-      console.error("Error during afterAll cleanup:", e);
-    }
+    await clearFireStore();
   });
 
   // POST

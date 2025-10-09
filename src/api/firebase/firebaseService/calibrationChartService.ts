@@ -28,7 +28,7 @@ export async function addChartToOrg(token: string, organizationId: string, chart
     }
 
     // Add to database
-    await chartDatabase.add(organizationId, chartData);
+    await chartDatabase.add(organizationId, chartData.chartId, chartData);
 
   } catch (e) {
     console.error("Error in addChartToOrg service:", e);

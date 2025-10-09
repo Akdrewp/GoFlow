@@ -1,6 +1,6 @@
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { adminAuth, adminDb } from "@/api/firebase/firebaseAdmin";
-import { clearFirestoreAuth, clearFirestoreDB } from "./cleanUpEmulators";
+import { clearFireStore, clearFirestoreAuth, clearFirestoreDB } from "./cleanUpEmulators";
 import { addAssignmentToOrg, addCalibrationReportToOrg, addChartToOrg, addEmployeeToOrg, addRoleToOrg, addTruckToOrg, addUser, createOrganization, } from "@/api/firebase/firebaseService";
 import { CalibrationChart, ORGANIZATION_RESOURCES, Role, TankType, Truck, } from "@/api/database/database";
 import { UserRecord } from 'firebase-admin/auth';
@@ -184,13 +184,7 @@ describe('Calibration Reports API Route E2E Tests', () => {
   });
 
   afterAll(async () => {
-    try {
-      await clearFirestoreAuth();
-      await clearFirestoreDB();
-      await adminDb.terminate();
-    } catch (e) {
-      console.error("Error during afterAll cleanup:", e);
-    }
+    await clearFireStore();
   });
 
   // POST
@@ -203,6 +197,7 @@ describe('Calibration Reports API Route E2E Tests', () => {
       employeeId: driverUserEmployee.employeeId,
       truckId: testTruck.truckId,
       userId: driverAuthUser.uid,
+      loadoutId: "FakeLoadOut",
     });
     
     const apiRoute = `${NEXT_PUBLIC_BASE_URL}/api/organizations/${testOrg1.organizationId}/calibrationReports`;
@@ -240,6 +235,7 @@ describe('Calibration Reports API Route E2E Tests', () => {
       employeeId: driverUserEmployee.employeeId,
       truckId: testTruck.truckId,
       userId: driverAuthUser.uid,
+      loadoutId: "FakeLoadOut",
     });
 
     const apiRoute = `${NEXT_PUBLIC_BASE_URL}/api/organizations/${testOrg1.organizationId}/calibrationReports`;
@@ -293,12 +289,15 @@ describe('Calibration Reports API Route E2E Tests', () => {
       employeeId: driverUserEmployee.employeeId,
       truckId: testTruck.truckId,
       userId: driverAuthUser.uid,
+      loadoutId: "FakeLoadOut",
     });
     // Add report to organization
     const report = await addCalibrationReportToOrg(driverUserAuthToken, testOrg1.organizationId, {
       truckId: testTruck.truckId,
       assignmentId: assignment.assignmentId,
       productMeasurement: 100,
+      productId: "FakeProductId",
+      areaCompleted: 100
     });
 
     const apiRoute = `${NEXT_PUBLIC_BASE_URL}/api/organizations/${testOrg1.organizationId}/calibrationReports/${report.reportId}`;
@@ -330,12 +329,15 @@ describe('Calibration Reports API Route E2E Tests', () => {
       employeeId: driverUserEmployee.employeeId,
       truckId: testTruck.truckId,
       userId: driverAuthUser.uid,
+      loadoutId: "FakeLoadOut",
     });
     // Add report to organization
     const report = await addCalibrationReportToOrg(driverUserAuthToken, testOrg1.organizationId, {
       truckId: testTruck.truckId,
       assignmentId: assignment.assignmentId,
       productMeasurement: 100,
+      productId: "FakeProductId",
+      areaCompleted: 100
     });
     
     const reportDocRef = adminDb.doc(`organizations/${testOrg1.organizationId}/calibrationReports/${report.reportId}`);

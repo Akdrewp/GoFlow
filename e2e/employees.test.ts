@@ -1,6 +1,6 @@
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth"; 
-import { adminAuth, adminDb } from "@/api/firebase/firebaseAdmin";
-import { clearFirestoreAuth, clearFirestoreDB } from "./cleanUpEmulators";
+import { adminAuth } from "@/api/firebase/firebaseAdmin";
+import { clearFireStore, clearFirestoreAuth, clearFirestoreDB } from "./cleanUpEmulators";
 import { addUser } from "@/api/firebase/firebaseService";
 import { ORGANIZATION_RESOURCES, Role } from "@/api/database/database";
 
@@ -85,9 +85,7 @@ describe('Add Employee API Route E2E Tests', () => {
   });
 
   afterAll(async () => {
-    await clearFirestoreAuth();
-    await clearFirestoreDB();
-    await adminDb.terminate();
+    await clearFireStore();
   });
 
   // Test Case 1: Successful Employee Creation

@@ -21,7 +21,7 @@ export async function addUser(userProfile: UserProfile): Promise<void> {
           400 // Bad request
         );
       }
-      if (!(await employeeDatabase.existsInOrg(organizationId, employeeId))) {
+      if (!(await employeeDatabase.exists(organizationId, employeeId))) {
         throw new FirebaseVerifyError(
           "Employee with passed employeeId does not exist in this organization", 
           400 // Bad request

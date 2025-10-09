@@ -358,3 +358,10 @@ export interface Loadout {
   name: string;
   products: Product[];
 }
+
+// Loadout
+export const loadoutSchema = z.object({
+  loadoutId: z.string().min(1, "Loadout ID is required"),
+  name: z.string().min(1, "Loadout name is required"),
+  products: z.array(productSchema),
+});

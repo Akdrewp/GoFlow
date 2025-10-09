@@ -1,6 +1,6 @@
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
-import { adminAuth, adminDb } from "@/api/firebase/firebaseAdmin";
-import { clearFirestoreAuth, clearFirestoreDB } from "./cleanUpEmulators";
+import { adminAuth } from "@/api/firebase/firebaseAdmin";
+import { clearFireStore, clearFirestoreAuth, clearFirestoreDB } from "./cleanUpEmulators";
 import { AccessType, canUserAccessData} from "@/api/firebase/firebaseVerify";
 import { createOrganization, addRoleToOrg, addEmployeeToOrg, addUser } from "@/api/firebase/firebaseService";
 import { ORGANIZATION_RESOURCES, Role } from "@/api/database/database";
@@ -67,6 +67,7 @@ describe('Roles API Route E2E Tests', () => {
       // Add driver and admin to users database
       await addUser({
         ...testAdminUser,
+        type: "individual",
         uid: adminAuthUser.uid,
         createdAt: new Date(),
       });
@@ -109,6 +110,7 @@ describe('Roles API Route E2E Tests', () => {
       // Activate user in organization
       await addUser({
         ...testDriverUser,
+        type: "organization",
         uid: driverAuthUser.uid,
         createdAt: new Date(),
         organizationId: testOrg1.organizationId,
@@ -126,6 +128,7 @@ describe('Roles API Route E2E Tests', () => {
       // Add testOrg2Admin to database
       await addUser({
         ...testOrg2AdminUser,
+        type: "individual",
         uid: testOrg2AdminAuthUser.uid,
         createdAt: new Date(),
       });
@@ -144,13 +147,7 @@ describe('Roles API Route E2E Tests', () => {
   });
 
   afterAll(async () => {
-    try {
-      await clearFirestoreAuth();
-      await clearFirestoreDB();
-      await adminDb.terminate();
-    } catch (e) {
-      console.error("Error during afterAll cleanup:", e);
-    }
+    await clearFireStore();
   });
 
   // Test Case 1: Admin Permissions

@@ -9,3 +9,5 @@ export { addUser, getUser, updateUser } from "./firebaseService/userService";
 export { addAssignmentToOrg, updateAssignmentInOrg, deleteAssignmentFromOrg, endAssignmentInOrg } from "./firebaseService/assignmentService";
 
 export { addCalibrationReportToOrg, updateCalibrationReportInOrg, deleteCalibrationReportFromOrg } from "./firebaseService/calibrationReportService";
+
+export { addLoadoutToOrg, deleteLoadoutFromOrg, updateLoadoutInOrg } from "./firebaseService/loadoutService";

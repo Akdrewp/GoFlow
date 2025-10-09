@@ -25,7 +25,7 @@ export async function addProductToOrg(token: string, organizationId: string, pro
     }
 
     // Add the product to the database
-    await productDatabase.add(organizationId, productData);
+    await productDatabase.add(organizationId, productData.productId, productData);
 
   } catch (e) {
     console.error("Error in addProductToOrg service:", e);
