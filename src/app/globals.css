@@ -1,0 +1,238 @@
+/* src/app/globals.css */
+
+/*
+  Base Tailwind directives. These should always be at the top of your main CSS file
+  to ensure Tailwind's utility classes are generated and available.
+*/
+@import "tailwindcss";
+
+
+@layer components {
+  .sidebar-icon {
+    @apply h-10 w-10;
+  }
+}
+
+/*
+  This directive imports a Tailwind CSS plugin for animations.
+  Ensure 'tailwindcss-animate' is installed and listed in your tail
+  Define custom CSS variables directly on the :root (html element)
+  These serve as your foundational design tokens. Tailwind's @apply will then
+  use the utility classes which in turn may use these variables or directly
+  generated values from tailwind.config.js.
+  For simplicity and robustness, we set the initial defaults to dark.
+*/
+:root {
+  --background: #111827; /* Directly use a dark hex for the absolute root default */
+  --foreground: #ffffff; /* White text for contrast */
+
+  /* Map your Tailwind color names to CSS variables if you intend to use them
+     outside of Tailwind utility classes (e.g., in raw CSS for custom components).
+     These values will be overridden by the .dark class if present.
+     However, for the homepage, these are the base values.
+  */
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --secondary: #1f2937;
+  --accent: #4f46e5;
+  --muted: #6b7280;
+  --muted-foreground: #9ca3af;
+  --card: #1a1a1a;
+  --card-foreground: #ededed;
+  --border: #2d2d2d;
+  --input: #2d2d2d;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --radius: 0.625rem; /* Base radius for border-radius */
+  --popover: #111827;
+  --popover-foreground: #ffffff;
+  --primary-foreground: #ffffff;
+  --secondary-foreground: #ffffff;
+  --accent-foreground: #ffffff;
+  --destructive-foreground: #ffffff;
+  --ring: #2563eb; /* Often matches primary color for focus rings */
+  --chart-1: #6b7280;
+  --chart-2: #3b82f6;
+  --chart-3: #10b981;
+  --chart-4: #f59e0b;
+  --chart-5: #ef4444;
+  --sidebar: #1a1a1a;
+  --sidebar-foreground: #ededed;
+  --sidebar-primary: #3b82f6;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #4f46e5;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #2d2d2d;
+  --sidebar-ring: #2563eb;
+}
+
+/*
+  Tailwind CSS v4's @theme inline directive for mapping custom properties
+  to Tailwind's internal color system. This is crucial for Tailwind utilities
+  like `bg-background` to pick up your custom CSS variable definitions.
+*/
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover); /* Make sure this is correctly mapped */
+  --color-secondary: var(--secondary);
+  --color-accent: var(--accent);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--danger); /* destructive maps to danger color */
+  --color-destructive-foreground: var(--destructive-foreground); /* Added */
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Font variables for Tailwind's font utilities */
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  /* Radius mapping for consistent rounded corners */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+/*
+  This `@custom-variant dark` is a specific feature of some Tailwind setups
+  (like with shadcn/ui or custom plugins) to enable manual dark mode toggling.
+  If you add `class="dark"` to your `<html>` tag, these variables will take effect.
+*/
+@custom-variant dark (&:is(.dark *));
+
+/*
+  This media query applies if the user's operating system or browser
+  is set to "prefer dark color scheme". It provides an alternative set
+  of dark mode values.
+*/
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a; /* Slightly darker than default dark */
+    --foreground: #ededed; /* Slightly off-white */
+    /* You can override other variables here if the system dark mode
+       should have different shades than your default app dark mode. */
+  }
+}
+
+/*
+  The `@layer base` directive is where Tailwind's base styles are applied.
+  It's the idiomatic way to set fundamental styles for HTML elements using
+  Tailwind utility classes.
+*/
+@layer base {
+  * {
+    /* Apply border and outline styles globally to all elements */
+    @apply border-border outline-ring/50;
+  }
+  body {
+    /* This is the key. It applies Tailwind's generated bg-background and text-foreground
+       utility classes directly to the body based on your theme.
+       Since :root --background is now dark, the body will start dark immediately.
+    */
+    @apply bg-background text-foreground font-sans;
+    /* This ensures your main font is applied globally */
+  }
+}
+
+/*
+  Additional custom CSS for specific elements (like table, button, card)
+  using the defined CSS variables. These are outside `@layer base`
+  because they are more specific component styles rather than global base resets.
+*/
+
+table {
+  background-color: var(--secondary);
+  color: var(--foreground);
+  border-color: var(--border);
+}
+
+th {
+  background-color: var(--secondary);
+  color: var(--muted-foreground);
+  font-weight: 600;
+}
+
+tr:hover {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+td {
+  border-color: var(--border);
+}
+
+button {
+  transition: all 0.2s ease;
+}
+
+.card {
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+/*
+  The `.dark` class, defining overrides for manual dark mode.
+  This is typically applied to the <html> or <body> element via JavaScript
+  for a user-toggleable theme.
+*/
+.dark {
+  --background: #0a0a0a; /* Deepest dark for manual toggle */
+  --foreground: #ededed;
+  --card: #1f2937;
+  --card-foreground: #ffffff;
+  --popover: #0a0a0a;
+  --popover-foreground: #ededed;
+  --primary: #3b82f6; /* Keep consistent with primary, or adjust for dark mode */
+  --primary-foreground: #ffffff;
+  --secondary: #374151;
+  --secondary-foreground: #ffffff;
+  --muted: #4b5563;
+  --muted-foreground: #d1d5db;
+  --accent: #6d28d9; /* Example: A different accent for dark mode */
+  --accent-foreground: #ffffff;
+  --destructive: #ef4444;
+  --border: #4b5563;
+  --input: #374151;
+  --ring: #3b82f6;
+  --chart-1: #4f46e5;
+  --chart-2: #a78bfa;
+  --chart-3: #818cf8;
+  --chart-4: #c4b5fd;
+  --chart-5: #e879f9;
+  --sidebar: #111827;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #3b82f6;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #4f46e5;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #4b5563;
+  --sidebar-ring: #3b82f6;
+}
