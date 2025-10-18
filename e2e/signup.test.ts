@@ -3,7 +3,7 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import { getAuth } from "firebase/auth"; 
 
 import { firebaseAuthService } from "@/api/firebase/firebaseAuthService";
-import { clearFirestoreAuth, clearFirestoreDB } from "./cleanUpEmulators";
+import { clearFireStore, clearFirestoreAuth, clearFirestoreDB } from "./cleanUpEmulators";
 
 const NEXT_PUBLIC_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
@@ -70,13 +70,8 @@ describe('Signup API Route E2E Tests', () => {
     }
   });
   
-  afterAll( async () => {
-    //Clear database and auth
-    await clearFirestoreAuth();
-    await clearFirestoreDB();
-
-    //Close firestore database when done
-    await adminDb.terminate();
+  afterAll(async () => {
+    await clearFireStore();
   });
 
 

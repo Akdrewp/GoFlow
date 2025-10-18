@@ -3,7 +3,7 @@ import { getAuth } from "firebase/auth";
 
 import { adminAuth, adminDb } from "@/api/firebase/firebaseAdmin";
 import { firebaseAuthService } from "@/api/firebase/firebaseAuthService"; 
-import { clearFirestoreAuth, clearFirestoreDB } from "./cleanUpEmulators";
+import { clearFireStore, clearFirestoreAuth, clearFirestoreDB } from "./cleanUpEmulators";
 
 const NEXT_PUBLIC_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
@@ -72,17 +72,8 @@ describe('Login API Route E2E Tests', () => {
     }
   });
 
-  // This block runs once after all tests in this describe block have completed
   afterAll(async () => {
-    try {
-      // Clean up the emulators after all tests are done
-      await clearFirestoreAuth();
-      await clearFirestoreDB();
-      // Terminate the admin app connection to allow Jest to exit cleanly
-      await adminDb.terminate();
-    } catch (e) {
-      console.error("Error during afterAll cleanup:", e);
-    }
+    await clearFireStore();
   });
 
   // Test Case 1: Successful Login

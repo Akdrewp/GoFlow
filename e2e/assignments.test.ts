@@ -1,5 +1,5 @@
 import { adminAuth, adminDb } from "@/api/firebase/firebaseAdmin";
-import { clearFirestoreAuth, clearFirestoreDB } from "./cleanUpEmulators";
+import { clearFireStore, clearFirestoreAuth, clearFirestoreDB } from "./cleanUpEmulators";
 import { addAssignmentToOrg, addEmployeeToOrg, addRoleToOrg, addTruckToOrg, addUser, createOrganization } from "@/api/firebase/firebaseService";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { ORGANIZATION_RESOURCES, Role, TankType, Truck } from "@/api/database/database";
@@ -222,13 +222,7 @@ describe('Assignments API Route E2E Tests', () => {
   });
 
   afterAll(async () => {
-    try {
-      await clearFirestoreAuth();
-      await clearFirestoreDB();
-      await adminDb.terminate();
-    } catch (e) {
-      console.error("Error during afterAll cleanup:", e);
-    }
+    await clearFireStore();
   });
 
   // POST route
@@ -306,7 +300,8 @@ describe('Assignments API Route E2E Tests', () => {
     const newAssignmentData = {
       truckId: testTruck1.truckId,
       userId: driverAuthUser.uid,
-      employeeId: driverUserEmployee.employeeId
+      employeeId: driverUserEmployee.employeeId,
+      loadoutId: "FakeLoadoutId"
     };
     const newAssignment = await addAssignmentToOrg(driverUserAuthToken, testOrg1.organizationId, newAssignmentData);
 
@@ -344,7 +339,8 @@ describe('Assignments API Route E2E Tests', () => {
     const newAssignmentData = {
       truckId: testTruck1.truckId,
       userId: driverAuthUser.uid,
-      employeeId: driverUserEmployee.employeeId
+      employeeId: driverUserEmployee.employeeId,
+      loadoutId: "FakeLoadOutID"
     };
 
     // Create an active assignment with driverUser as assignee
@@ -380,7 +376,8 @@ describe('Assignments API Route E2E Tests', () => {
     const newAssignmentData = {
       truckId: testTruck1.truckId,
       userId: driverAuthUser.uid,
-      employeeId: driverUserEmployee.employeeId
+      employeeId: driverUserEmployee.employeeId,
+      loadoutId: "FakeLoadOutID",
     };
     const newAssignment = await addAssignmentToOrg(driverUserAuthToken, testOrg1.organizationId, newAssignmentData);
 
@@ -413,7 +410,8 @@ describe('Assignments API Route E2E Tests', () => {
     const newAssignmentData = {
       truckId: testTruck1.truckId,
       userId: driverAuthUser.uid,
-      employeeId: driverUserEmployee.employeeId
+      employeeId: driverUserEmployee.employeeId,
+      loadoutId: "FakeLoadOutID"
     };
 
     // Create an active assignment with driverUser as assignee

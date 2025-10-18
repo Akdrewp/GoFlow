@@ -20,7 +20,7 @@ export async function addTruckToOrg(token: string, organizationId: string, truck
     await canUserAccessData(token, resourcePath, AccessType.WRITE);
 
     // Check if truck already exists
-    if (await truckDatabase.truckExists(organizationId, truckData.truckId)) {
+    if (await truckDatabase.exists(organizationId, truckData.truckId)) {
       throw new FirebaseVerifyError(
         `Truck with ID "${truckData.truckId}" already exists in this organization.`,
         409 // Conflict
@@ -28,7 +28,7 @@ export async function addTruckToOrg(token: string, organizationId: string, truck
     }
 
     // Add truck to database
-    await truckDatabase.addTruck(organizationId, truckData);
+    await truckDatabase.add(organizationId, truckData.truckId, truckData);
 
     console.log("addTruckToOrg CONSOLE LOG added truck to database");
 
@@ -64,7 +64,7 @@ export async function updateTruckInOrg(token: string, organizationId: string, tr
     }
 
     // Check if truck exists to update
-    if (!(await truckDatabase.truckExists(organizationId, truckId))) {
+    if (!(await truckDatabase.exists(organizationId, truckId))) {
       throw new FirebaseVerifyError(
         `Truck with ID "${truckId}" not found in this organization.`, 
         404 // Not found
@@ -97,7 +97,7 @@ export async function deleteTruckFromOrg(token: string, organizationId: string, 
     await canUserAccessData(token, resourcePath, AccessType.WRITE);
     
     // Check if truck to delete exists
-    if (!(await truckDatabase.truckExists(organizationId, truckId))) {
+    if (!(await truckDatabase.exists(organizationId, truckId))) {
       throw new FirebaseVerifyError(
         `Truck with ID "${truckId}" not found in this organization.`, 
         404 // Not Found

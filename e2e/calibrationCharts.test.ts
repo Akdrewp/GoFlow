@@ -1,6 +1,6 @@
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { adminAuth, adminDb } from "@/api/firebase/firebaseAdmin";
-import { clearFirestoreAuth, clearFirestoreDB } from "./cleanUpEmulators";
+import { clearFireStore, clearFirestoreAuth, clearFirestoreDB } from "./cleanUpEmulators";
 import { createOrganization, addRoleToOrg, addEmployeeToOrg, addUser, addChartToOrg } from "@/api/firebase/firebaseService";
 import { CalibrationChart, ORGANIZATION_RESOURCES, Role } from "@/api/database/database";
 
@@ -162,13 +162,7 @@ describe('Assignments API Route E2E Tests', () => {
   });
 
   afterAll(async () => {
-    try {
-      await clearFirestoreAuth();
-      await clearFirestoreDB();
-      await adminDb.terminate();
-    } catch (e) {
-      console.error("Error during afterAll cleanup:", e);
-    }
+    await clearFireStore();
   });
 
   // POST route

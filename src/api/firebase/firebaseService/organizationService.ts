@@ -110,7 +110,7 @@ export async function addEmployeeToOrg(token: string, organizationId: string, em
     await canUserAccessData(token, `organizations/${organizationId}/employees`, AccessType.WRITE);
 
     // Business Logic: Check for duplicate employee ID
-    if (await employeeDatabase.existsInOrg(organizationId, employeeData.employeeId)) {
+    if (await employeeDatabase.exists(organizationId, employeeData.employeeId)) {
       throw new FirebaseVerifyError(
         "Employee with passed employeeId already exists",
         409 // Conflict
