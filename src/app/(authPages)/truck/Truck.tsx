@@ -1,45 +1,8 @@
-import { Assignment, Loadout, Truck as TruckType } from "@/api/database/database"; // Conflicts with Truck tsx element
 import { getAssignmentFromUser, getProductFromOrg, getReportsForAssignment, getUser } from "@/api/firebase/firebaseService";
-import { getDataForResource, isValidUserToken } from "@/api/firebase/firebaseVerify";
+import { isValidUserToken } from "@/api/firebase/firebaseVerify";
 import { withServerAuth } from "@/app/lib/server-auth";
 import { TruckAssignmentClient } from "./TruckAssignment";
-
-const getTrucksForOrganization = async (token: string, organizationId: string): Promise<TruckType[]> => {
-  try {
-    const trucksCollectionId = `organizations/${organizationId}/trucks`;
-    const trucks = await getDataForResource(token, trucksCollectionId);
-
-    return trucks as TruckType[];
-  } catch (e) {
-    console.error("Error fetching trucks: ", e);
-    throw(e);
-  }
-};
-
-const getAssignmentForUser = async (token: string, organizationId: string, uid: string): Promise<Assignment | undefined> => {
-  try {
-
-    return await getAssignmentFromUser(token, organizationId, uid);
-
-  } catch (e) {
-    console.error("Error fetching user's assignment: ", e);
-    // Re-throw the error or return null depending on desired behavior for the caller
-    throw e; 
-  }
-};
-
-// Simple getter function for loadouts
-const getLoadouts = async (token: string, organizationId: string): Promise<Loadout[]> => {
-  try {
-    const loadoutsCollectionId = `organizations/${organizationId}/loadouts`;
-    const loadouts = await getDataForResource(token, loadoutsCollectionId);
-
-    return loadouts as Loadout[];
-  } catch (e) {
-    console.error("Error fetching calibration charts: ", e);
-    throw(e);
-  }
-};
+import { getLoadoutsForOrg, getTrucksForOrg } from "@/app/lib/datafetching";
 
 const getTruckData = async (token: string) => {
 
@@ -52,9 +15,9 @@ const getTruckData = async (token: string) => {
     const organizationId = userProfile.organizationId;
 
     // Get requisite truck component data
-    const trucks = await getTrucksForOrganization(token, organizationId);
-    const userAssignment = await getAssignmentForUser(token, organizationId, userId);
-    const availableLoadouts = await getLoadouts(token, organizationId);
+    const trucks = await getTrucksForOrg(token, organizationId);
+    const userAssignment = await getAssignmentFromUser(token, organizationId, userId);
+    const availableLoadouts = await getLoadoutsForOrg(token, organizationId);
 
     // If assigned to truck then get data
     let loadoutDetails;

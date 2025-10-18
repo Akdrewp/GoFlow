@@ -1,61 +1,9 @@
-import { Assignment, Employee, Truck } from "@/api/database/database";
 import { getProductFromOrg, getReportsForAssignment, getUser } from "@/api/firebase/firebaseService";
 import { getLoadoutFromOrg } from "@/api/firebase/firebaseService/loadoutService";
-import { getDataForResource, isValidUserToken } from "@/api/firebase/firebaseVerify";
+import { isValidUserToken } from "@/api/firebase/firebaseVerify";
 import { withServerAuth } from "@/app/lib/server-auth";
 import { ReportsClient, DisplayAssignment, DisplayReport } from "./ReportsView";
-
-const getTrucksForOrganization = async (token: string, organizationId: string): Promise<Truck[]> => {
-  try {
-    const trucksCollectionId = `organizations/${organizationId}/trucks`;
-    const trucks = await getDataForResource(token, trucksCollectionId);
-
-    return trucks as Truck[];
-  } catch (e) {
-    console.error("Error fetching trucks: ", e);
-    throw(e);
-  }
-};
-
-const getActiveAssignmentsForOrganization = async (token: string, organizationId: string): Promise<Assignment[]> => {
-  try {
-
-    // Get assignments
-    const assignmentsCollectionId = `organizations/${organizationId}/assignments`;
-    const assignmentsData = await getDataForResource(token, assignmentsCollectionId);
-
-    // Get active assignment where unassigned is null
-    const activeAssignments = assignmentsData.filter((assignment: Assignment) => {
-      return assignment.unassignedAt === null;
-    });
-
-    /**
-     * @todo Change getDataForResource to return proper type rather than Documents
-     * Maybe make it generic
-     */
-    // Hopeful casting
-    return activeAssignments as Assignment[];
-
-  } catch (e) {
-    console.error("Error fetching user's assignment: ", e);
-    // Re-throw the error or return null depending on desired behavior for the caller
-    throw e; 
-  }
-};
-
-const getEmployeesForOrganization = async (token: string, organizationId: string): Promise<Employee[]> => {
-    try {
-        const employeesCollectionId = `organizations/${organizationId}/employees`;
-        const employees = await getDataForResource(token, employeesCollectionId);
-
-        // const employees = querySnapshot.docs.map(doc => doc.data() as Employee);
-        return employees as Employee[];
-    } catch (e) {
-        console.error("Error fetching employees:", e);
-        throw e;
-    }
-};
-
+import { getActiveAssignmentsForOrg, getEmployeesForOrg, getTrucksForOrg } from "@/app/lib/datafetching";
 
 
 export async function Reports() {
@@ -78,9 +26,9 @@ export async function Reports() {
       allTrucks,
       allEmployees,
     ] = await Promise.all([
-      getActiveAssignmentsForOrganization(token, organizationId),
-      getTrucksForOrganization(token, organizationId),
-      getEmployeesForOrganization(token, organizationId),
+      getActiveAssignmentsForOrg(token, organizationId),
+      getTrucksForOrg(token, organizationId),
+      getEmployeesForOrg(token, organizationId),
     ]);
 
     const truckMap = new Map(allTrucks.map(t => [t.truckId, t.name]));

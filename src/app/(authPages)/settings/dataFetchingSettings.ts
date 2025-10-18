@@ -1,7 +1,8 @@
 import { getDataForResource, isValidUserToken } from "@/api/firebase/firebaseVerify";
 import { getOrganization, getRolesForOrg, getUser } from "@/api/firebase/firebaseService";
 
-import { CalibrationChart, Loadout, Organization, Product } from "@/api/database/database";
+import { Organization } from "@/api/database/database";
+import { getLoadoutsForOrg, getCalibrationChartsForOrg, getProductsForOrg } from "@/app/lib/datafetching";
 import { OrgSettingsData } from "./settingsOptions/OrganizationSettings";
 
 /**
@@ -37,45 +38,6 @@ export const getGeneralSettingsData = async (token: string): Promise<Organizatio
   }
 };
 
-// Simple getter function for calibration charts
-const getCalibrationCharts = async (token: string, organizationId: string): Promise<CalibrationChart[]> => {
-  try {
-    const calibrationChartsCollectionId = `organizations/${organizationId}/calibrationCharts`;
-    const calibrationCharts = await getDataForResource(token, calibrationChartsCollectionId);
-
-    return calibrationCharts as CalibrationChart[];
-  } catch (e) {
-    console.error("Error fetching calibration charts: ", e);
-    throw(e);
-  }
-}; 
-
-// Simple getter function for products
-const getProducts = async (token: string, organizationId: string): Promise<Product[]> => {
-  try {
-    const productsCollectionId = `organizations/${organizationId}/products`;
-    const products = await getDataForResource(token, productsCollectionId);
-
-    return products as Product[];
-  } catch (e) {
-    console.error("Error fetching calibration charts: ", e);
-    throw(e);
-  }
-};
-
-// Simple getter function for loadouts
-const getLoadouts = async (token: string, organizationId: string): Promise<Loadout[]> => {
-  try {
-    const loadoutsCollectionId = `organizations/${organizationId}/loadouts`;
-    const loadouts = await getDataForResource(token, loadoutsCollectionId);
-
-    return loadouts as Loadout[];
-  } catch (e) {
-    console.error("Error fetching calibration charts: ", e);
-    throw(e);
-  }
-};
-
 /**
  * 
  * @todo Refactor returning null and nesting
@@ -95,9 +57,9 @@ export const getOrganizationSettingsData = async (token: string): Promise<OrgSet
       // Get organization, roles, and calibrationCharts
       const organizationData = await getOrganization(token, userInfo.organizationId);
       const rolesData = await getRolesForOrg(token, userInfo.organizationId);
-      const calibrationCharts = await getCalibrationCharts(token, userInfo.organizationId);
-      const products = await getProducts(token, userInfo.organizationId);
-      const loadouts = await getLoadouts(token, userInfo.organizationId);
+      const calibrationCharts = await getCalibrationChartsForOrg(token, userInfo.organizationId);
+      const products = await getProductsForOrg(token, userInfo.organizationId);
+      const loadouts = await getLoadoutsForOrg(token, userInfo.organizationId);
 
       return {
         organization: organizationData,

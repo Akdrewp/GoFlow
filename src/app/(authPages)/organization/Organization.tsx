@@ -2,46 +2,9 @@ import { getDataForResource, isValidUserToken } from "@/api/firebase/firebaseVer
 import { getRolesForOrg, getUser } from "@/api/firebase/firebaseService"; 
 import { withServerAuth } from "@/app/lib/server-auth";
 //Change type to sidestep duplicate organization use
-import { Organization as OrganizationType, Employee, Truck, CalibrationChart } from "@/api/database/database";
+import { Organization as OrganizationType } from "@/api/database/database";
 import { OrganizationDisplay } from "@/app/(authPages)/organization/OrganizationDisplay";
-
-const getEmployeesForOrganization = async (token: string, organizationId: string): Promise<Employee[] | null> => {
-    try {
-        const employeesCollectionId = `organizations/${organizationId}/employees`;
-        const employees = await getDataForResource(token, employeesCollectionId);
-
-        // const employees = querySnapshot.docs.map(doc => doc.data() as Employee);
-        return employees as Employee[];
-    } catch (e) {
-        console.error("Error fetching employees:", e);
-        return null;
-    }
-};
-
-const getTrucksForOrganization = async (token: string, organizationId: string): Promise<Truck[] | null> => {
-  try {
-    const trucksCollectionId = `organizations/${organizationId}/trucks`;
-    const trucks = await getDataForResource(token, trucksCollectionId);
-
-    return trucks as Truck[];
-  } catch (e) {
-    console.error("Error fetching trucks: ", e);
-    return null;
-  }
-};
-
-// Simple getter function for calibration charts
-const getCalibrationCharts = async (token: string, organizationId: string): Promise<CalibrationChart[]> => {
-  try {
-    const calibrationChartsCollectionId = `organizations/${organizationId}/calibrationCharts`;
-    const calibrationCharts = await getDataForResource(token, calibrationChartsCollectionId);
-
-    return calibrationCharts as CalibrationChart[];
-  } catch (e) {
-    console.error("Error fetching calibration charts: ", e);
-    throw(e);
-  }
-}; 
+import { getCalibrationChartsForOrg, getEmployeesForOrg, getLoadoutsForOrg, getTrucksForOrg } from "@/app/lib/datafetching";
 
 const getOrganizationInfo = async (token: string): Promise<OrganizationType | null> => {
 
@@ -74,35 +37,34 @@ const getOrganizationInfo = async (token: string): Promise<OrganizationType | nu
 
 export default async function Organization() {
 
-  const organizationInfo = await withServerAuth(async (token) => {
-    return await getOrganizationInfo(token);
-  });
+  const organizationData = await withServerAuth(async (token) => {
+    
+    // Get organizationId
+    const organizationInfo = await getOrganizationInfo(token);
+    if (!organizationInfo) {
+      // If the user is not in an organization, there's no more data to fetch.
+      return null;
+    }
+    const { organizationId } = organizationInfo;
 
-  const roles = await withServerAuth(async (token) => {
-    return await getRolesForOrg(token, organizationInfo?.organizationId as string);
-  });
+    // Get resources in promises
+    const [
+      roles,
+      employees,
+      trucks,
+      calibrationCharts,
+      loadouts
+    ] = await Promise.all([
+      getRolesForOrg(token, organizationId),
+      getEmployeesForOrg(token, organizationId),
+      getTrucksForOrg(token, organizationId),
+      getCalibrationChartsForOrg(token, organizationId),
+      getLoadoutsForOrg(token, organizationId)
+    ]);
 
-  //Cast to string just for testing purposes
-  const employees = await withServerAuth(async (token) => {
-    return await getEmployeesForOrganization(token, organizationInfo?.organizationId as string);
+    // Return a single, complete data object.
+    return { organizationInfo, roles, employees, trucks, calibrationCharts, loadouts };
   });
-
-  // Change to getTrucksLater
-  const trucks = await withServerAuth(async (token) => {
-    return await getTrucksForOrganization(token, organizationInfo?.organizationId as string);
-  });
-
-  const calibrationCharts = await withServerAuth(async (token) => {
-    return await getCalibrationCharts(token, organizationInfo?.organizationId as string);
-  });
-
-  const organizationData = {
-    info: organizationInfo,
-    employees: employees,
-    calibrationCharts: calibrationCharts,
-    roles: roles,
-    trucks: trucks,
-  };
 
   return (
     <div>

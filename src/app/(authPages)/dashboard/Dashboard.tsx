@@ -5,8 +5,6 @@ import { withServerAuth } from "@/app/lib/server-auth";
 import { getLoadoutFromOrg } from "@/api/firebase/firebaseService/loadoutService";
 import { getTruckFromOrg } from "@/api/firebase/firebaseService/truckService";
 
-
-
 export async function Dashboard() {
 
   const dashboardData = await withServerAuth(async (token) => {
