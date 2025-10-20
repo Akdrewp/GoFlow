@@ -29,6 +29,8 @@ export default async function SignUp() {
     redirect("/dashboard");
   }
 
+  console.log("TEST");
+
   return (
     <SignUpPage/>
   );

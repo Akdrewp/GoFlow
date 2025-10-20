@@ -3,6 +3,7 @@
 // app/lib/server-auth.ts
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { auth } from '@/api/firebase/firebaseConfig';
 
 /**
  * A higher-order function to wrap server-side logic that requires authentication.
@@ -24,8 +25,8 @@ export async function withServerAuth<T>(
   const userCookies = await cookies();
   const token = userCookies.get('session-token')?.value;
 
-  // 2. Redirect to login if no token is found.
-  //This should be caught by middleware but extra redunancy is fine
+  // Redirect to login if no token is found.
+  // This should be caught by middleware but extra redunancy is fine
   if (!token) {
     redirect('/login');
   }

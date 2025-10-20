@@ -9,7 +9,7 @@ import { TruckList } from './organizationDisplay/truckList';
 // OrganizationType is Organization renamed to avoid
 // confusion with organization component
 export interface organizationDisplayData {
-  info: OrganizationType | null, 
+  organizationInfo: OrganizationType | null, 
   employees: Employee[] | null,
   roles: Role[] | null,
   trucks: Truck[] | null
@@ -18,10 +18,13 @@ export interface organizationDisplayData {
 
 // --- Component to Display Organization Info, Employees, and Trucks ---
 export function OrganizationDisplay({ data: organizationData }: { data: organizationDisplayData | null }) {
+
+  console.log("organizationData", organizationData);
+
   if (!organizationData) {
     return "Error";
   }
-  if (!organizationData.info) {
+  if (!organizationData.organizationInfo) {
     return (
       <div className="p-6 rounded-lg border bg-card text-card-foreground">
         <h2 className="text-xl font-semibold">No Organization Found</h2>
@@ -34,15 +37,15 @@ export function OrganizationDisplay({ data: organizationData }: { data: organiza
     <div>
       {/* Organization Header */}
       <div>
-        <h1 className="text-5xl font-bold text-foreground">{organizationData.info.name}</h1>
-        <p className="text-sm text-muted-foreground mt-1">{organizationData.info.organizationId}</p>
+        <h1 className="text-5xl font-bold text-foreground">{organizationData.organizationInfo.name}</h1>
+        <p className="text-sm text-muted-foreground mt-1">{organizationData.organizationInfo.organizationId}</p>
       </div>
 
       {/* Employee List */}
-      <EmployeeList employees={organizationData.employees} organizationId={organizationData.info.organizationId} roles={organizationData.roles} />
+      <EmployeeList employees={organizationData.employees} organizationId={organizationData.organizationInfo.organizationId} roles={organizationData.roles} />
       
       {/* Truck List */}
-      <TruckList initialTrucks={organizationData.trucks} calibrationCharts={organizationData.calibrationCharts} organizationId={organizationData.info.organizationId} />
+      <TruckList initialTrucks={organizationData.trucks} calibrationCharts={organizationData.calibrationCharts} organizationId={organizationData.organizationInfo.organizationId} />
     </div>
   );
 }

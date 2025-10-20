@@ -26,7 +26,6 @@
         "./src/*"
       ]
     },
-    "module": "esnext"
   },
   "ts-node": {
     "require": [

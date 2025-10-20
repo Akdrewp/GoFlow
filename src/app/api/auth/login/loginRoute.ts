@@ -36,7 +36,7 @@ export async function loginRoute(request: NextRequest) {
       secure: process.env.NODE_ENV === 'production',
       path: '/',
       sameSite: 'strict',
-      maxAge: 60 * 60 * 24, // 1 day in seconds
+      maxAge: 60 * 60, // 1 hour in seconds
     });
 
     return NextResponse.json(

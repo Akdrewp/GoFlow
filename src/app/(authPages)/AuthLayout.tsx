@@ -59,6 +59,7 @@ export default function AuthLayout({
   children: React.ReactNode;
 }>) {
 
+  
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   return (

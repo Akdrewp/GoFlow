@@ -85,7 +85,8 @@ export async function addAssignmentToOrg(token: string, organizationId: string, 
 
 
 /**
- * Fetches the currently active assignment for a specific user within an organization.
+ * Fetches the currently active assignment for a specific user within an organization
+ * Or undefined if no active assignment is found
  * @param token The token of the user making the request (for permission checks).
  * @param organizationId The ID of the organization.
  * @param userId The UID of the user whose assignment is being requested.

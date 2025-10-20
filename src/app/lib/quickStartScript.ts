@@ -12,7 +12,6 @@ import { firebaseAuthService } from "../../../src/api/firebase/firebaseAuthServi
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../../../src/api/firebase/firebaseConfig";
 import { createOrganization, addTruckToOrg, addProductToOrg, addChartToOrg, addLoadoutToOrg, addRoleToOrg, addAssignmentToOrg, addCalibrationReportToOrg, addEmployeeToOrg } from "../../../src/api/firebase/firebaseService";
-import { adminAuth } from '@/api/firebase/firebaseAdmin';
 
 // --- SEED DATA DEFINITIONS ---
 

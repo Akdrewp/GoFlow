@@ -3,6 +3,9 @@ import { z } from "zod";
 // --- ZOD SCHEMAS (The Single Source of Truth) ---
 
 // Base schemas for discriminated union
+/**
+ * 
+ */
 const individualUserProfileSchema = z.object({
   type: z.literal('individual'),
   name: z.string(),
