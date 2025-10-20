@@ -12,6 +12,7 @@ import { firebaseAuthService } from "../../../src/api/firebase/firebaseAuthServi
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../../../src/api/firebase/firebaseConfig";
 import { createOrganization, addTruckToOrg, addProductToOrg, addChartToOrg, addLoadoutToOrg, addRoleToOrg, addAssignmentToOrg, addCalibrationReportToOrg, addEmployeeToOrg } from "../../../src/api/firebase/firebaseService";
+import { adminAuth } from '@/api/firebase/firebaseAdmin';
 
 // --- SEED DATA DEFINITIONS ---
 
@@ -128,12 +129,12 @@ async function setup() {
 
     // Get adminUser token
     const adminUserAuth = await signInWithEmailAndPassword(auth, adminUserSignUp.email, adminUserSignUp.password);
-    const adminUserAuthToken = await adminUserAuth.user.getIdToken();
+    const adminUserAuthSession = await adminAuth.createSessionCookie((await adminUserAuth.user.getIdToken()), { expiresIn: 60 * 60 * 1000});
     const adminUid = adminUserAuth.user.uid;
     console.log("Admin user token obtained.");
 
     // Create organization with adminUser as owner
-    await createOrganization(adminUserAuthToken, {
+    await createOrganization(adminUserAuthSession, {
       ...mainOrg,
       createdBy: adminUid,
       createdAt: new Date(),
@@ -142,19 +143,19 @@ async function setup() {
 
     // --- Add New Resources ---
     
-    await addChartToOrg(adminUserAuthToken, mainOrg.organizationId, defaultChart);
+    await addChartToOrg(adminUserAuthSession, mainOrg.organizationId, defaultChart);
     console.log(`Chart "${defaultChart.chartId}" added to organization.`);
 
-    await addProductToOrg(adminUserAuthToken, mainOrg.organizationId, liquidProduct);
-    await addProductToOrg(adminUserAuthToken, mainOrg.organizationId, unitProduct);
+    await addProductToOrg(adminUserAuthSession, mainOrg.organizationId, liquidProduct);
+    await addProductToOrg(adminUserAuthSession, mainOrg.organizationId, unitProduct);
     console.log("Sample products added to organization.");
 
-    await addLoadoutToOrg(adminUserAuthToken, mainOrg.organizationId, standardLoadout);
+    await addLoadoutToOrg(adminUserAuthSession, mainOrg.organizationId, standardLoadout);
     console.log(`Loadout "${standardLoadout.loadoutId}" added to organization.`);
 
     const allTrucks = [mainTruck, truck2, truck3, truck4, truck5, truck6, truck7];
     for (const truck of allTrucks) {
-      await addTruckToOrg(adminUserAuthToken, mainOrg.organizationId, truck);
+      await addTruckToOrg(adminUserAuthSession, mainOrg.organizationId, truck);
       console.log(`Truck "${truck.truckId}" added to organization.`);
     }
 
@@ -175,7 +176,7 @@ async function setup() {
       level: 50,
       permissions: driverPermissions
     };
-    await addRoleToOrg(adminUserAuthToken, mainOrg.organizationId, driverRole);
+    await addRoleToOrg(adminUserAuthSession, mainOrg.organizationId, driverRole);
     console.log("Driver role created.");
 
     // This array will hold the credentials of the newly created drivers
@@ -184,7 +185,7 @@ async function setup() {
     for (const emp of employeesToCreate) {
 
       // Add as invited employee
-      await addEmployeeToOrg(adminUserAuthToken, mainOrg.organizationId, {
+      await addEmployeeToOrg(adminUserAuthSession, mainOrg.organizationId, {
         ...emp,
         roleId: driverRole.roleId,
       });
@@ -199,8 +200,8 @@ async function setup() {
       // Signin using auth
       const userCredential = await signInWithEmailAndPassword(auth, emp.email, "password");
       const user = userCredential.user;
-      const token = await user.getIdToken();
-      createdDrivers.push({ ...emp, uid: user.uid, token });
+      const session = await adminAuth.createSessionCookie((await userCredential.user.getIdToken()), { expiresIn: 60 * 60 * 1000});
+      createdDrivers.push({ ...emp, uid: user.uid, session });
       
       console.log(`Employee "${emp.name}" signed up and activated.`);
     }
@@ -211,7 +212,7 @@ async function setup() {
       const driver = createdDrivers[i];
       const truck = allTrucks[i];
 
-      const assignment = await addAssignmentToOrg(driver.token, mainOrg.organizationId, {
+      const assignment = await addAssignmentToOrg(driver.session, mainOrg.organizationId, {
         truckId: truck.truckId,
         userId: driver.uid,
         employeeId: driver.employeeId,
@@ -231,7 +232,7 @@ async function setup() {
         totalArea = totalArea + area;
 
         // Report for liquid product
-        await addCalibrationReportToOrg(driver.token, mainOrg.organizationId, {
+        await addCalibrationReportToOrg(driver.session, mainOrg.organizationId, {
             truckId: truck.truckId,
             assignmentId: assignment.assignmentId,
             productId: liquidProduct.productId,
@@ -240,7 +241,7 @@ async function setup() {
         });
 
         // Report for unit product
-        await addCalibrationReportToOrg(driver.token, mainOrg.organizationId, {
+        await addCalibrationReportToOrg(driver.session, mainOrg.organizationId, {
             truckId: truck.truckId,
             assignmentId: assignment.assignmentId,
             productId: unitProduct.productId,

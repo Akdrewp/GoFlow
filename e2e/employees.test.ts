@@ -43,7 +43,7 @@ describe('Add Employee API Route E2E Tests', () => {
 
       // Sign in as the user to get a valid ID token
       const userCredential = await signInWithEmailAndPassword(authClient, testUser.email, testUser.password);
-      validUserToken = await userCredential.user.getIdToken();
+      validUserToken = await adminAuth.createSessionCookie((await userCredential.user.getIdToken()), { expiresIn: 60 * 60 * 1000});
 
       // Add user to database
       await addUser({

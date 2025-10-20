@@ -38,8 +38,8 @@ describe('Signup API Route E2E Tests', () => {
       validUserUid = newAuthUser.uid; // Store the UID for use in tests
       const currentTimeIso = new Date().toISOString();
 
-      const userCredential = await signInWithEmailAndPassword(authClient, validUser.email, validUser.password);
-      validUserToken = await userCredential.user.getIdToken(); // Store the ID token
+      const userCredential = await signInWithEmailAndPassword(authClient,validUser.email,validUser.password);
+      validUserToken = await userCredential.user.getIdToken();
 
       commonHeaders = {
         'Content-Type': 'application/json',

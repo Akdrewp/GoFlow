@@ -92,9 +92,9 @@ describe('Assignments API Route E2E Tests', () => {
       driverAuthUser = await adminAuth.createUser(testDriverUser);
       const driverAuthUser2 = await adminAuth.createUser(testDriverUser2);
 
-      adminUserAuthToken = await (await signInWithEmailAndPassword(authClient, testAdminUser.email, testAdminUser.password)).user.getIdToken();
-      driverUserAuthToken = await (await signInWithEmailAndPassword(authClient, testDriverUser.email, testDriverUser.password)).user.getIdToken();
-      driverUser2AuthToken = await (await signInWithEmailAndPassword(authClient, testDriverUser2.email, testDriverUser2.password)).user.getIdToken();
+      adminUserAuthToken = await adminAuth.createSessionCookie(await (await signInWithEmailAndPassword(authClient, testAdminUser.email, testAdminUser.password)).user.getIdToken(), { expiresIn: 60 * 60 * 1000});
+      driverUserAuthToken = await adminAuth.createSessionCookie(await (await signInWithEmailAndPassword(authClient, testDriverUser.email, testDriverUser.password)).user.getIdToken(), { expiresIn: 60 * 60 * 1000});
+      driverUser2AuthToken = await adminAuth.createSessionCookie(await (await signInWithEmailAndPassword(authClient, testDriverUser2.email, testDriverUser2.password)).user.getIdToken(), { expiresIn: 60 * 60 * 1000});
 
       await addUser({
         ...testAdminUser,

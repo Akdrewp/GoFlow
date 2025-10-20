@@ -24,19 +24,25 @@ export async function loginRoute(request: NextRequest) {
     // This will throw an error if the token is invalid.
     await adminAuth.verifyIdToken(token);
 
+    const userCookies = await cookies();
+
+    // Use adminAuth session cookies to keep track of token expiry time
+    // Once the token is almost expired refresh
+    const sessionCookies = await adminAuth.createSessionCookie(token, { expiresIn: 60 * 60 * 1000 * 12 }); // 12 hours in miliseconds
+
+    console.log("sessionCookies", sessionCookies);
+
     // Set the token in a secure, HTTP-only cookie.
     // HttpOnly: Prevents client-side JavaScript from accessing the cookie.
     // Secure: Ensures the cookie is only sent over HTTPS.
     // Path: The cookie is available for all routes.
     // SameSite=Strict: Mitigates CSRF attacks.
-    const userCookies = await cookies();
-
-    userCookies.set('session-token', token, {
+    userCookies.set('session-token', sessionCookies, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       path: '/',
       sameSite: 'strict',
-      maxAge: 60 * 60, // 1 hour in seconds
+      maxAge: 60 * 60 * 12, // 12 hours in seconds
     });
 
     return NextResponse.json(

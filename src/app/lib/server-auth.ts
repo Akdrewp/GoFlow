@@ -3,7 +3,6 @@
 // app/lib/server-auth.ts
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { auth } from '@/api/firebase/firebaseConfig';
 
 /**
  * A higher-order function to wrap server-side logic that requires authentication.

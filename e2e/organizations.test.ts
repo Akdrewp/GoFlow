@@ -38,12 +38,12 @@ describe('Login API Route E2E Tests', () => {
       validUserUid = newAuthUser.uid; // Store the UID for use in tests
       const currentTimeIso = new Date().toISOString();
 
-      const userCredential = await signInWithEmailAndPassword(authClient, validUser.email, validUser.password);
-      validUserToken = await userCredential.user.getIdToken(); // Store the ID token
+      const userCredential = await signInWithEmailAndPassword(authClient,validUser.email,validUser.password);
+      validUserToken = await adminAuth.createSessionCookie((await userCredential.user.getIdToken()), { expiresIn: 60 * 60 * 1000});
 
       commonHeaders = {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${validUserToken}`,
+        'Authorization': `Bearer ${await userCredential.user.getIdToken()}`,
       };
 
       //Add user to database via api route
@@ -180,7 +180,7 @@ describe('Login API Route E2E Tests', () => {
 
     // Sign in as the user to get a valid ID token
     const conflictOrgUserCredential = await signInWithEmailAndPassword(authClient, conflictOrgIdUser.email, conflictOrgIdUser.password);
-    const conflictOrgIdUserToken = await conflictOrgUserCredential.user.getIdToken();
+    const conflictOrgIdUserToken = await adminAuth.createSessionCookie(await conflictOrgUserCredential.user.getIdToken(), { expiresIn: 60 * 60 * 1000});
 
     // Add conflictOrgIdUser to database
     await addUser({

@@ -76,8 +76,8 @@ describe('Roles API Route E2E Tests', () => {
       const driverAuthUser = await adminAuth.createUser(testDriverUser);
 
       // Get users token
-      adminUserAuthToken = await (await signInWithEmailAndPassword(authClient, testAdminUser.email, testAdminUser.password)).user.getIdToken();
-      driverUserAuthToken = await (await signInWithEmailAndPassword(authClient, testDriverUser.email, testDriverUser.password)).user.getIdToken();
+      adminUserAuthToken = await adminAuth.createSessionCookie(await (await signInWithEmailAndPassword(authClient, testAdminUser.email, testAdminUser.password)).user.getIdToken(), { expiresIn: 60 * 60 * 1000});
+      driverUserAuthToken = await adminAuth.createSessionCookie(await (await signInWithEmailAndPassword(authClient, testDriverUser.email, testDriverUser.password)).user.getIdToken(), { expiresIn: 60 * 60 * 1000});;
 
       // Add driver and admin to users database
       await addUser({
@@ -138,7 +138,7 @@ describe('Roles API Route E2E Tests', () => {
       const testOrg2AdminAuthUser = await adminAuth.createUser(testOrg2AdminUser);
 
       // Sign in to get auth token
-      testOrg2AdminToken = await (await signInWithEmailAndPassword(authClient, testOrg2AdminUser.email, testOrg2AdminUser.password)).user.getIdToken();
+      testOrg2AdminToken = await adminAuth.createSessionCookie(await (await signInWithEmailAndPassword(authClient, testOrg2AdminUser.email, testOrg2AdminUser.password)).user.getIdToken(), { expiresIn: 60 * 60 * 1000});
 
       // Add testOrg2Admin to database
       await addUser({

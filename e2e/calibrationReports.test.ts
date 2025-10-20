@@ -69,8 +69,8 @@ describe('Calibration Reports API Route E2E Tests', () => {
       const adminAuthUser = await adminAuth.createUser(testAdminUser);
       driverAuthUser = await adminAuth.createUser(testDriverUser);
 
-      adminUserAuthToken = await (await signInWithEmailAndPassword(authClient, testAdminUser.email, testAdminUser.password)).user.getIdToken();
-      driverUserAuthToken = await (await signInWithEmailAndPassword(authClient, testDriverUser.email, testDriverUser.password)).user.getIdToken();
+      adminUserAuthToken = await adminAuth.createSessionCookie(await (await signInWithEmailAndPassword(authClient, testAdminUser.email, testAdminUser.password)).user.getIdToken(), { expiresIn: 60 * 60 * 1000});
+      driverUserAuthToken = await adminAuth.createSessionCookie(await (await signInWithEmailAndPassword(authClient, testDriverUser.email, testDriverUser.password)).user.getIdToken(), { expiresIn: 60 * 60 * 1000});;
 
       await addUser({ ...testAdminUser, uid: adminAuthUser.uid, createdAt: new Date(), type: 'individual' });
 

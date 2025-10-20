@@ -50,7 +50,7 @@ describe('Organization Signup API Route E2E Tests', () => {
 
       // Sign in as owner
       const userCredential = await signInWithEmailAndPassword(authClient, ownerProfile.email, "password");
-      validUserToken = await userCredential.user.getIdToken();
+      validUserToken = await adminAuth.createSessionCookie((await userCredential.user.getIdToken()), { expiresIn: 60 * 60 * 1000});
 
       // Add owner user to database
       await addUser({
@@ -88,7 +88,6 @@ describe('Organization Signup API Route E2E Tests', () => {
       // Add invited employee to organization
       await addEmployeeToOrg(validUserToken, testOrg.organizationId, {
         ...invitedEmployee,
-        status: "invited"
       });
 
 

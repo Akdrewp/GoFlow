@@ -7,7 +7,7 @@ import { collection, doc, DocumentData, getDoc, getDocs } from 'firebase/firesto
 import { DecodedIdToken } from 'firebase-admin/auth';
 import { adminAuth } from './firebaseAdmin'; // Assuming adminAuth is imported
 import { db } from './firebaseConfig';
-import { organizationDatabase, userDatabase, permissionsDatabase, employeeDatabase } from "./firestoreDatabase";
+import { userDatabase, permissionsDatabase, employeeDatabase } from "./firestoreDatabase";
 import { Employee, UserProfile, ORGANIZATION_RESOURCES } from "../database/database";
 
 export enum AccessType {
@@ -38,7 +38,7 @@ export const isValidUserToken = async (token: string): Promise<DecodedIdToken> =
       throw new Error("Token is null or undefined.");
     }
     // Check if token is valid
-    const decodedIdToken = await adminAuth.verifyIdToken(token);
+    const decodedIdToken = await adminAuth.verifySessionCookie(token);
     // If token is valid, return the decoded data
     return decodedIdToken;
   } catch (e) {
