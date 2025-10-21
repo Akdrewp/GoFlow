@@ -116,7 +116,7 @@ export default function Login() {
                 {/* Link to Sign Up Page */}
                 <div className="text-center mt-6">
                     <a href="/signup" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                        Don`&apos`;t have an account? <span className="font-semibold text-primary">Sign Up</span>
+                        Don&apos;t have an account? <span className="font-semibold text-primary">Sign Up</span>
                     </a>
                 </div>
             </div>

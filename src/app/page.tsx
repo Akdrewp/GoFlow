@@ -11,8 +11,9 @@ export default function HomePage() {
 
         {/* Brief Description */}
         <p className="text-lg md:text-xl text-subtle mb-8">
-          Optimize your routes, manage stops, and streamline your delivery and service jobs with GoFlow.
-          Efficiency on the go, for every journey.
+          Streamline your team&apos;s calibration monitoring. Employees can post
+          calibration reports from the field, and managers can review them
+          instantly. Ensure accuracy and compliance, all in one place.
         </p>
 
         {/* Sign Up Button */}
