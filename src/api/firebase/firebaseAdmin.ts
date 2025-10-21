@@ -4,6 +4,9 @@ import admin from 'firebase-admin';
 
 // Initialize Firebase Admin SDK only once
 if (!admin.apps.length) {
+
+  console.log("INITIALIZING FIREBASE ADMIN");
+
   // Check if the environment variable is set
   if (!process.env.FIREBASE_ADMIN_SDK_CONFIG) {
     throw new Error('FIREBASE_ADMIN_SDK_CONFIG environment variable is not set.');

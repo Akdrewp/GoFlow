@@ -12,6 +12,8 @@ export default async function SignUp() {
   let shouldRedirect = false;
   // If user has a token check if its valid
   if (token) {
+
+    console.log("TOKEN FOUND",);
     try {
       await isValidUserToken(token);
 

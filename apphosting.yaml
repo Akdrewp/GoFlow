@@ -8,7 +8,7 @@ runConfig:
 # Environment variables and secrets.
 env:
   - variable: FIREBASE_ADMIN_SDK_CONFIG
-    value: FIREBASE_ADMIN_SDK_CONFIG
+    secret: FIREBASE_ADMIN_SDK_CONFIG
     availability:
       - BUILD
       - RUNTIME
