@@ -6,4 +6,9 @@ runConfig:
   memoryMiB: 512
 
 # Environment variables and secrets.
-
+env:
+  - variable: NEXT_PUBLIC_BASE_URL
+    value: https://goflow--goflow-routemaker.us-east4.hosted.app/
+    availability:
+      - BUILD
+      - RUNTIME
