@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowUpRight, Truck } from 'lucide-react';
+import { ArrowUpRight, Truck, PlusCircle } from 'lucide-react';
 import { CalibrationReport, Truck as TruckType } from '@/api/database/database';
 import { useUser } from '@/app/lib/contexts/UserContext';
 
@@ -12,8 +12,31 @@ interface DashboardData {
   truck: TruckType | undefined;
 }
 
-// --- NEW Manager Actions Component ---
-// A small, focused component for manager-specific links.
+
+// --- NEW No Organization Component ---
+// This component is shown to users who haven't created or joined an organization yet.
+export function NoOrganizationView() {
+  return (
+    <div className="flex items-center justify-center h-[60vh] text-center">
+      <div>
+        <h2 className="text-2xl font-semibold text-foreground">
+          You&apos;re not currently part of an organization.
+        </h2>
+        <p className="mt-2 text-muted-foreground">
+          Create or join one in settings to start monitoring calibrations.
+        </p>
+        <Link href="/settings">
+          <button className="mt-6 inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 py-2 bg-primary text-primary-foreground shadow hover:bg-primary/90">
+            <PlusCircle className="mr-2 h-4 w-4" /> Go to Settings
+          </button>
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+
+// --- Manager Actions Component ---
 function ManagerActions() {
   return (
     <div>
@@ -37,17 +60,14 @@ function ManagerActions() {
 
 
 // --- UNIFIED CLIENT COMPONENT ---
-// Renamed from EmployeeDashboardClient
 export function DashboardView({ dashboardData }: { dashboardData: DashboardData }) {
 
   const userContext = useUser();
   const assignment = userContext.assignment;
   const isManager = userContext.isManager;
 
-
   const { reports, truck } = dashboardData;
 
-  // This is the base view that everyone sees.
   const employeeView = (
     <>
       <div>
@@ -73,25 +93,25 @@ export function DashboardView({ dashboardData }: { dashboardData: DashboardData 
       </div>
 
       {assignment && (
-         <div>
-          <h2 className="text-2xl font-semibold text-foreground">My Recent Reports</h2>
-          <div className="mt-4 space-y-2">
-            {reports.length > 0 ? reports.slice(0, 5).map(report => (
-              <div key={report.reportId} className="p-3 rounded-lg border bg-card flex justify-between">
-                <div>
-                  <p className="font-medium text-foreground">Product: {report.productId}</p>
-                  <p className="text-xs text-muted-foreground">{new Date(report.createdAt).toLocaleString()}</p>
-                </div>
-                <div className="text-right">
-                  <p className="font-mono text-foreground">Rate: {(report.actualCalibrationRate * 1000000).toFixed(3)}</p>
-                  <p className="text-xs text-muted-foreground">Used: {report.productUsed.toFixed(2)}</p>
-                </div>
+       <div>
+        <h2 className="text-2xl font-semibold text-foreground">My Recent Reports</h2>
+        <div className="mt-4 space-y-2">
+          {reports.length > 0 ? reports.slice(0, 5).map(report => (
+            <div key={report.reportId} className="p-3 rounded-lg border bg-card flex justify-between">
+              <div>
+                <p className="font-medium text-foreground">Product: {report.productId}</p>
+                <p className="text-xs text-muted-foreground">{new Date(report.createdAt).toLocaleString()}</p>
               </div>
-            )) : (
-              <p className="text-sm text-muted-foreground">You have not submitted any reports for this assignment yet.</p>
-            )}
-          </div>
+              <div className="text-right">
+                <p className="font-mono text-foreground">Rate: {(report.actualCalibrationRate * 1000000).toFixed(3)}</p>
+                <p className="text-xs text-muted-foreground">Used: {report.productUsed.toFixed(2)}</p>
+              </div>
+            </div>
+          )) : (
+            <p className="text-sm text-muted-foreground">You have not submitted any reports for this assignment yet.</p>
+          )}
         </div>
+       </div>
       )}
     </>
   );
@@ -100,11 +120,9 @@ export function DashboardView({ dashboardData }: { dashboardData: DashboardData 
     <div className="space-y-8">
       {employeeView}
       
-      {/* Conditionally render the manager actions */}
       {isManager && (
         <ManagerActions />
       )}
     </div>
   );
 }
-
