@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { FirebaseVerifyError } from "@/api/firebase/firebaseVerify";
 import { FirestoreDatabaseError } from "@/api/firebase/firestoreDatabase";
 import { assignmentSchema } from "@/api/database/database";
-import { addAssignmentToOrg, getEmployeeFromOrg, getUser } from "@/api/firebase/firebaseService";
+import { addAssignmentToOrg, getEmployeeFromOrg } from "@/api/firebase/firebaseService";
 
 /**
  * This route handles the creation of a assignment of a truck

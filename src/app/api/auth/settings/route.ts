@@ -1,8 +1,8 @@
 import "server-only";
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
-export async function POST(request: NextRequest) {
+export async function POST() {
 
   console.log("Sending settings data");
   return NextResponse.json(

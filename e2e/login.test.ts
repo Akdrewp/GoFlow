@@ -4,6 +4,7 @@ import { getAuth } from "firebase/auth";
 import { adminAuth } from "@/api/firebase/firebaseAdmin";
 import { firebaseAuthService } from "@/api/firebase/firebaseAuthService"; 
 import { clearFireStore, clearFirestoreAuth, clearFirestoreDB } from "./cleanUpEmulators";
+import { isValidUserToken } from "@/api/firebase/firebaseVerify";
 
 const NEXT_PUBLIC_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
@@ -138,5 +139,30 @@ describe('Login API Route E2E Tests', () => {
     const responseBody = await response.json();
     expect(responseBody.status).toBe('error');
     expect(responseBody.message).toBe('Authentication failed');
+  });
+
+    // Test Case 4: Session Duration
+  test('should remain valid after 10 hours', async () => {
+    // Enable fake timer
+    jest.useFakeTimers();
+
+    // Login and get session cookie
+    const loginResponse = await firebaseAuthService.login.loginWithEmail({
+      email: validUser.email,
+      password: validUser.password,
+    });
+    const setCookieHeader = loginResponse.headers.get('Set-Cookie') || '';
+    const sessionCookie = setCookieHeader.split(';')[0].split('=')[1];
+
+    console.log("sessionCookie", sessionCookie);
+
+    // Advance time by 10 hours
+    jest.advanceTimersByTime(10 * 60 * 60 * 1000); // 10 hours in milliseconds
+
+    // Check if token is still valid
+    await isValidUserToken(sessionCookie);
+
+    // Clean up by restoring real timers
+    jest.useRealTimers();
   });
 });

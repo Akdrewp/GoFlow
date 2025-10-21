@@ -2,13 +2,11 @@
 
 import { z } from 'zod';
 
-import { collection, doc, DocumentData, getDoc, getDocs } from 'firebase/firestore';
-
 import { DecodedIdToken } from 'firebase-admin/auth';
-import { adminAuth } from './firebaseAdmin'; // Assuming adminAuth is imported
-import { db } from './firebaseConfig';
+import { adminAuth, adminDb } from './firebaseAdmin'; // Assuming adminAuth is imported
 import { userDatabase, permissionsDatabase, employeeDatabase } from "./firestoreDatabase";
 import { Employee, UserProfile, ORGANIZATION_RESOURCES } from "../database/database";
+import { DocumentData } from 'firebase-admin/firestore';
 
 export enum AccessType {
   READ = "read",
@@ -260,7 +258,7 @@ export const getDataForResource = async (
   token: string,
   resourceId: string
 ): Promise<DocumentData | DocumentData[]> => {
-  
+
   // Check if user can read the data
   // This will throw an error if not
   await canUserAccessData(token, resourceId, AccessType.READ);
@@ -271,38 +269,35 @@ export const getDataForResource = async (
   const resourceSegments = resourceId.split("/").length;
 
   // If trying to access one document
-  // resourceId = "someCollection/someDocument/otherCollection/documentName"
+  // e.g., resourceId = "someCollection/someDocument"
   if (resourceSegments % 2 == 0) {
 
-    // Get document reference
-    const docRef = doc(db, resourceId);
+    // Get document reference using Admin SDK
+    const docRef = adminDb.doc(resourceId);
 
     // Get the document and make sure it exists
-    const docSnap = await getDoc(docRef);
-    if (!docSnap.exists()) {
+    const docSnap = await docRef.get();
+    if (!docSnap.exists) {
       throw new FirebaseVerifyError(
         "data with passed resourceId does not exist",
         400 // Bad request
       );
     }
 
-    return docSnap.data();
+    return docSnap.data() as DocumentData; // Added 'as DocumentData' for type safety
   } else {
     // If trying to access a collection
-    // resourceId = "someCollection/someDocument/collectionName"
-    
-    // Get collection
-    const collectionRef = collection(db, resourceId);
-    const querySnapshot = await getDocs(collectionRef);
+    // e.g., resourceId = "someCollection/someDocument/collectionName"
+
+    // Get collection reference using Admin SDK
+    const collectionRef = adminDb.collection(resourceId);
+    const querySnapshot = await collectionRef.get();
 
     // Check if collection has data
     if (querySnapshot.empty) {
-      // If no data return empty array
+      // If no data, return an empty array. The original code had a throw here,
+      // but returning an empty array is usually more expected for a collection query.
       return [];
-      throw new FirebaseVerifyError(
-        "Collection with passed resourceId has no data",
-        400 // Bad request
-      );
     }
 
     const collectionData = querySnapshot.docs.map(doc => doc.data());

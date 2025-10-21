@@ -4,14 +4,12 @@ import "server-only";
 
 import { NextRequest, NextResponse } from 'next/server';
 
-import { db } from "@/api/firebase/firebaseConfig";
-import { adminAuth } from "@/api/firebase/firebaseAdmin";
+import { adminAuth, adminDb } from "@/api/firebase/firebaseAdmin";
 import { userProfileSchema } from "@/api/database/database";
 import { FirestoreDatabaseError } from '@/api/firebase/firestoreDatabase';
 import { FirebaseVerifyError } from "@/api/firebase/firebaseVerify";
 import { addUser } from "@/api/firebase/firebaseService";
 
-import { collection, doc, getDoc, getDocs, query, where, } from "firebase/firestore";
 
 
 export async function signUpRoute(request: NextRequest) {
@@ -49,9 +47,8 @@ export async function signUpRoute(request: NextRequest) {
     // --- Duplicate Key Checks ---
 
     // Check if user profile with UID already exists (Firestore document ID)
-    const userDocRef = doc(db, 'users', uid);
-    const userDocSnap = await getDoc(userDocRef);
-    if (userDocSnap.exists()) {
+    const userDocSnap = await adminDb.doc(`users/${uid}`).get();
+    if (userDocSnap.exists) {
       console.log("SERVER LOG: === Returning 409 - UID already exists in Firestore ===");
       return NextResponse.json(
         { status: "fail", message: "User profile with this UID already exists." },
@@ -60,9 +57,9 @@ export async function signUpRoute(request: NextRequest) {
     }
 
     // Check if user profile with user name already exists
-    const usersRef = collection(db, 'users');
-    const qName = query(usersRef, where('name', '==', name));
-    const querySnapshotName = await getDocs(qName);
+    const usersRef = adminDb.collection('users');
+    const qName = usersRef.where('name', '==', name);
+    const querySnapshotName = await qName.get();
     if (!querySnapshotName.empty) {
       console.log("SERVER LOG: === Returning 409 - Name already exists in Firestore ===");
       return NextResponse.json(
@@ -72,8 +69,8 @@ export async function signUpRoute(request: NextRequest) {
     }
 
     // Check if user profile with email already exists
-    const qEmail = query(usersRef, where('email', '==', email));
-    const querySnapshotEmail = await getDocs(qEmail);
+    const qEmail = usersRef.where('email', '==', email);
+    const querySnapshotEmail = await qEmail.get();
     if (!querySnapshotEmail.empty) {
       console.log("SERVER LOG: === Returning 409 - Email already exists in Firestore ===");
       return NextResponse.json(

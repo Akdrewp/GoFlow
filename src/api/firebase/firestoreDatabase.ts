@@ -2,9 +2,6 @@
 
 import { z } from "zod";
 
-import { collection, doc, setDoc, getDoc, updateDoc, getDocs, query, where, DocumentData, orderBy } from "firebase/firestore";
-import { db } from "./firebaseConfig";
-
 import { 
   Assignment,
   assignmentSchema, 
@@ -26,7 +23,8 @@ import {
   calibrationReportSchema
 } from "@/api/database/database";
 import { AccessType } from "./firebaseVerify";
-import { CollectionReference, Timestamp } from "firebase-admin/firestore";
+// ADDED DocumentData to admin import
+import { CollectionReference, Timestamp, DocumentData } from "firebase-admin/firestore";
 import { adminDb } from "./firebaseAdmin";
 
 export class FirestoreDatabaseError extends Error {
@@ -190,7 +188,7 @@ export const calibrationReportDatabase = {
   add: async (organizationId: string, initialReportData: Omit<CalibrationReport, "reportId">): Promise<CalibrationReport> => {
     try {
       // Create a reference to a new document in the sub-collection to generate a unique ID.
-      const reportDocRef = doc(collection(db, `organizations/${organizationId}/calibrationReports`));
+      const reportDocRef = adminDb.collection(`organizations/${organizationId}/calibrationReports`).doc();
       
       // Combine the generated ID with the initial data to form the complete document.
       const fullReportData: CalibrationReport = {
@@ -199,7 +197,7 @@ export const calibrationReportDatabase = {
       };
 
       // Save the complete document to Firestore.
-      await setDoc(reportDocRef, fullReportData);
+      await reportDocRef.set(fullReportData);
       
       console.log(`Calibration report "${fullReportData.reportId}" added to organization "${organizationId}".`);
       
@@ -221,17 +219,16 @@ export const calibrationReportDatabase = {
    */
   getFromAssignment: async (organizationId: string, assignmentId: string, productId: string): Promise<CalibrationReport[]> => {
     try {
-      const reportsRef = collection(db, `organizations/${organizationId}/calibrationReports`);
+      // CHANGED: from collection(db, ...) to adminDb.collection(...)
+      const reportsRef = adminDb.collection(`organizations/${organizationId}/calibrationReports`);
       
       // Query for reports matching the assignmentId AND the productId, ordered from newest to oldest.
-      const q = query(
-        reportsRef, 
-        where("assignmentId", "==", assignmentId),
-        where("productId", "==", productId),
-        orderBy("createdAt", "desc")
-      );
+      const q = reportsRef
+        .where("assignmentId", "==", assignmentId)
+        .where("productId", "==", productId)
+        .orderBy("createdAt", "desc");
       
-      const querySnapshot = await getDocs(q);
+      const querySnapshot = await q.get();
 
       if (querySnapshot.empty) {
         return [];
@@ -272,7 +269,6 @@ export const loadoutDatabase = {
     try {
       const assignmentsRef = adminDb.collection(`organizations/${organizationId}/assignments`);
       
-      // Query for any assignment that uses this loadout AND is currently active.
       const q = assignmentsRef.where("loadoutId", "==", loadoutId).where("unassignedAt", "==", null);
       
       const querySnapshot = await q.get();
@@ -301,7 +297,7 @@ export const userDatabase = {
     try {
       
       // Add user to database with data
-      await setDoc(doc(db, "users", userProfile.uid), userProfile);
+      await adminDb.collection("users").doc(userProfile.uid).set(userProfile);
 
       console.log("User document added/updated with UID:", userProfile.uid);
     } catch (e) {
@@ -319,13 +315,10 @@ export const userDatabase = {
    */
   get: async (uid: string): Promise<UserProfile> => {
     try {
-      /**
-       * @todo use of getDoc in these methods probably should delegate to firebaseVerify
-       */
-      const userDocRef = doc(db, "users", uid);
-      const docSnap = await getDoc(userDocRef);
 
-      console.log("firestoreDatabase userDatabase get CONSOLE LOG getDoc(uid) = docSnap.data(): ", docSnap.data());
+      const userDocRef = adminDb.collection("users").doc(uid);
+
+      const docSnap = await userDocRef.get();
 
       // It's a good practice to validate the data with Zod here before casting
       return docSnap.data() as UserProfile;
@@ -347,15 +340,15 @@ export const userDatabase = {
   update: async (uid: string, userProfile: Partial<UserProfile>): Promise<UserProfile> => {
 
     try {
-        const userDocRef = doc(db, "users", uid);
+        const userDocRef = adminDb.collection("users").doc(uid);
         
         // updateDoc will throw an error if the document doesn't exist.
-        await updateDoc(userDocRef, userProfile);
+        await userDocRef.update(userProfile);
 
         console.log(`User profile for UID ${uid} successfully updated.`);
 
         // Fetch the updated document to return the full, merged profile
-        const updatedDoc = await getDoc(userDocRef);
+        const updatedDoc = await userDocRef.get();
         return updatedDoc.data() as UserProfile;
 
     } catch (e) {
@@ -374,10 +367,10 @@ export const organizationDatabase = {
   add: async (organization: Organization): Promise<void> => {
     try {
       const orgDocId = organization.organizationId;
-      const organizationDoc = doc(db, "organizations", orgDocId);
+      const organizationDoc = adminDb.collection("organizations").doc(orgDocId);
 
       // Create the organization document
-      await setDoc(organizationDoc, {
+      await organizationDoc.set({
         name: organization.name,
         email: organization.email,
         organizationId: organization.organizationId,
@@ -398,10 +391,12 @@ export const organizationDatabase = {
    */
   get: async (organizationId: string): Promise<Organization> => {
       try {
-          const orgDocRef = doc(db, "organizations", organizationId);
-          const docSnap = await getDoc(orgDocRef);
 
-          if (!docSnap.exists()) {
+          const orgDocRef = adminDb.collection("organizations").doc(organizationId);
+
+          const docSnap = await orgDocRef.get();
+
+          if (!docSnap.exists) {
               console.log(`Organization with ID "${organizationId}" not found.`);
               throw new FirestoreDatabaseError(
                 `Organization with ID "${organizationId}" not found.`,
@@ -424,10 +419,9 @@ export const organizationDatabase = {
    */
   exists: async (customOrganizationId: string): Promise<boolean> => {
     try {
-      // A direct get is more efficient than a query if the doc ID is the custom ID
-      const orgDocRef = doc(db, "organizations", customOrganizationId);
-      const docSnap = await getDoc(orgDocRef);
-      return docSnap.exists();
+      const orgDocRef = adminDb.collection("organizations").doc(customOrganizationId);
+      const docSnap = await orgDocRef.get();
+      return docSnap.exists;
     } catch (e) {
       console.error("Error checking organization existence:", e);
       throw new Error(`Failed to check organization existence: ${(e as Error).message || 'Unknown error'}`);
@@ -443,9 +437,9 @@ export const organizationDatabase = {
    */
   addEmployee: async (organizationId: string, employeeData: Employee): Promise<void> => {
     try {
-      const employeeDocRef = doc(db, `organizations/${organizationId}/employees`, employeeData.employeeId);
+      const employeeDocRef = adminDb.collection(`organizations/${organizationId}/employees`).doc(employeeData.employeeId);
       
-      await setDoc(employeeDocRef, {
+      await employeeDocRef.set({
         ...employeeData,
       });
 
@@ -465,11 +459,11 @@ export const organizationDatabase = {
    */
   getEmployee: async (organizationId: string, employeeId: string): Promise<Employee> => {
       try {
-          const employeeDocRef = doc(db, `organizations/${organizationId}/employees`, employeeId);
+          const employeeDocRef = adminDb.collection(`organizations/${organizationId}/employees`).doc(employeeId);
           
-          const docSnap = await getDoc(employeeDocRef);
+          const docSnap = await employeeDocRef.get();
 
-          if (!docSnap.exists()) {
+          if (!docSnap.exists) {
               console.log(`Employee with ID ${employeeId} not found in organization ${organizationId}`);
               throw new FirestoreDatabaseError("Employee with pass employee id not found in organization", 400);
           }
@@ -492,10 +486,10 @@ export const organizationDatabase = {
       try {
           // Get roles DocPath
           const rolesCollectionPath = `organizations/${organizationId}/roles`;
-          const rolesCollectionRef = collection(db, rolesCollectionPath);
+          const rolesCollectionRef = adminDb.collection(rolesCollectionPath);
 
           // Fetch the document snapshot.
-          const querySnapshot = await getDocs(rolesCollectionRef);
+          const querySnapshot = await rolesCollectionRef.get();
 
           // If none found just return empty array
           // Shouldn't happen as there is always default admin
@@ -531,6 +525,7 @@ export const roleDatabase = {
    */
   isRoleInUse: async (organizationId: string, roleId: string): Promise<boolean> => {
     try {
+
       const employeesRef = adminDb.collection(`organizations/${organizationId}/employees`);
       const querySnapshot = await employeesRef.where("roleId", "==", roleId).get();
       // If the snapshot is not empty, it means at least one employee has this role.
@@ -559,7 +554,7 @@ export const assignmentDatabase = {
       // Generate document and assignment id
       // Putting the specified collection without a documentId
       // creates an generated documentId which is assignmentId
-      const assignmentDocRef = doc(collection(db, `organizations/${organizationId}/assignments`));
+      const assignmentDocRef = adminDb.collection(`organizations/${organizationId}/assignments`).doc();
 
       console.log("assignmentDatabase CONSOLE LOG initialAssignment: ", initialAssignmentData);
 
@@ -570,11 +565,11 @@ export const assignmentDatabase = {
       };
 
       // Add doc to database and return assignment
-      await setDoc(assignmentDocRef, assignmentData);
+      await assignmentDocRef.set(assignmentData);
       return assignmentData;
     } catch (e) {
       console.error("Error adding assignment to database:", e);
-      throw new Error(`Failed to add assignment: ${(e as Error).message}`);
+      throw (e);
     }
   },
 
@@ -587,21 +582,23 @@ export const assignmentDatabase = {
    */
   isActive: async (organizationId: string, assignmentId: string): Promise<boolean> => {
     try {
-      const assignmentDocRef = doc(db, `organizations/${organizationId}/assignments`, assignmentId);
-      const docSnap = await getDoc(assignmentDocRef);
 
-      if (!docSnap.exists()) {
+      const assignmentDocRef = adminDb.collection(`organizations/${organizationId}/assignments`).doc(assignmentId);
+
+      const docSnap = await assignmentDocRef.get();
+
+      // Get the data from the document
+      const assignmentData = docSnap.data();
+
+      if (assignmentData) {
+        return assignmentData.unassignedAt === null;
+      } else { // Document does not exist
         throw new FirestoreDatabaseError(
           "Assignment does not exist in the database",
           404 // Not Found is more appropriate here
         );
       }
-      
-      // Get the data from the document
-      const assignmentData = docSnap.data();
 
-      // An assignment is active if its 'unassignedAt' field is explicitly null.
-      return assignmentData.unassignedAt === null;
 
     } catch (e) {
       console.error(`Error checking if assignment "${assignmentId}" is active:`, e);
@@ -618,16 +615,16 @@ export const assignmentDatabase = {
    */
   isTruckCurrentlyAssigned: async (organizationId: string, truckId: string): Promise<boolean> => {
     try {
-      const assignmentsRef = collection(db, `organizations/${organizationId}/assignments`);
+
+      const assignmentsRef = adminDb.collection(`organizations/${organizationId}/assignments`);
       
       // Query for assignments for this truck that are currently active (unassignedAt is null).
-      const q = query(
-        assignmentsRef, 
-        where("truckId", "==", truckId), 
-        where("unassignedAt", "==", null)
-      );
+      const q = assignmentsRef 
+        .where("truckId", "==", truckId)
+        .where("unassignedAt", "==", null);
       
-      const querySnapshot = await getDocs(q);
+      // CHANGED: from getDocs(q) to q.get()
+      const querySnapshot = await q.get();
 
       console.log("isTruckCurrentlyAssigned CONSOLE LOG querySnapshot: ", querySnapshot);
       
@@ -649,16 +646,15 @@ export const assignmentDatabase = {
    */
   getFromUser: async (organizationId: string, userId: string): Promise<Assignment | undefined> => {
     try {
-      const assignmentsRef = collection(db, `organizations/${organizationId}/assignments`);
+      // CHANGED: from collection(db, ...) to adminDb.collection(...)
+      const assignmentsRef = adminDb.collection(`organizations/${organizationId}/assignments`);
       
       // Query for an assignment for this user that is currently active (unassignedAt is null).
-      const q = query(
-        assignmentsRef, 
-        where("userId", "==", userId), 
-        where("unassignedAt", "==", null)
-      );
-      
-      const querySnapshot = await getDocs(q);
+      const q = assignmentsRef
+        .where("userId", "==", userId)
+        .where("unassignedAt", "==", null);
+      const querySnapshot = await q.get();
+
 
       // An active user should only ever have one active assignment.
       if (querySnapshot.empty) {
@@ -686,9 +682,11 @@ export const employeeDatabase = {
    */
   isAssociated: async (employeeId: string): Promise<boolean> => {
     try {
-      const usersRef = collection(db, "users");
-      const q = query(usersRef, where("employeeId", "==", employeeId));
-      const querySnapshot = await getDocs(q);
+
+      // Get all users whose employeeId is "employeeId"
+      const usersRef = adminDb.collection("users");
+      const q = usersRef.where("employeeId", "==", employeeId);
+      const querySnapshot = await q.get();
 
       return !querySnapshot.empty;
     } catch (e) {
@@ -707,10 +705,10 @@ export const employeeDatabase = {
   activate: async (organizationId: string, employeeId: string, uid: string): Promise<void> => {
     try {
       // Path to the specific employee document
-      const employeeDocRef = doc(db, `organizations/${organizationId}/employees`, employeeId);
+      const employeeDocRef = adminDb.collection(`organizations/${organizationId}/employees`).doc(employeeId);
       
-      // Use updateDoc to change only specific fields
-      await updateDoc(employeeDocRef, {
+      // Update the status and uid of the employee to activate
+      await employeeDocRef.update({
         uid: uid,
         status: "active"
       });
@@ -727,8 +725,8 @@ export const genericDatabase = {
   get: async (resourceId: string): Promise<DocumentData> => {
 
     // Get and return requested resource
-    const docRef = doc(db, resourceId);
-    const docData = await getDoc(docRef);
+    const docRef = adminDb.doc(resourceId);
+    const docData = await docRef.get();
     return docData;
   },
 
@@ -742,8 +740,8 @@ export const genericDatabase = {
 
     // Get docRef and update
     // This will throw an error if document doesn't exist
-    const docRef = doc(db, resourceId);
-    await updateDoc(docRef, data);
+    const docRef = adminDb.doc(resourceId);
+    await docRef.update(data);
   }
 };
 
@@ -760,7 +758,8 @@ export const permissionsDatabase = {
    */
   getAccessStatus: async (organizationId: string, roleId: string, resourcePath: string, accessType: AccessType): Promise<boolean> => {
     try {
-
+      // No change needed here, as roleDatabase.get() uses the
+      // createSubCollectionRepository which already uses adminDb.
       const roleData = await roleDatabase.get(organizationId, roleId);
 
       console.log("getAccessStatus CONSOLE LOG roleData(roleDocSnap.data()): ", roleData);
@@ -807,14 +806,16 @@ export const permissionsDatabase = {
            */
 
           // Get role of employee trying to write to
+          // No change needed, uses repository
           const requestedEmployee = await employeeDatabase.get(organizationId, documentId);
+          // No change needed, uses repository
           const requestedEmployeeRole = await roleDatabase.get(organizationId, requestedEmployee.roleId);
 
           // Check if requesters permission level is greater than
           // permission level of employee trying to write to
           if (requestedEmployeeRole.level >= roleData.level) {
             return false;
-          }        
+          }         
         }
       }
 
