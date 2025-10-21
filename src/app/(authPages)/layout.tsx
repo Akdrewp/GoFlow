@@ -32,6 +32,13 @@ async function getUserContext() {
           assignment: currentAssignment,
           isManager: isManager,
         };   
+      } else {
+        return {
+          user: userProfile,
+          employee: undefined,
+          assignment: undefined,
+          isManager: false,
+        };
       }
 
     } catch (e) {

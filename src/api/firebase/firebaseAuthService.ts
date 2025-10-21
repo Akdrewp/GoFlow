@@ -15,7 +15,7 @@ import { UserProfile } from "../database/database";
 
 // https://goflow--goflow-routemaker.us-east4.hosted.app/
 
-const NEXT_PUBLIC_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+const NEXT_PUBLIC_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3001';
 const databaseSignUpApiEndpoint = `${NEXT_PUBLIC_BASE_URL}/api/auth/signup`;
 const sessionLoginApiEndpoint = `${NEXT_PUBLIC_BASE_URL}/api/auth/login`;
 
