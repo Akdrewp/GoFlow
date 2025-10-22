@@ -1,15 +1,3 @@
-<p align="center">
-<img src="./public/goflow-logo.svg" alt="GoFlow Logo" width="120">
-</p>
-
-<h1 align="center">GoFlow - Field Calibration Monitoring</h1>
-
-<p align="center">
-<strong>
-<a href="https://goflow--goflow-routemaker.us-east4.hosted.app/">View Live Application</a>
-</strong>
-</p>
-
 About The Project
 
 GoFlow is a streamlined web application designed for teams that require precise field calibration monitoring. It provides an intuitive platform for employees to submit detailed calibration reports from any location, allowing managers to review and ensure compliance and accuracy in real-time.
