@@ -18,7 +18,7 @@ export async function employeesPOST(
     // Only check for name, email, and organizationId since
     // Those are the form data
     const parsedReq = await request.json();
-    const isValidUserFormData = employeeSchema.safeParse(parsedReq);
+    const isValidUserFormData = employeeSchema.pick({ name: true, roleId: true, employeeId: true }).safeParse(parsedReq);
 
     if (!isValidUserFormData.success) {
       console.log("SERVER LOG: === Returning 400 - Zod Validation Failed ===");
