@@ -1,12 +1,7 @@
-// Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
-// import { getAnalytics } from "firebase/analytics";
 import { getAuth } from "firebase/auth";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// Your web app's Firebase configuration in case you want to clone
 const firebaseConfig = {
   apiKey: "AIzaSyB_l-MV0m9E-PSira0Tc5v8QYw2J6dG1hk",
   authDomain: "goflow-routemaker.firebaseapp.com",
@@ -21,9 +16,3 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
-
-/**
- * @TODO Remove connect to emulator
- */
-// connectAuthEmulator(auth, "http://127.0.0.1:9099");
-// const analytics = getAnalytics(app);
