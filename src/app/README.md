@@ -14,7 +14,7 @@ These files are marked with "use client" and are responsible for rendering the U
 
 ### Data Flow
 
-Any access to the database is handled through API Routes (defined in the /src/api directory). Server components in this /app folder call these API routes to securely fetch or modify data. This ensures that all business logic and database access are centralized and secured on the backend.
+Any access to the database is handled through API Routes (defined in the /src/app/api directory). Server components in this /app folder call these API routes to securely fetch or modify data. This ensures that all business logic and database access are centralized and secured on the backend.
 
 ### Route Groups
 
