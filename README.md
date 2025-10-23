@@ -8,6 +8,8 @@
 
 ## About The Project
 
+GoFlow is a web application built specifically for Weedman, a leading lawn care company, to solve the challenge of managing field calibrations. Previously, employees submitted calibration data by texting various managers, leading to disorganized, untrackable, and inconsistent records. Which cost the company money is over/under applied product throughout the day.
+
 GoFlow web application designed for teams that require precise field calibration monitoring. It provides a  platform for employees to submit detailed calibration reports from any location, allowing managers to review and ensure compliance and accuracy in real-time.
 
 Built with a modern tech stack, GoFlow simplifies the workflow for both field operators and administrative staff, ensuring that critical calibration data is always accessible and well-organized.
